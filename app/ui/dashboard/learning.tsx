@@ -1,89 +1,112 @@
+import { motion } from "motion/react";
+import { Calculator, Atom, Beaker, Globe, BookOpen } from "lucide-react";
 
-type LearningCardProps = {
-  icon: React.ReactNode;
-  title: string;
-  time: number; // ví dụ: 12.5
-  learnedLessons: number; // ví dụ: 8
-  totalLessons: number; // ví dụ: 16
-  progress: number; // 0 -> 100
-  color: 'blue' | 'purple' | 'green' | 'orange';
-};
+const courses = [
+  {
+    id: 1,
+    name: 'Advanced Calculus',
+    icon: Calculator,
+    progress: 68,
+    totalLessons: 24,
+    completedLessons: 16,
+    timeSpent: 12.5,
+    color: 'from-blue-500 to-cyan-500',
+    bgColor: 'bg-blue-100',
+    iconColor: 'text-blue-600'
+  },
+  {
+    id: 2,
+    name: 'Quantum Physics',
+    icon: Atom,
+    progress: 45,
+    totalLessons: 18,
+    completedLessons: 8,
+    timeSpent: 8.2,
+    color: 'from-purple-500 to-pink-500',
+    bgColor: 'bg-purple-100',
+    iconColor: 'text-purple-600'
+  },
+  {
+    id: 3,
+    name: 'Organic Chemistry',
+    icon: Beaker,
+    progress: 82,
+    totalLessons: 20,
+    completedLessons: 16,
+    timeSpent: 15.3,
+    color: 'from-green-500 to-emerald-500',
+    bgColor: 'bg-green-100',
+    iconColor: 'text-green-600'
+  },
+  {
+    id: 4,
+    name: 'World History',
+    icon: Globe,
+    progress: 30,
+    totalLessons: 30,
+    completedLessons: 9,
+    timeSpent: 6.5,
+    color: 'from-orange-500 to-red-500',
+    bgColor: 'bg-orange-100',
+    iconColor: 'text-orange-600'
+  },
+];
 
-const colorMap = {
-  blue: {
-    bg: 'bg-blue-100',
-    icon: 'text-blue-600',
-    progress: 'bg-blue-500',
-  },
-  purple: {
-    bg: 'bg-purple-100',
-    icon: 'text-purple-600',
-    progress: 'bg-purple-500',
-  },
-  green: {
-    bg: 'bg-green-100',
-    icon: 'text-green-600',
-    progress: 'bg-green-500',
-  },
-  orange: {
-    bg: 'bg-orange-100',
-    icon: 'text-orange-600',
-    progress: 'bg-orange-500',
-  },
-};
-
-export function LearningCard({
-  icon,
-  title,
-  time,
-  learnedLessons,
-  totalLessons,
-  progress,
-  color,
-}: LearningCardProps) {
-  const style = colorMap[color];
+export function Learning() {
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm hover:shadow-md transition">
-      
-      {/* Top */}
-      <div className="flex items-start justify-between">
-        
-        {/* Icon */}
-        <div className={`p-3 rounded-xl ${style.bg}`}>
-          <div className={`h-6 w-6 ${style.icon}`}>
-            {icon}
-          </div>
-        </div>
-
-        {/* Time */}
-        <span className="text-sm text-gray-500">{time}h</span>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.45 }}
+      className="mb-8 mt-8"
+    >
+      <div className="flex items-center gap-2 mb-6">
+        <BookOpen className="w-5 h-5" />
+        <h3 className="text-xl">Continue Learning</h3>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {courses.map((course, index) => {
+          const Icon = course.icon;
+          return (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 + index * 0.1 }}
+              whileHover={{ y: -6 }}
+              className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-12 h-12 rounded-xl ${course.bgColor} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <Icon className={`w-6 h-6 ${course.iconColor}`} />
+                </div>
+                <div className="text-sm text-muted-foreground">{course.timeSpent}h</div>
+              </div>
 
-      {/* Title */}
-      <h3 className="mt-4 text-base font-semibold text-gray-800">
-        {title}
-      </h3>
+              <h4 className="font-medium mb-1">{course.name}</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                {course.completedLessons}/{course.totalLessons} lessons
+              </p>
 
-      {/* Lessons */}
-      <p className="text-sm text-gray-500 mt-1">
-        {learnedLessons}/{totalLessons} Lessons
-      </p>
-
-      {/* Progress */}
-      <div className="mt-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span className="text-gray-500">Progress</span>
-          <span className="font-medium">{progress}%</span>
-        </div>
-
-        <div className="h-2 w-full bg-gray-100 rounded-full">
-          <div
-            className={`h-2 rounded-full ${style.progress}`}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Progress</span>
+                  <span className="font-medium">{course.progress}%</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${course.progress}%` }}
+                    transition={{ duration: 0.8, delay: 0.6 + index * 0.1, ease: "easeOut" }}
+                    className={`h-full bg-gradient-to-r ${course.color} rounded-full`}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
-    </div>
-  );
+    </motion.div>
+  )
 }

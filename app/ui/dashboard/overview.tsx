@@ -1,10 +1,5 @@
-import {
-  ClockIcon,
-  CheckCircleIcon,
-  FireIcon,
-} from '@heroicons/react/24/outline';
-import { lusitana } from '../fonts';
-
+import { motion } from 'motion/react';
+import { TrendingUp, Flame, FlameIcon, ClockIcon, CheckCircle2 } from 'lucide-react';
 
 export default async function CardWrapper() {
   return (
@@ -24,9 +19,9 @@ export default async function CardWrapper() {
 }
 
 const iconMap = {
-  'Day Streak': FireIcon,
+  'Day Streak': FlameIcon,
   'Total Study Time': ClockIcon,
-  'Sessions Completed': CheckCircleIcon,
+  'Sessions Completed': CheckCircle2,
 }
 
 const cardStyle = {
@@ -57,27 +52,21 @@ export function OverviewCard({
   const style = cardStyle[type];
 
   return (
-    <div className="rounded-xl bg-white p-2 shadow-sm hover:shadow-md transition">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-
-        {/* Icon */}
-        {Icon && (
-          <div className={`p-2 rounded-lg ${style.bg}`}>
-            <Icon className={`h-5 w-5 ${style.text}`} />
-          </div>
-        )}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+      whileHover={{ y: -4 }}
+      className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow"
+    >
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-12 h-12 rounded-xl ${style.bg} flex items-center justify-center`}>
+          <Icon className={`w-6 h-6 ${style.text}`} />
+        </div>
+        <TrendingUp className="w-5 h-5 text-green-500" />
       </div>
-
-      {/* Value */}
-      <div
-        className={`${lusitana.className}
-          mt-4 text-3xl font-semibold text-gray-800`}
-      >
-        {value}
-      </div>
-    </div>
+      <div className="text-4xl mb-1">{value}</div>
+      <div className="text-muted-foreground">{title}</div>
+    </motion.div>
   );
 }
