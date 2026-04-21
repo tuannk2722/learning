@@ -68,7 +68,7 @@ export function AchievementGrid({ achievements }: Props) {
 
                 {achievement.unlocked && achievement.unlockedDate && (
                   <span className="text-xs text-muted-foreground">
-                    {new Date(achievement.unlockedDate).toLocaleDateString()}
+                    {new Date(achievement.unlockedDate).toLocaleDateString('en-US')}
                   </span>
                 )}
               </div>

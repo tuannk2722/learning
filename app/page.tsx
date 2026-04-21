@@ -1,8 +1,5 @@
-'use client';
-
 import { HeroSection } from "./ui/home/hero-section";
 import { HIWSection } from "./ui/home/hiw-section";
-import { Navigation } from "./ui/home/navigation";
 import { PopularCourses } from "./ui/home/popular-courses";
 import { TestimonialsSection } from "./ui/home/testimonials-section";
 

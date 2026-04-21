@@ -1,4 +1,6 @@
-import { BarChart3, BookOpen, Brain, Target, TrendingUp, Trophy, Users } from "lucide-react";
+'use client';
+
+import { BookOpen, Target, TrendingUp, Trophy } from "lucide-react";
 import { motion } from "motion/react";
 
 

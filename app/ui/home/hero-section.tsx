@@ -1,6 +1,9 @@
+'use client';
+
 import { ArrowRight, Crown, Sparkles, Trophy, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 const stats = [
   { value: '10K+', label: 'Active Learners' },
@@ -10,6 +13,10 @@ const stats = [
 ];
 
 export function HeroSection() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto px-6 pt-20 pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">

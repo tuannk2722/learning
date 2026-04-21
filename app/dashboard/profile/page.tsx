@@ -2,6 +2,8 @@ import { ProfileTitle } from '@/app/ui/profile/title';
 import { ProfileHeader } from '@/app/ui/profile/header';
 import { ProfileStatsGrid } from '@/app/ui/profile/stats-grid';
 import { ProfileSetting } from '@/app/ui/profile/setting';
+import { Suspense } from 'react';
+import { ProfileHeaderSkeleton, ProfileStatsGridSkeleton, ProfileSettingSkeleton } from '@/app/ui/skeletons';
 
 export default function Profile() {
   const userInfo = {
@@ -19,13 +21,19 @@ export default function Profile() {
         <ProfileTitle />
 
         {/* Profile Header */}
-        <ProfileHeader userInfo={userInfo} />
+        <Suspense fallback={<ProfileHeaderSkeleton />}>
+          <ProfileHeader userInfo={userInfo} />
+        </Suspense>
 
         {/* Stats Grid */}
-        <ProfileStatsGrid />
+        <Suspense fallback={<ProfileStatsGridSkeleton />}>
+          <ProfileStatsGrid />
+        </Suspense>
 
         {/* Settings Section */}
-        <ProfileSetting />
+        <Suspense fallback={<ProfileSettingSkeleton />}>
+          <ProfileSetting />
+        </Suspense>
 
       </div>
     </div>

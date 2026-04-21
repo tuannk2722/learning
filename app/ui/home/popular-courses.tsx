@@ -1,4 +1,6 @@
-import { Code2, Brain, Palette, Database, Rocket, Star, Users, BookOpen, Zap, ChevronRight, Calculator, Atom, Beaker, Globe } from "lucide-react"
+'use client';
+
+import { ChevronRight } from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
 import { CourseCardAvailable } from "../courses/available-course-card"

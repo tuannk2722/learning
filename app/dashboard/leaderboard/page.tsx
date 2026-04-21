@@ -1,6 +1,8 @@
 import { LeaderboardTitle } from "@/app/ui/leaderboard/title";
 import { Top3Podium } from "@/app/ui/leaderboard/top-3-podium";
 import { FullLeaderboard } from "@/app/ui/leaderboard/full-leaderboard";
+import { Suspense } from "react";
+import { Top3PodiumSkeleton, FullLeaderboardSkeleton } from "@/app/ui/skeletons";
 
 export default function Leaderboard() {
   const leaderboardData = [
@@ -23,10 +25,14 @@ export default function Leaderboard() {
         <LeaderboardTitle />
 
         {/* Top 3 Podium */}
-        <Top3Podium leaderboardData={leaderboardData.slice(0, 3)} />
+        <Suspense fallback={<Top3PodiumSkeleton />}>
+          <Top3Podium leaderboardData={leaderboardData.slice(0, 3)} />
+        </Suspense>
 
         {/* Full Leaderboard */}
-        <FullLeaderboard leaderboardData={leaderboardData} />
+        <Suspense fallback={<FullLeaderboardSkeleton />}>
+          <FullLeaderboard leaderboardData={leaderboardData} />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,3 +1,5 @@
+'use client';
+
 import { Award, Crown, Flame, Link, Target } from "lucide-react";
 import { motion } from "motion/react";
 

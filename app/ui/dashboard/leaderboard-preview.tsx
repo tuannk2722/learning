@@ -1,13 +1,15 @@
+'use client';
+
 import { TrendingUp } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 
 const topLearners = [
-    { name: "Trần Thị B", level: 28, xp: 125000, avatar: "🏆" },
-    { name: "Lê Văn C", level: 26, xp: 118000, avatar: "🥈" },
-    { name: "Phạm Thị D", level: 24, xp: 112000, avatar: "🥉" },
-    { name: "Nguyễn Văn A", level: 15, xp: 45000, avatar: "👤", isCurrentUser: true }
-  ];
+  { name: "Trần Thị B", level: 28, xp: 125000, avatar: "🏆" },
+  { name: "Lê Văn C", level: 26, xp: 118000, avatar: "🥈" },
+  { name: "Phạm Thị D", level: 24, xp: 112000, avatar: "🥉" },
+  { name: "Nguyễn Văn A", level: 15, xp: 45000, avatar: "👤", isCurrentUser: true }
+];
 
 export function LeaderboardPreview() {
   return (
