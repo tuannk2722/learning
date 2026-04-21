@@ -2,16 +2,18 @@
 
 import { motion } from 'motion/react';
 import { Star, Users } from 'lucide-react';
-import { Course } from '@/app/lib/definitions/definitions';
 import { DynamicIcon } from '../dynamic-icon';
 import Link from 'next/link';
+import { getCourseColorClasses } from './course-utils';
+import { Courses } from '@/app/lib/definitions/courses';
 
 interface Props {
-  course: Course;
+  course: Courses;
   index: number;
 }
 
 export const CourseCardAvailable = ({ course, index }: Props) => {
+  const colorClasses = getCourseColorClasses(course.theme_color);
 
   return (
     <motion.div
@@ -21,17 +23,21 @@ export const CourseCardAvailable = ({ course, index }: Props) => {
       whileHover={{ y: -4 }}
       className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col h-full"
     >
-      <div className={`w-14 h-14 rounded-xl ${course.color || 'bg-violet-100'} flex items-center justify-center mb-4`}>
-        <DynamicIcon name={course.icon} className={`w-7 h-7 ${course.iconColor}`} />
+      <div className={`w-14 h-14 rounded-xl ${colorClasses.bg} flex items-center justify-center mb-4`}>
+        <DynamicIcon name={course.icon_name} className={`w-7 h-7 ${colorClasses.text}`} />
       </div>
 
       <h3 className="text-lg font-medium mb-2">{course.name}</h3>
       <p className="text-sm text-muted-foreground mb-4 flex-grow">{course.description}</p>
 
-      <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
-        <span className="bg-gray-100 px-2 py-1 rounded">{course.level}</span>
-        <span>{course.lessons || 0} lessons</span>
-        <span>{course.duration} hours</span>
+      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-4">
+        <span className="bg-violet-50 text-violet-700 px-2 py-1 rounded-md font-medium">{course.category_name}</span>
+        <span>•</span>
+        <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">{course.level}</span>
+        <span>•</span>
+        <span>{course.total_lessons || 0} lessons</span>
+        <span>•</span>
+        <span>{course.estimated_hours}h</span>
       </div>
 
       <div className="flex items-center justify-between mb-4">
@@ -41,7 +47,7 @@ export const CourseCardAvailable = ({ course, index }: Props) => {
         </div>
         <div className="flex items-center gap-1 text-muted-foreground text-sm">
           <Users className="w-4 h-4" />
-          <span suppressHydrationWarning>{course.students.toLocaleString('en-US')}</span>
+          <span>{course.enrolled_count}</span>
         </div>
       </div>
 

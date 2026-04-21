@@ -1,18 +1,29 @@
-import { motion } from 'motion/react';
 import { BookOpen, Lock } from 'lucide-react';
-import { coursesData } from '@/app/lib/courses';
 import { CourseCardEnrolled } from '@/app/ui/courses/enrolled-course-card';
 import { CourseCardAvailable } from '@/app/ui/courses/available-course-card';
 import { CourseTitle } from '@/app/ui/courses/title';
 import AllCoursesPage from '@/app/courses/page';
 import { Suspense } from 'react';
 import { CourseCardSkeleton } from '@/app/ui/skeletons';
+import { auth } from '@/auth';
+import { fetchUserEnrolledCourses, fetchUserNotEnrolledCourses } from '@/app/lib/data/courses';
 
-export default function Courses() {
-  const isNewUser = false;
+export default async function Courses() {
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+  console.log(isLoggedIn);
+
+  const userId = session?.user?.id;
+  console.log("Current User ID:", userId);
+
+  const enrolledCourses = await fetchUserEnrolledCourses(userId!);
+  console.log(enrolledCourses);
+
+  const notEnrolledCourses = await fetchUserNotEnrolledCourses(userId!);
+  console.log(notEnrolledCourses);
 
   return (
-    isNewUser ? (
+    enrolledCourses.length == 0 ? (
       <AllCoursesPage />
     ) : (
       <div className="p-6">
@@ -33,7 +44,7 @@ export default function Courses() {
               </div>
             }>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {coursesData.filter(c => c.enrolled).map((course, index) => {
+                {enrolledCourses.map((course, index) => {
                   return <CourseCardEnrolled key={course.id} course={course} index={index} />;
                 })}
               </div>
@@ -55,7 +66,7 @@ export default function Courses() {
               </div>
             }>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {coursesData.filter(c => !c.enrolled).map((course, index) => {
+                {notEnrolledCourses.map((course, index) => {
                   return <CourseCardAvailable key={course.id} course={course} index={index} />;
                 })}
               </div>

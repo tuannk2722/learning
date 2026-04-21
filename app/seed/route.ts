@@ -48,6 +48,8 @@ async function seedDatabase(t: any) {
       icon_name VARCHAR(50),
       theme_color VARCHAR(50),
       estimated_hours INT,
+      rating DECIMAL(2,1) DEFAULT 0.0,
+      reviews_count INT DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
@@ -180,11 +182,11 @@ async function seedDatabase(t: any) {
 
   // 3. Nạp Courses
   await t`
-    INSERT INTO courses (id, category_id, name, description, level, icon_name, theme_color, estimated_hours)
+    INSERT INTO courses (id, category_id, name, description, level, icon_name, theme_color, estimated_hours, rating, reviews_count)
     VALUES 
-      (1, 1, 'Advanced Calculus', 'Master derivatives, integrals, and differential equations', 'Advanced', 'calculator', 'bg-blue-100', 8),
-      (2, 2, 'Quantum Physics', 'Explore quantum mechanics and particle behavior', 'Advanced', 'atom', 'bg-purple-100', 6),
-      (3, 3, 'Intro to React', 'Learn modern web development', 'Beginner', 'code', 'bg-cyan-100', 10)
+      (1, 1, 'Advanced Calculus', 'Master derivatives, integrals, and differential equations', 'Advanced', 'calculator', 'blue', 8, 4.8, 120),
+      (2, 2, 'Quantum Physics', 'Explore quantum mechanics and particle behavior', 'Advanced', 'atom', 'purple', 6, 4.9, 85),
+      (3, 3, 'Intro to React', 'Learn modern web development', 'Beginner', 'code', 'cyan', 10, 4.7, 210)
     ON CONFLICT (id) DO NOTHING;
   `;
   console.log('Đã nạp mẫu Courses');

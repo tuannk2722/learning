@@ -1,8 +1,8 @@
+import { Courses } from "@/app/lib/definitions/courses";
 import { CourseCardAvailable } from "./available-course-card";
-import { Course } from "@/app/lib/definitions/definitions";
 
 
-export const CourseGrid = ({ courses }: { courses: Course[] }) => {
+export const CourseGrid = ({ courses }: { courses: Courses[] }) => {
   if (courses.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100 mx-6">
