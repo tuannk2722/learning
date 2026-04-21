@@ -12,8 +12,13 @@ import {
   AchievementsCardSkeleton,
   LeaderboardPreviewSkeleton
 } from "@/app/ui/skeletons";
+import { fetchUserEnrolledCourses } from "@/app/lib/data/courses";
+import { auth } from "@/auth";
 
-export default function DashboardHome() {
+export default async function DashboardHome() {
+  const session = await auth();
+  const user_id = session?.user?.id;
+  const continueCourses = await fetchUserEnrolledCourses(user_id!);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
@@ -37,7 +42,7 @@ export default function DashboardHome() {
 
               {/* Continuing Courses */}
               <Suspense fallback={<ContinueCoursesSkeleton />}>
-                <ContinueCourses />
+                <ContinueCourses data={continueCourses} />
               </Suspense>
             </div>
 

@@ -3,10 +3,10 @@
 import { motion } from "motion/react";
 import { BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { coursesData } from "@/app/lib/courses";
+import { Courses } from "@/app/lib/definitions/courses";
+import { getCourseColorClasses } from "../courses/course-utils";
 
-export function ContinueCourses() {
-  const continuingCourses = coursesData.filter(c => c.enrolled);
+export function ContinueCourses({ data }: { data: Courses[] }) {
 
   return (
     <motion.div
@@ -29,36 +29,39 @@ export function ContinueCourses() {
       </div>
 
       <div className="space-y-6">
-        {continuingCourses.map((course, index) => (
-          <motion.div
-            key={course.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
-            className="group cursor-pointer"
-          >
-            <Link href={`/dashboard/courses/${course.id}`} className="block">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 group-hover:text-violet-600 transition-colors">
-                    {course.name}
-                  </h3>
-                  {/* <p className="text-sm text-gray-600">{course.currentLesson}</p> */}
-                </div>
-                {/* <div className="text-sm font-medium text-gray-700">
+        {data.map((course, index) => {
+          const colorClasses = getCourseColorClasses(course.theme_color);
+          return (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
+              className="group cursor-pointer"
+            >
+              <Link href={`/dashboard/courses/${course.id}`} className="block">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-violet-600 transition-colors">
+                      {course.name}
+                    </h3>
+                    {/* <p className="text-sm text-gray-600">{course.currentLesson}</p> */}
+                  </div>
+                  {/* <div className="text-sm font-medium text-gray-700">
                   {course.completedLessons}/{course.totalLessons}
                 </div> */}
-              </div>
-              <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className={`absolute top-0 left-0 h-full bg-gradient-to-r ${course.color} rounded-full`}
-                  style={{ width: `${course.progress}%` }}
-                />
-              </div>
-              <div className="text-xs text-gray-500 mt-2">{course.progress}% completed</div>
-            </Link>
-          </motion.div>
-        ))}
+                </div>
+                <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`absolute top-0 left-0 h-full bg-gradient-to-r ${colorClasses.gradient} rounded-full`}
+                    style={{ width: `${course.progress_percent}%` }}
+                  />
+                </div>
+                <div className="text-xs text-gray-500 mt-2">{course.progress_percent}% completed</div>
+              </Link>
+            </motion.div>
+          )
+        })}
       </div>
 
       <Link

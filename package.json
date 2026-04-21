@@ -3,7 +3,9 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -13,6 +15,7 @@
     "bcrypt": "^5.1.1",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
+    "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.8.0",
     "motion": "^12.38.0",
     "next": "latest",
@@ -31,8 +34,11 @@
     "@types/bcrypt": "^5.0.2",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "22.10.7",
+    "@types/pg": "^8.20.0",
     "@types/react": "19.0.7",
-    "@types/react-dom": "19.0.3"
+    "@types/react-dom": "19.0.3",
+    "dotenv": "^17.4.2",
+    "drizzle-kit": "^0.31.10"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
