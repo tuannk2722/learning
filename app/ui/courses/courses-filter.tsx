@@ -1,18 +1,16 @@
-import { categories, levels } from "@/app/lib/courses";
 import { Filter, X } from "lucide-react";
 
 interface Props {
-  selectedCategory: string;
-  setSelectedCategory: (val: string) => void;
   selectedLevel: string;
   setSelectedLevel: (val: string) => void;
 }
 
+const levels = ['All', 'Beginner', 'Intermediate', 'Advanced']
+
 export const CourseFilters = ({
-  selectedCategory, setSelectedCategory,
   selectedLevel, setSelectedLevel
 }: Props) => {
-  const activeCount = (selectedCategory !== "All" ? 1 : 0) + (selectedLevel !== "All" ? 1 : 0);
+  const activeCount = (selectedLevel !== "All" ? 1 : 0);
 
   return (
     <section className="pb-8 px-6">
@@ -28,7 +26,7 @@ export const CourseFilters = ({
           </div>
           {activeCount > 0 && (
             <button
-              onClick={() => { setSelectedCategory("All"); setSelectedLevel("All"); }}
+              onClick={() => { setSelectedLevel("All"); }}
               className="text-sm text-violet-600 flex items-center gap-1 hover:underline"
             >
               <X className="w-4 h-4" /> Clear All
@@ -38,7 +36,7 @@ export const CourseFilters = ({
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Category Selector */}
-          <div>
+          {/* <div>
             <label className="block text-sm font-semibold text-gray-600 mb-3">Category</label>
             <div className="flex flex-wrap gap-2">
               {categories.map(cat => (
@@ -52,7 +50,7 @@ export const CourseFilters = ({
                 </button>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Level Filter */}
           <div>

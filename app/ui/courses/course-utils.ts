@@ -36,6 +36,16 @@ export function getCourseColorClasses(colorName: string | undefined | null) {
       text: 'text-indigo-600',
       gradient: 'from-indigo-600 to-purple-600',
     },
+    yellow: {
+      bg: 'bg-yellow-100',
+      text: 'text-yellow-600',
+      gradient: 'from-yellow-500 to-orange-500',
+    },
+    black: {
+      bg: 'bg-gray-900',
+      text: 'text-white',
+      gradient: 'from-gray-900 to-gray-700',
+    }
   };
 
   return colors[colorName as string] || colors.indigo; // Default to indigo if not found

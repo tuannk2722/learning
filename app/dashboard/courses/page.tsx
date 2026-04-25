@@ -6,21 +6,15 @@ import AllCoursesPage from '@/app/courses/page';
 import { Suspense } from 'react';
 import { CourseCardSkeleton } from '@/app/ui/skeletons';
 import { auth } from '@/auth';
-import { fetchUserEnrolledCourses, fetchUserNotEnrolledCourses } from '@/app/lib/data/courses';
+import { getEnrolledCourses, getNotEnrolledCourses } from '@/app/lib/data/courses';
 
 export default async function Courses() {
   const session = await auth();
-  const isLoggedIn = !!session?.user;
-  console.log(isLoggedIn);
 
   const userId = session?.user?.id;
-  console.log("Current User ID:", userId);
 
-  const enrolledCourses = await fetchUserEnrolledCourses(userId!);
-  console.log(enrolledCourses);
-
-  const notEnrolledCourses = await fetchUserNotEnrolledCourses(userId!);
-  console.log(notEnrolledCourses);
+  const enrolledCourses = await getEnrolledCourses(userId!);
+  const notEnrolledCourses = await getNotEnrolledCourses(userId!);
 
   return (
     enrolledCourses.length == 0 ? (
@@ -73,6 +67,7 @@ export default async function Courses() {
             </Suspense>
           </div>
         </div>
-      </div>)
+      </div>
+    )
   );
 }

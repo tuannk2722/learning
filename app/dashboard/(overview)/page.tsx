@@ -12,24 +12,28 @@ import {
   AchievementsCardSkeleton,
   LeaderboardPreviewSkeleton
 } from "@/app/ui/skeletons";
-import { fetchUserEnrolledCourses } from "@/app/lib/data/courses";
+import { getEnrolledCourses } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
+import { getUserById } from "@/app/lib/data/users";
 
 export default async function DashboardHome() {
   const session = await auth();
   const user_id = session?.user?.id;
-  const continueCourses = await fetchUserEnrolledCourses(user_id!);
+
+  const userInfo = await getUserById(user_id!);
+  console.log(userInfo);
+  const continueCourses = await getEnrolledCourses(user_id!);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       <div className="pt-24 pb-12 px-6">
         <div className="max-w-7xl mx-auto">
           {/* Welcome Header */}
-          <HeaderDashboard />
+          <HeaderDashboard isNew={continueCourses.length === 0} name={userInfo?.name} />
 
           {/* Stats Overview */}
           <Suspense fallback={<StatsOverviewSkeleton />}>
-            <StatsOverview />
+            <StatsOverview userInfo={userInfo!} />
           </Suspense>
 
           {/* Main Grid */}

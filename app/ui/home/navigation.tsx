@@ -4,8 +4,10 @@ import Link from "next/link";
 import Logo from "../logo";
 import { useState, useRef, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 export function Navigation() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
@@ -23,6 +25,8 @@ export function Navigation() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  if (pathname === '/onboarding') return null;
 
   return (
     <nav ref={navRef} className="bg-white/90 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50">

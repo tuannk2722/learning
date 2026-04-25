@@ -1,6 +1,6 @@
 'use client';
 
-import { handleLogout } from '@/app/lib/action';
+import { handleLogout } from '@/app/lib/actions/auth';
 import { Settings, LogOut } from 'lucide-react';
 import { motion } from 'motion/react';
 

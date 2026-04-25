@@ -68,7 +68,7 @@ export const lessons = pgTable('lessons', {
   duration_minutes: integer('duration_minutes'),
   xp_reward: integer('xp_reward').default(0),
   lesson_type: varchar('lesson_type', { length: 50 }).default('video'),
-  content_html: text('content_html'),
+  content: text('content'),
   video_url: text('video_url'),
   order_index: integer('order_index').notNull(),
 });

@@ -1,4 +1,3 @@
-import { Trophy, Flame, Star, Target, Award, Crown, Zap, BookOpen, Brain, Medal } from 'lucide-react';
 import { AchievementTitle } from '@/app/ui/achievement/title';
 import { AchievementProgressBar } from '@/app/ui/achievement/progress-bar';
 import { AchievementGrid } from '@/app/ui/achievement/achievement-grid';

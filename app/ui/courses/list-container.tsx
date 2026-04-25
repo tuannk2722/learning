@@ -9,16 +9,14 @@ import { Courses } from "@/app/lib/definitions/courses";
 
 export function CourseListContainer({ initialCourses }: { initialCourses: Courses[] }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
 
   const filteredCourses = initialCourses.filter((course) => {
     const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || course.category_name === selectedCategory;
     const matchesLevel = selectedLevel === "All" || course.level === selectedLevel;
 
-    return matchesSearch && matchesCategory && matchesLevel;
+    return matchesSearch && matchesLevel;
   });
 
   return (
@@ -42,7 +40,6 @@ export function CourseListContainer({ initialCourses }: { initialCourses: Course
       </section>
 
       <CourseFilters
-        selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory}
         selectedLevel={selectedLevel} setSelectedLevel={setSelectedLevel}
       />
 

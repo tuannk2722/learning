@@ -7,7 +7,6 @@ import { TestimonialsSection } from "./ui/home/testimonials-section";
 
 export default async function Page() {
   const popularCourses = await fetchPopularCourses();
-  console.log(popularCourses);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">

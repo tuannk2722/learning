@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useActionState, useEffect, useState } from 'react';
 import { ButtonFacebook, ButtonGoogle } from '../button';
 import { useSearchParams } from 'next/navigation';
-import { authenticate } from '@/app/lib/action';
+import { authenticate } from '@/app/lib/actions/auth';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 export function LoginForm() {

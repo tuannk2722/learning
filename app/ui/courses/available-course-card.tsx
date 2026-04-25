@@ -5,10 +5,10 @@ import { Star, Users } from 'lucide-react';
 import { DynamicIcon } from '../dynamic-icon';
 import Link from 'next/link';
 import { getCourseColorClasses } from './course-utils';
-import { Courses } from '@/app/lib/definitions/courses';
+import { CourseListing } from '@/app/lib/definitions/courses';
 
 interface Props {
-  course: Courses;
+  course: CourseListing;
   index: number;
 }
 

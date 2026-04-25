@@ -3,11 +3,11 @@ import { motion } from 'motion/react';
 import { Play } from 'lucide-react';
 import Link from 'next/link';
 import { DynamicIcon } from '../dynamic-icon';
-import { Courses } from '@/app/lib/definitions/courses';
+import { CourseListing } from '@/app/lib/definitions/courses';
 import { getCourseColorClasses } from './course-utils';
 
 interface Props {
-  course: Courses;
+  course: CourseListing;
   index: number;
 }
 
@@ -40,6 +40,7 @@ export const CourseCardEnrolled = ({ course, index }: Props) => {
           <span className="text-muted-foreground font-medium">Progress</span>
           <span className="font-bold text-indigo-600">{course.progress_percent}%</span>
         </div>
+        <p className="text-sm text-gray-600">{course.current_lesson || "Completed"}</p>
         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}

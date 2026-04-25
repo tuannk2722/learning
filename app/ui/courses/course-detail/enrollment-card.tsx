@@ -1,21 +1,15 @@
 'use client';
 
-import { Course } from "@/app/lib/definitions/definitions";
-import { Award, CheckCircle2, Play } from "lucide-react";
+import { CourseDetail } from "@/app/lib/definitions/courses";
+import { CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
+import { getCourseColorClasses } from "../course-utils";
 
-
-// Mock user progress for this course
-const userProgress = {
-  enrolled: true,
-  completedLessons: 42,
-  currentLesson: 43,
-  progressPercentage: 42,
-  totalTimeSpent: 1847, // minutes
-  xpEarned: 8400
-};
-
-export function EnrollmentCard({ course }: { course: Course }) {
+export function EnrollmentCard({ course }: { course: CourseDetail }) {
+  const colorClasses = getCourseColorClasses(course.theme_color);
+  // const progressPercentage = course.total_lessons > 0
+  //   ? Math.round(((course.completed_lessons || 0) / course.total_lessons) * 100)
+  //   : 0;
 
   return (
     <motion.div
@@ -24,41 +18,36 @@ export function EnrollmentCard({ course }: { course: Course }) {
       transition={{ duration: 0.6, delay: 0.2 }}
       className="bg-white rounded-3xl p-8 shadow-2xl border-2 border-violet-100 h-fit sticky top-24"
     >
-      {userProgress.enrolled ? (
+      {course.is_enrolled ? (
         <>
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm text-gray-600">Total Progress</span>
-              <span className="text-sm font-bold text-gray-900">{userProgress.progressPercentage}%</span>
+              <span className="text-sm font-bold text-gray-900">{course.progress_percent}%</span>
             </div>
             <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
               <div
-                className={`absolute top-0 left-0 h-full bg-gradient-to-r ${course.color} rounded-full`}
-                style={{ width: `${userProgress.progressPercentage}%` }}
+                className={`h-full bg-gradient-to-r ${colorClasses.gradient} rounded-full`}
+                style={{ width: `${course.progress_percent}%` }}
               />
             </div>
             <div className="text-xs text-gray-500">
-              {userProgress.completedLessons}/{course.lessons} lessons completed
+              {course.completed_lessons || 0}/{course.total_lessons} lessons completed
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="bg-violet-50 rounded-2xl p-4">
               <div className="text-sm text-gray-600 mb-1">XP Earned</div>
-              <div className="text-2xl font-bold text-violet-600">{userProgress.xpEarned}</div>
+              <div className="text-2xl font-bold text-violet-600">{course.xp_earned || 0}</div>
             </div>
             <div className="bg-violet-50 rounded-2xl p-4">
               <div className="text-sm text-gray-600 mb-1">Time Spent</div>
               <div className="text-2xl font-bold text-violet-600">
-                {Math.floor(userProgress.totalTimeSpent / 60)}h
+                {Math.floor((course.learned_minutes || 0) / 60)}h {(course.learned_minutes || 0) % 60}m
               </div>
             </div>
           </div>
-
-          <button className={`w-full py-4 rounded-xl bg-gradient-to-r ${course.color} text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all mb-3`}>
-            <Play className="w-5 h-5" />
-            Continue Learning
-          </button>
         </>
       ) : (
         <>
@@ -67,7 +56,7 @@ export function EnrollmentCard({ course }: { course: Course }) {
             <div className="text-sm text-gray-600">Start learning today</div>
           </div>
 
-          <button className={`w-full py-4 rounded-xl bg-gradient-to-r ${course.color} text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all mb-3`}>
+          <button className={`w-full py-4 rounded-xl ${colorClasses.bg} text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all mb-3`}>
             Enroll in Course
           </button>
 
@@ -87,18 +76,6 @@ export function EnrollmentCard({ course }: { course: Course }) {
           </div>
         </>
       )}
-
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="flex items-center gap-2 mb-2">
-          <Award className="w-5 h-5 text-yellow-500" />
-          <span className="text-sm font-bold text-gray-900">Rewards for Completion:</span>
-        </div>
-        <ul className="text-sm text-gray-600 space-y-1 ml-7">
-          <li>• {course.xp.toLocaleString('en-US')} XP</li>
-          <li>• 5 exclusive badges</li>
-          <li>• {course.name} certificate</li>
-        </ul>
-      </div>
     </motion.div>
   )
 }

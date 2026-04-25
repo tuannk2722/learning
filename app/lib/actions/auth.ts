@@ -2,8 +2,31 @@
 
 import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
-import { registerUser } from "@/auth";
 import { redirect } from "next/navigation";
+import { db } from "../db";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
+import bcrypt from 'bcrypt';
+
+export async function registerUser(name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const existingUser = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    if (existingUser.length > 0) return { success: false, error: "Email already exists!" };
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.insert(users).values({
+      name,
+      email,
+      password_hash: hashedPassword,
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to register user:', error);
+    return { success: false, error: "System error. Cannot create account right now." };
+  }
+}
 
 export async function authenticate(
   prevState: string | undefined,

@@ -3,10 +3,10 @@
 import { motion } from "motion/react";
 import { BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { Courses } from "@/app/lib/definitions/courses";
 import { getCourseColorClasses } from "../courses/course-utils";
+import { CourseListing } from "@/app/lib/definitions/courses";
 
-export function ContinueCourses({ data }: { data: Courses[] }) {
+export function ContinueCourses({ data }: { data: CourseListing[] }) {
 
   return (
     <motion.div
@@ -45,7 +45,7 @@ export function ContinueCourses({ data }: { data: Courses[] }) {
                     <h3 className="text-lg font-bold text-gray-900 group-hover:text-violet-600 transition-colors">
                       {course.name}
                     </h3>
-                    {/* <p className="text-sm text-gray-600">{course.currentLesson}</p> */}
+                    <p className="text-sm text-gray-600">{course.current_lesson || "Completed"}</p>
                   </div>
                   {/* <div className="text-sm font-medium text-gray-700">
                   {course.completedLessons}/{course.totalLessons}

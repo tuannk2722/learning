@@ -3,7 +3,7 @@ import { Eye, EyeOff, Lock, Mail, Sparkles, Trophy, User, CheckCircle2, AlertCir
 import { motion } from "motion/react";
 import Link from "next/link";
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
-import { register } from "@/app/lib/action";
+import { register } from "@/app/lib/actions/auth";
 import { useActionState, useState } from "react";
 import { ButtonFacebook, ButtonGoogle } from "../button";
 

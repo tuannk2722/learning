@@ -449,3 +449,42 @@ export function ProfileSettingSkeleton() {
     </div>
   );
 }
+
+export function CoursesSkeleton() {
+  return (
+    <div className="p-6 w-full">
+      <div className="max-w-7xl mx-auto">
+        {/* Title Skeleton */}
+        <div className="mb-8">
+          <div className={`${shimmer} h-10 w-64 bg-gray-200 rounded-lg mb-2`} />
+          <div className={`${shimmer} h-4 w-96 bg-gray-200 rounded-lg`} />
+        </div>
+
+        {/* Enrolled Courses Section */}
+        <div className="mb-12">
+          <div className="flex items-center gap-2 mb-4">
+            <div className={`${shimmer} w-5 h-5 bg-gray-200 rounded`} />
+            <div className={`${shimmer} h-6 w-48 bg-gray-200 rounded`} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CourseCardSkeleton />
+            <CourseCardSkeleton />
+          </div>
+        </div>
+
+        {/* Available Courses Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <div className={`${shimmer} w-5 h-5 bg-gray-200 rounded`} />
+            <div className={`${shimmer} h-6 w-48 bg-gray-200 rounded`} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <CourseCardSkeleton />
+            <CourseCardSkeleton />
+            <CourseCardSkeleton />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
