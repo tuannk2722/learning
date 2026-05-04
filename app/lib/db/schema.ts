@@ -1,15 +1,15 @@
-import { 
-  pgTable, 
-  text, 
-  varchar, 
-  integer, 
-  timestamp, 
-  boolean, 
-  uuid, 
-  serial, 
-  jsonb, 
-  numeric, 
-  primaryKey 
+import {
+  pgTable,
+  text,
+  varchar,
+  integer,
+  timestamp,
+  boolean,
+  uuid,
+  serial,
+  jsonb,
+  numeric,
+  primaryKey
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -35,6 +35,7 @@ export const categories = pgTable('categories', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
+  theme_color: varchar('theme_color', { length: 50 }),
 });
 
 // 3. BẢNG COURSES
@@ -89,7 +90,7 @@ export const enrollments = pgTable('enrollments', {
 export const user_lesson_progress = pgTable('user_lesson_progress', {
   user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   lesson_id: integer('lesson_id').notNull().references(() => lessons.id, { onDelete: 'cascade' }),
-  status: varchar('status', { length: 50 }).default('LOCKED'),
+  status: varchar('status', { length: 50 }).default('locked'),
   completed_at: timestamp('completed_at'),
 }, (t) => ({
   pk: primaryKey({ columns: [t.user_id, t.lesson_id] }),
@@ -116,6 +117,19 @@ export const questions = pgTable('questions', {
   order_index: integer('order_index').notNull(),
 });
 
+// 10. BẢNG QUIZ_ATTEMPTS (Lịch sử làm quiz)
+export const quiz_attempts = pgTable('quiz_attempts', {
+  id: serial('id').primaryKey(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  quiz_id: integer('quiz_id').notNull().references(() => quizzes.id, { onDelete: 'cascade' }),
+  score: integer('score').notNull(),
+  total: integer('total').notNull(),
+  passed: boolean('passed').notNull(),
+  xp_earned: integer('xp_earned').default(0),
+  answers: jsonb('answers'),
+  completed_at: timestamp('completed_at').defaultNow(),
+});
+
 // 10. BẢNG ACHIEVEMENTS
 export const achievements = pgTable('achievements', {
   id: serial('id').primaryKey(),
@@ -125,6 +139,7 @@ export const achievements = pgTable('achievements', {
   rarity: varchar('rarity', { length: 50 }).default('COMMON'),
   theme_color: varchar('theme_color', { length: 50 }),
   unlock_condition: jsonb('unlock_condition'),
+  reward_xp: integer('reward_xp').default(0),
 });
 
 // 11. BẢNG USER_ACHIEVEMENTS
@@ -134,4 +149,14 @@ export const user_achievements = pgTable('user_achievements', {
   unlocked_at: timestamp('unlocked_at').defaultNow(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.user_id, t.achievement_id] }),
+}));
+
+// 12. BẢNG LESSON_NOTES (1 note per user per lesson)
+export const lesson_notes = pgTable('lesson_notes', {
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  lesson_id: integer('lesson_id').notNull().references(() => lessons.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  updated_at: timestamp('updated_at').defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.user_id, t.lesson_id] }),
 }));

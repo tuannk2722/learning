@@ -44,6 +44,7 @@ export interface DetailLesson {
   course_id: number;
   duration_minutes: number;
   id: number;
+  isCompleted: boolean;
   lessonNumber: number;
   lesson_type: string;
   title: string;

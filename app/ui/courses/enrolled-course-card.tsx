@@ -4,7 +4,7 @@ import { Play } from 'lucide-react';
 import Link from 'next/link';
 import { DynamicIcon } from '../dynamic-icon';
 import { CourseListing } from '@/app/lib/definitions/courses';
-import { getCourseColorClasses } from './course-utils';
+import { getColorClasses } from '@/app/lib/utils/color-classes';
 
 interface Props {
   course: CourseListing;
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const CourseCardEnrolled = ({ course, index }: Props) => {
-  const colorClasses = getCourseColorClasses(course.theme_color);
+  const colorClasses = getColorClasses(course.theme_color);
 
   return (
     <motion.div

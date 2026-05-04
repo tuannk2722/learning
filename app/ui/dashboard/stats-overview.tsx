@@ -5,7 +5,7 @@ import { Crown, Flame, Star, Zap } from "lucide-react";
 import { User } from "@/app/lib/definitions/user";
 import { calculateLevel, getRankName } from "@/app/lib/utils/xp";
 
-export function StatsOverview({ userInfo }: { userInfo: User }) {
+export function StatsOverview({ userInfo, rankPosition }: { userInfo: User, rankPosition: number }) {
   const { level, currentXpInLevel, nextLevelXp, progress } = calculateLevel(userInfo.total_xp || 0);
   const rank = getRankName(level);
 
@@ -21,7 +21,7 @@ export function StatsOverview({ userInfo }: { userInfo: User }) {
         <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all" />
         <div className="flex items-center justify-between mb-4">
           <Crown className="w-8 h-8" />
-          <span className="text-3xl font-bold">#{/* TODO: Leaderboard Pos */}127</span>
+          <span className="text-3xl font-bold">#{rankPosition > 0 ? rankPosition : '-'}</span>
         </div>
         <div>
           <div className="text-sm opacity-90 mb-1">Current Level</div>

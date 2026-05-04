@@ -3,34 +3,6 @@ import * as schema from "../db/schema";
 import { eq, sql, getTableColumns, and } from "drizzle-orm";
 import { CourseCurriculum, DetailLesson } from "../definitions/lessons";
 
-// export async function getSectionsByCourseId(id: number) {
-//   try {
-//     const data = await db
-//       .select()
-//       .from(schema.sections)
-//       .where(eq(schema.sections.course_id, id))
-//       .orderBy(schema.sections.order_index);
-//     return data;
-//   } catch (error) {
-//     console.error('Database Error:', error);
-//     throw new Error('Failed to fetch sections.');
-//   }
-// }
-
-// export async function getLessonBySectionId(id: number) {
-//   try {
-//     const data = await db
-//       .select()
-//       .from(schema.lessons)
-//       .where(eq(schema.lessons.section_id, id))
-//       .orderBy(schema.lessons.order_index);
-//     return data;
-//   } catch (error) {
-//     console.error('Database Error:', error);
-//     throw new Error('Failed to fetch lessons.');
-//   }
-// }
-
 export async function getCourseCurriculum(courseId: number, userId?: string): Promise<CourseCurriculum> {
   try {
     // 1. Lấy tất cả các section của course
@@ -64,7 +36,7 @@ export async function getCourseCurriculum(courseId: number, userId?: string): Pr
         .where(eq(schema.user_lesson_progress.user_id, userId));
 
       progressData.forEach(p => {
-        userProgressMap.set(p.lesson_id, p.status || 'LOCKED');
+        userProgressMap.set(p.lesson_id, p.status || 'locked');
       });
     }
 
@@ -79,9 +51,9 @@ export async function getCourseCurriculum(courseId: number, userId?: string): Pr
             title: lesson.title,
             duration: lesson.duration || 0,
             xp: lesson.xp || 0,
-            completed: status === 'COMPLETED',
-            locked: status === 'LOCKED' || !status,
-            isCurrent: status === 'UNLOCKED' || status === 'IN_PROGRESS',
+            completed: status === 'completed',
+            locked: status === 'locked' || !status,
+            isCurrent: status === 'unlocked' || status === 'in_progress',
           };
         });
 
@@ -137,6 +109,23 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
     const lessonNumber = lessonsInCourse.findIndex(l => l.id === lessonId) + 1;
     const totalLessons = lessonsInCourse.length;
 
+    // 3. Check if user has already completed this lesson
+    let isCompleted = false;
+    if (userId) {
+      const progressData = await db
+        .select({ status: schema.user_lesson_progress.status })
+        .from(schema.user_lesson_progress)
+        .where(
+          and(
+            eq(schema.user_lesson_progress.user_id, userId),
+            eq(schema.user_lesson_progress.lesson_id, lessonId)
+          )
+        )
+        .limit(1);
+
+      isCompleted = progressData.length > 0 && progressData[0].status === 'completed';
+    }
+
     // Trả về object đã map sẵn sàng cho UI và khớp với interface DetailLesson
     return {
       id: lesson.id,
@@ -148,11 +137,64 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
       duration_minutes: lesson.duration_minutes || 0,
       course_id: lesson.course_id,
       courseTitle: lesson.courseTitle || 'Unknown Course',
+      isCompleted,
       lessonNumber,
       totalLessons,
     };
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch lesson detail.');
+  }
+}
+
+/**
+ * Tìm ID bài học tiếp theo trong course, theo thứ tự section → lesson order_index.
+ * Trả về null nếu đây là bài cuối cùng.
+ */
+export async function getNextLessonId(courseId: number, currentLessonId: number): Promise<number | null> {
+  try {
+    const courseLessons = await db
+      .select({ id: schema.lessons.id })
+      .from(schema.lessons)
+      .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
+      .where(eq(schema.sections.course_id, courseId))
+      .orderBy(schema.sections.order_index, schema.lessons.order_index);
+
+    const currentIndex = courseLessons.findIndex(l => l.id === currentLessonId);
+
+    if (currentIndex !== -1 && currentIndex < courseLessons.length - 1) {
+      return courseLessons[currentIndex + 1].id;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Database Error:', error);
+    return null;
+  }
+}
+
+/**
+ * Lấy ghi chú của user cho bài học cụ thể
+ */
+export async function getLessonNote(lessonId: number, userId: string): Promise<string | null> {
+  try {
+    const noteData = await db
+      .select({ content: schema.lesson_notes.content })
+      .from(schema.lesson_notes)
+      .where(
+        and(
+          eq(schema.lesson_notes.user_id, userId),
+          eq(schema.lesson_notes.lesson_id, lessonId)
+        )
+      )
+      .limit(1);
+
+    if (noteData.length > 0) {
+      return noteData[0].content;
+    }
+    return null;
+  } catch (error) {
+    console.error('Database Error:', error);
+    return null;
   }
 }

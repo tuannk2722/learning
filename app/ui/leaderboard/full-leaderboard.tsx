@@ -51,8 +51,12 @@ export function FullLeaderboard({ leaderboardData }: FullLeaderboardProps) {
             <div className={`w-10 h-10 rounded-full ${user.isCurrentUser
               ? 'bg-gradient-to-br from-indigo-500 to-purple-600'
               : 'bg-gray-200'
-              } flex items-center justify-center text-white font-medium text-sm`}>
-              {user.avatar}
+              } flex items-center justify-center text-white font-medium text-sm overflow-hidden`}>
+              {user.avatar.startsWith('http') || user.avatar.startsWith('/') ? (
+                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                user.avatar
+              )}
             </div>
             <div>
               <div className="font-medium">{user.name}</div>

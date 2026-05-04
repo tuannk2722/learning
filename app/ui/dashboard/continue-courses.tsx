@@ -3,8 +3,8 @@
 import { motion } from "motion/react";
 import { BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { getCourseColorClasses } from "../courses/course-utils";
 import { CourseListing } from "@/app/lib/definitions/courses";
+import { getColorClasses } from "@/app/lib/utils/color-classes";
 
 export function ContinueCourses({ data }: { data: CourseListing[] }) {
 
@@ -30,7 +30,7 @@ export function ContinueCourses({ data }: { data: CourseListing[] }) {
 
       <div className="space-y-6">
         {data.map((course, index) => {
-          const colorClasses = getCourseColorClasses(course.theme_color);
+          const colorClasses = getColorClasses(course.theme_color);
           return (
             <motion.div
               key={course.id}

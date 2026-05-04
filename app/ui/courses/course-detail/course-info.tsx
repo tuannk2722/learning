@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { DynamicIcon } from "../../dynamic-icon";
 import { CourseDetail } from "@/app/lib/definitions/courses";
-import { getCourseColorClasses } from "../course-utils";
+import { getColorClasses } from "@/app/lib/utils/color-classes";
 
 
 export function CourseInfo({
@@ -13,7 +13,7 @@ export function CourseInfo({
 }: {
   course: CourseDetail
 }) {
-  const colorClasses = getCourseColorClasses(course.theme_color);
+  const colorClasses = getColorClasses(course.theme_color);
   const totalLessons = course.total_lessons;
   const totalDuration = course.total_duration;
 

@@ -90,7 +90,7 @@ export async function getEnrolledCourses(userId: string) {
           LEFT JOIN user_lesson_progress ulp 
             ON ulp.lesson_id = l.id 
             AND ulp.user_id = ${userId} 
-            AND ulp.status = 'COMPLETED'
+            AND ulp.status = 'completed'
           WHERE s.course_id = courses.id AND ulp.lesson_id IS NULL
           ORDER BY s.order_index ASC, l.order_index ASC
           LIMIT 1
@@ -201,7 +201,7 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
             and(
               eq(schema.user_lesson_progress.user_id, userId),
               eq(schema.sections.course_id, courseId),
-              eq(schema.user_lesson_progress.status, 'COMPLETED')
+              eq(schema.user_lesson_progress.status, 'completed')
             )
           );
 

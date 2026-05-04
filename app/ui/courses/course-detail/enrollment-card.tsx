@@ -3,13 +3,10 @@
 import { CourseDetail } from "@/app/lib/definitions/courses";
 import { CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
-import { getCourseColorClasses } from "../course-utils";
+import { getColorClasses } from "@/app/lib/utils/color-classes";
 
 export function EnrollmentCard({ course }: { course: CourseDetail }) {
-  const colorClasses = getCourseColorClasses(course.theme_color);
-  // const progressPercentage = course.total_lessons > 0
-  //   ? Math.round(((course.completed_lessons || 0) / course.total_lessons) * 100)
-  //   : 0;
+  const colorClasses = getColorClasses(course.theme_color);
 
   return (
     <motion.div

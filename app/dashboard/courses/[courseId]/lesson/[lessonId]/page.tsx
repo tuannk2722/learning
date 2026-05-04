@@ -1,10 +1,11 @@
 import { LessonContent } from "@/app/ui/courses/course-detail/lesson-detail/lesson-content";
 import { LessonDetailHeader } from "@/app/ui/courses/course-detail/lesson-detail/lesson-header";
 import { LessonNote } from "@/app/ui/courses/course-detail/lesson-detail/lesson-note";
-import { getCourseCurriculum, getLessonDetail } from "@/app/lib/data/lessons";
+import { getCourseCurriculum, getLessonDetail, getLessonNote } from "@/app/lib/data/lessons";
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import { CurriculumSection } from "@/app/ui/courses/course-detail/course-curriculum";
+import { completeLesson } from "@/app/lib/actions/lesson";
 
 export default async function LessonDetailPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const session = await auth();
@@ -21,6 +22,14 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
   const curriculum = await getCourseCurriculum(Number(courseId), userId);
   // console.log(curriculum);
 
+  const initialNoteContent = userId ? await getLessonNote(Number(lessonId), userId) : null;
+
+  const handleCompleteLesson = async () => {
+    "use server";
+    if (!userId) return { success: false, xpEarned: 0 };
+    return await completeLesson(lessonId, userId);
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       <div className="pt-24">
@@ -32,7 +41,7 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
             <div className="grid lg:grid-cols-3 gap-8 items-start">
               <div className="lg:col-span-2">
                 {/* Lesson Content */}
-                <LessonContent lesson={lesson} courseId={courseId} lessonId={lessonId} />
+                <LessonContent lesson={lesson} courseId={courseId} lessonId={lessonId} onComplete={handleCompleteLesson} isAlreadyCompleted={lesson.isCompleted} />
               </div>
 
               {/* Curriculum */}
@@ -45,9 +54,8 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
         </section>
 
         {/* Lesson Note */}
-        <LessonNote />
+        <LessonNote lessonId={lessonId} initialContent={initialNoteContent} />
       </div>
     </div>
   );
 }
-

@@ -25,9 +25,16 @@ export type Achievement = {
   unlocked: boolean,
   unlockedDate: string | null,
   rarity: string,
-  color: string,
-  bgColor: string
+  theme_color: string,
+  reward_xp: number
 }
+
+export type AnalyticsStats = {
+  label: string;
+  value: number | string;
+  icon: string;
+  color: string;
+};
 
 // Định nghĩa các loại câu hỏi cho phép
 export type QuestionType = "multiple-choice" | "true-false" | "fill-blank" | "code";

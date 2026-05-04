@@ -166,12 +166,16 @@ function Welcome(props) {
     { id: 14, section_id: 7, title: 'Filtering and Sorting Data', duration_minutes: 22, xp_reward: 130, order_index: 2, lesson_type: 'doc', content: '# Data Manipulation\nSlice and dice your data.' },
   ]);
 
+  await seedQuizzesAndQuestions();
+}
+
+async function seedQuizzesAndQuestions() {
   console.log('Seeding quizzes...');
   await db.insert(schema.quizzes).values([
     { id: 1, lesson_id: 1, title: 'React Basics Quiz', passing_score: 80, xp_reward: 100 },
     { id: 2, lesson_id: 4, title: 'State & Hook Quiz', passing_score: 80, xp_reward: 150 },
     { id: 3, lesson_id: 13, title: 'Pandas Basics Quiz', passing_score: 85, xp_reward: 200 },
-  ]);
+  ]).onConflictDoNothing();
 
   console.log('Seeding questions...');
   await db.insert(schema.questions).values([
@@ -205,6 +209,116 @@ function Welcome(props) {
       correct_answer: '1',
       order_index: 1,
     },
+    {
+      id: 4,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "What is the primary purpose of the topic discussed in this lesson?",
+      metadata: { options: ["Option A: To simplify code", "Option B: To improve performance", "Option C: To enhance security", "Option D: All of the above"] },
+      correct_answer: "3", 
+      explanation: "The topic covers various aspects including simplification, performance, and security.",
+      order_index: 2,
+    },
+    {
+      id: 5,
+      quiz_id: 3,
+      question_type: "true-false",
+      question_text: "Is it true that the concepts in this lesson are considered best practices in modern development?",
+      metadata: {},
+      correct_answer: "true",
+      explanation: "Yes, these concepts are fundamental and widely adopted.",
+      order_index: 3,
+    },
+    {
+      id: 6,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "Which of the following is a common mistake when implementing this feature?",
+      metadata: { options: ["Not testing enough", "Ignoring edge cases", "Premature optimization", "All of the above"] },
+      correct_answer: "3",
+      explanation: "Developers often encounter these challenges when first learning this topic.",
+      order_index: 4,
+    },
+    {
+      id: 7,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "What is the complexity of the standard approach mentioned in the lesson?",
+      metadata: { options: ["O(1)", "O(n)", "O(log n)", "It depends on implementation"] },
+      correct_answer: "3",
+      explanation: "Implementation details can vary based on specific requirements.",
+      order_index: 5,
+    },
+    {
+      id: 8,
+      quiz_id: 3,
+      question_type: "true-false",
+      question_text: "Can this feature be used in mobile development?",
+      metadata: {},
+      correct_answer: "true",
+      explanation: "Yes, it is cross-platform and works well on mobile devices.",
+      order_index: 6,
+    },
+    {
+      id: 9,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "Which keyword is most associated with this topic?",
+      metadata: { options: ["function", "const", "class", "async"] },
+      correct_answer: "1",
+      explanation: "Immutability is often a key part of the discussion.",
+      order_index: 7,
+    },
+    {
+      id: 10,
+      quiz_id: 3,
+      question_type: "fill-blank",
+      question_text: "The technique described in the lesson is often called '____ programming'.",
+      metadata: {},
+      correct_answer: "functional",
+      explanation: "Functional programming is a common paradigm related to many modern web concepts.",
+      order_index: 8,
+    },
+    {
+      id: 11,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "What is the main benefit of using this approach?",
+      metadata: { options: ["Less code", "More readable", "Easier to maintain", "All of the above"] },
+      correct_answer: "3",
+      explanation: "Combining these benefits makes it a superior choice.",
+      order_index: 9,
+    },
+    {
+      id: 12,
+      quiz_id: 3,
+      question_type: "true-false",
+      question_text: "Is this feature supported in all modern browsers?",
+      metadata: {},
+      correct_answer: "true",
+      explanation: "Modern browsers have excellent support for these standards.",
+      order_index: 10,
+    },
+    {
+      id: 13,
+      quiz_id: 3,
+      question_type: "code",
+      question_text: "What will be the output of this simplified example?",
+      metadata: { code: "const x = 10;\nconsole.log(x + 5);", options: ["10", "15", "5", "error"] },
+      correct_answer: "1",
+      explanation: "Basic addition results in 15.",
+      order_index: 11,
+    },
+    {
+      id: 14,
+      quiz_id: 3,
+      question_type: "code",
+      question_text: "What will be the output of this simplified example (Part 2)?",
+      metadata: { code: "const x = 10;\nconsole.log(x * 5);", options: ["10", "15", "50", "error"] },
+      correct_answer: "2",
+      explanation: "Basic multiplication results in 50.",
+      order_index: 12,
+    }
   ]);
 }
 
@@ -384,6 +498,15 @@ export async function GET(request: Request) {
       await seedRelations();
 
       return Response.json({ message: 'Content (Courses, Lessons, Achievements) updated successfully! Users preserved.' });
+    }
+
+    if (target === 'questions') {
+      console.log('Clearing and seeding QUESTIONS only...');
+      await db.delete(schema.questions);
+      // We don't delete quizzes if we don't want to break existing lesson relations, 
+      // but since seedQuizzesAndQuestions uses onConflictDoNothing for quizzes, it's safe to just clear questions.
+      await seedQuizzesAndQuestions();
+      return Response.json({ message: 'Seeded Questions only! Users and Courses preserved.' });
     }
 
     if (target === 'achievements') {

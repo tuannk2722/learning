@@ -3,15 +3,30 @@
 import { TrendingUp } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
+import { LeaderboardEntry } from "@/app/lib/definitions/definitions";
 
-const topLearners = [
-  { name: "Trần Thị B", level: 28, xp: 125000, avatar: "🏆" },
-  { name: "Lê Văn C", level: 26, xp: 118000, avatar: "🥈" },
-  { name: "Phạm Thị D", level: 24, xp: 112000, avatar: "🥉" },
-  { name: "Nguyễn Văn A", level: 15, xp: 45000, avatar: "👤", isCurrentUser: true }
-];
+type LeaderboardPreviewProps = {
+  leaderboardData: LeaderboardEntry[];
+}
 
-export function LeaderboardPreview() {
+export function LeaderboardPreview({ leaderboardData }: LeaderboardPreviewProps) {
+  // Get top 3 + current user if not in top 3
+  const top3 = leaderboardData.slice(0, 3);
+  const currentUserEntry = leaderboardData.find(u => u.isCurrentUser);
+
+  let previewData = [...top3];
+  if (currentUserEntry && !top3.some(u => u.rank === currentUserEntry.rank)) {
+    previewData.push(currentUserEntry);
+  }
+
+  const getAvatar = (rank: number, isCurrentUser?: boolean) => {
+    if (rank === 1) return "🏆";
+    if (rank === 2) return "🥈";
+    if (rank === 3) return "🥉";
+    if (isCurrentUser) return "👤";
+    return "👤";
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -24,15 +39,15 @@ export function LeaderboardPreview() {
           <TrendingUp className="w-6 h-6 text-violet-600" />
           <h3 className="text-xl font-bold">Leaderboard</h3>
         </div>
-        <Link href="/leaderboard" className="text-sm text-violet-600 hover:text-violet-700">
+        <Link href="/dashboard/leaderboard" className="text-sm text-violet-600 hover:text-violet-700">
           View Full
         </Link>
       </div>
 
       <div className="space-y-3">
-        {topLearners.map((learner, index) => (
+        {previewData.map((learner, index) => (
           <motion.div
-            key={index}
+            key={learner.rank}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 1.2 + index * 0.1 }}
@@ -42,7 +57,7 @@ export function LeaderboardPreview() {
               }`}
           >
             <div className="flex items-center gap-3">
-              <div className="text-2xl">{learner.avatar}</div>
+              <div className="text-2xl">{getAvatar(learner.rank, learner.isCurrentUser)}</div>
               <div>
                 <div className={`font-bold ${learner.isCurrentUser ? "text-violet-700" : "text-gray-900"}`}>
                   {learner.name}

@@ -14,15 +14,16 @@ import {
 } from "@/app/ui/skeletons";
 import { getEnrolledCourses } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
-import { getUserById } from "@/app/lib/data/users";
+import { getUserById, getLeaderboardData, getRankByUserId } from "@/app/lib/data/users";
 
 export default async function DashboardHome() {
   const session = await auth();
   const user_id = session?.user?.id;
 
   const userInfo = await getUserById(user_id!);
-  console.log(userInfo);
   const continueCourses = await getEnrolledCourses(user_id!);
+  const leaderboardData = await getLeaderboardData(user_id);
+  const rankPosition = await getRankByUserId(user_id!);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
@@ -33,7 +34,7 @@ export default async function DashboardHome() {
 
           {/* Stats Overview */}
           <Suspense fallback={<StatsOverviewSkeleton />}>
-            <StatsOverview userInfo={userInfo!} />
+            <StatsOverview userInfo={userInfo!} rankPosition={rankPosition} />
           </Suspense>
 
           {/* Main Grid */}
@@ -58,7 +59,7 @@ export default async function DashboardHome() {
 
               {/* Leaderboard Preview */}
               <Suspense fallback={<LeaderboardPreviewSkeleton />}>
-                <LeaderboardPreview />
+                <LeaderboardPreview leaderboardData={leaderboardData} />
               </Suspense>
             </div>
           </div>
