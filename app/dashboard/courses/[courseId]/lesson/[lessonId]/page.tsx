@@ -2,6 +2,7 @@ import { LessonContent } from "@/app/ui/courses/course-detail/lesson-detail/less
 import { LessonDetailHeader } from "@/app/ui/courses/course-detail/lesson-detail/lesson-header";
 import { LessonNote } from "@/app/ui/courses/course-detail/lesson-detail/lesson-note";
 import { getCourseCurriculum, getLessonDetail, getLessonNote } from "@/app/lib/data/lessons";
+import { getUserCourseRating } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import { CurriculumSection } from "@/app/ui/courses/course-detail/course-curriculum";
@@ -24,6 +25,7 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
 
   const curriculum = await getCourseCurriculum(Number(courseId), userId);
   const initialNoteContent = await getLessonNote(Number(lessonId), userId);
+  const initialRating = await getUserCourseRating(Number(courseId), userId);
 
   const handleCompleteLesson = async () => {
     "use server";
@@ -34,7 +36,7 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       <div className="pt-24">
         {/* Lesson Header */}
-        <LessonDetailHeader lesson={lesson} />
+        <LessonDetailHeader lesson={lesson} initialRating={initialRating} />
 
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">

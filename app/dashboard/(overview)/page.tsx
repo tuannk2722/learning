@@ -35,6 +35,8 @@ export default async function DashboardHome() {
     currentStreak = await getEffectiveStreak(userInfo.current_streak, userInfo.last_study_date);
   }
 
+  // const handleClose = (e) => 
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       <div className="pt-24 pb-12 px-6">

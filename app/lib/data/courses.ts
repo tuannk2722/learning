@@ -221,3 +221,23 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
     throw new Error('Failed to fetch course by ID.');
   }
 }
+
+export async function getUserCourseRating(courseId: number, userId: string): Promise<number | null> {
+  try {
+    const enrollment = await db
+      .select({ rating: schema.enrollments.user_rating })
+      .from(schema.enrollments)
+      .where(
+        and(
+          eq(schema.enrollments.course_id, courseId),
+          eq(schema.enrollments.user_id, userId)
+        )
+      )
+      .limit(1);
+    
+    return enrollment.length > 0 ? enrollment[0].rating : null;
+  } catch (error) {
+    console.error('Database Error:', error);
+    return null;
+  }
+}

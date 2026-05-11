@@ -2,8 +2,9 @@
 import { DetailLesson } from "@/app/lib/definitions/lessons";
 import { ChevronLeft, Clock, Code2, FileText, Play } from "lucide-react";
 import Link from "next/link";
+import { CourseRating } from "../course-rating";
 
-export function LessonDetailHeader({ lesson }: { lesson: DetailLesson }) {
+export function LessonDetailHeader({ lesson, initialRating }: { lesson: DetailLesson, initialRating?: number | null }) {
 
   return (
     <div className="bg-white border-b border-gray-200 top-[73px] z-40">
@@ -48,6 +49,10 @@ export function LessonDetailHeader({ lesson }: { lesson: DetailLesson }) {
             <h1 className="text-3xl font-bold text-gray-900">{lesson.title}</h1>
           </div>
 
+          {/* Rating */}
+          <div className="flex-shrink-0">
+            <CourseRating courseId={lesson.course_id} initialRating={initialRating} />
+          </div>
         </div>
 
         {/* Progress Bar */}

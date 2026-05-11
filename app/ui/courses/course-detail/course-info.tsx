@@ -7,11 +7,14 @@ import { DynamicIcon } from "../../dynamic-icon";
 import { CourseDetail } from "@/app/lib/definitions/courses";
 import { getColorClasses } from "@/app/lib/utils/color-classes";
 
+import { CourseRating } from "./course-rating";
 
 export function CourseInfo({
-  course
+  course,
+  initialRating
 }: {
-  course: CourseDetail
+  course: CourseDetail,
+  initialRating?: number | null
 }) {
   const colorClasses = getColorClasses(course.theme_color);
   const totalLessons = course.total_lessons;
@@ -36,7 +39,13 @@ export function CourseInfo({
             <span className={`px-3 py-1 rounded-full text-xs ${colorClasses.bg} ${colorClasses.text} font-medium inline-block mb-2`}>
               {course.level}
             </span>
-            <h1 className="text-5xl font-bold mb-2">{course.name}</h1>
+            <h1 className="text-5xl font-bold mb-4">{course.name}</h1>
+            
+            {course.is_enrolled && (
+              <div className="flex items-center gap-2 mb-2">
+                <CourseRating courseId={course.id} initialRating={initialRating} />
+              </div>
+            )}
           </div>
         </div>
 

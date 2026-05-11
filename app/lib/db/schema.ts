@@ -82,6 +82,7 @@ export const enrollments = pgTable('enrollments', {
   status: varchar('status', { length: 50 }).default('ACTIVE'),
   enrolled_at: timestamp('enrolled_at').defaultNow(),
   last_accessed_at: timestamp('last_accessed_at'),
+  user_rating: integer('user_rating'),
 }, (t) => ({
   pk: primaryKey({ columns: [t.user_id, t.course_id] }),
 }));
@@ -183,3 +184,4 @@ export const user_daily_quests = pgTable('user_daily_quests', {
   completed_at: timestamp('completed_at'),
   reward_claimed: boolean('reward_claimed').default(false),
 });
+

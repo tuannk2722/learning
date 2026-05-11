@@ -1,9 +1,8 @@
-import Link from "next/link";
 import { CourseInfo } from "@/app/ui/courses/course-detail/course-info";
 import { EnrollmentCard } from "@/app/ui/courses/course-detail/enrollment-card";
 import { CurriculumSection } from "@/app/ui/courses/course-detail/course-curriculum";
 import { auth } from "@/auth";
-import { getCourseById } from "@/app/lib/data/courses";
+import { getCourseById, getUserCourseRating } from "@/app/lib/data/courses";
 import { getCourseCurriculum } from "@/app/lib/data/lessons";
 import { WillLearned } from "@/app/ui/courses/course-detail/will-learned";
 
@@ -21,6 +20,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
 
   const curriculum = await getCourseCurriculum(Number(courseId), userId);
   const listedLessons = curriculum.flatMap(section => section.lessons);
+  const initialRating = userId ? await getUserCourseRating(Number(courseId), userId) : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
@@ -30,7 +30,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Course Info */}
-            <CourseInfo course={course} />
+            <CourseInfo course={course} initialRating={initialRating} />
 
             {/* Enrollment Card */}
             <EnrollmentCard course={course} />

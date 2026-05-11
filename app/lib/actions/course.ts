@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from "../db";
-import { enrollments, sections, lessons, user_lesson_progress } from "../db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { enrollments, sections, lessons, user_lesson_progress, courses } from "../db/schema";
+import { eq, and, asc, sql, isNotNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { evaluateAchievements } from "./achievements";
@@ -97,5 +97,47 @@ export async function updateLastAccessCourse(courseId: number) {
       ));
   } catch (error) {
     console.error('Error updating last access:', error);
+  }
+}
+
+export async function rateCourse(courseId: number, rating: number): Promise<{ success: boolean; message: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, message: 'You must be logged in to rate' };
+    }
+    const userId = session.user.id;
+
+    // 1. Update review in enrollments
+    await db.update(enrollments)
+      .set({ user_rating: rating })
+      .where(and(eq(enrollments.user_id, userId), eq(enrollments.course_id, courseId)));
+
+    // 2. Calculate new average rating and update course
+    const allReviews = await db
+      .select({ rating: enrollments.user_rating })
+      .from(enrollments)
+      .where(and(
+        eq(enrollments.course_id, courseId),
+        isNotNull(enrollments.user_rating)
+      ));
+    
+    if (allReviews.length > 0) {
+      const totalRating = allReviews.reduce((sum, review) => sum + review.rating!, 0);
+      const avgRating = (totalRating / allReviews.length).toFixed(1);
+      
+      await db.update(courses)
+        .set({ 
+          rating: avgRating.toString(),
+          reviews_count: allReviews.length 
+        })
+        .where(eq(courses.id, courseId));
+    }
+
+    revalidatePath(`/dashboard/courses/${courseId}`);
+    return { success: true, message: 'Rating submitted successfully' };
+  } catch (error) {
+    console.error('Error rating course:', error);
+    return { success: false, message: 'Failed to submit rating' };
   }
 }
