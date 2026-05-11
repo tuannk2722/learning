@@ -1,6 +1,7 @@
 /** Kết quả chi tiết cho từng câu hỏi sau khi chấm */
 import { QuestUpdateInfo } from "./quests";
-import type { StreakResult } from "../actions/streak";
+import type { StreakResult } from "../definitions/definitions";
+import type { UnlockedAchievement } from "../actions/achievements";
 
 export interface QuestionResult {
   id: number;
@@ -23,6 +24,7 @@ export interface QuizSubmitResult {
   results: QuestionResult[];
   questUpdates?: QuestUpdateInfo[];
   streakResult?: StreakResult;
+  unlockedAchievements?: UnlockedAchievement[];
 }
 
 /** Tóm tắt 1 lần làm quiz (dùng cho list ở Analytics) */

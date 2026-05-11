@@ -29,12 +29,30 @@ export type AchievementPreview = {
   theme_color: string,
 }
 
+export type UnlockedAchievement = {
+  id: number;
+  title: string;
+  description: string | null;
+  icon_name: string | null;
+  theme_color: string | null;
+  reward_xp: number | null;
+};
+
 export type AnalyticsStats = {
   label: string;
   value: number | string;
   icon: string;
   color: string;
 };
+
+export type StreakResult = {
+  streakUpdated: boolean;
+  currentStreak: number;
+  longestStreak: number;
+  isNewRecord: boolean;
+  isMilestone: boolean;   // Vừa đạt một mốc đặc biệt? (7, 14, 30, 50, 100, 365 ngày)
+  milestoneValue?: number;    // Giá trị mốc đạt được (nếu có)
+}
 
 export type Invoice = {
   id: string;

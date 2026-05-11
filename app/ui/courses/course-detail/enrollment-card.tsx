@@ -7,6 +7,7 @@ import { getColorClasses } from "@/app/lib/utils/color-classes";
 import { enrollInCourse } from "@/app/lib/actions/course";
 import { useState } from "react";
 import { toast } from "sonner";
+import { showAchievementToasts } from "../../achievement/achievement-toast";
 
 export function EnrollmentCard({ course }: { course: CourseDetail }) {
   const colorClasses = getColorClasses(course.theme_color);
@@ -18,6 +19,9 @@ export function EnrollmentCard({ course }: { course: CourseDetail }) {
       const result = await enrollInCourse(course.id);
       if (result.success) {
         toast.success(result.message || 'Successfully enrolled in course!');
+        if (result.unlockedAchievements?.length) {
+          showAchievementToasts(result.unlockedAchievements);
+        }
       } else {
         toast.error(result.message || 'Failed to enroll');
       }

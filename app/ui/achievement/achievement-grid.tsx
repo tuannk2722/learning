@@ -3,6 +3,7 @@ import { Achievement } from '@/app/lib/definitions/definitions';
 import { motion } from 'motion/react';
 import { DynamicIcon } from '../dynamic-icon';
 import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { Zap } from 'lucide-react';
 
 type Props = {
   achievements: Achievement[],
@@ -55,6 +56,9 @@ export function AchievementGrid({ achievements }: Props) {
                   name={achievement.icon}
                   className={`w-8 h-8 ${achievement.unlocked ? text : 'text-gray-400'}`}
                 />
+                <div className="absolute -top-2 -right-2 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+                  {achievement.reward_xp} XP
+                </div>
               </div>
 
               <h3 className="font-medium mb-1">{achievement.title}</h3>
@@ -67,7 +71,7 @@ export function AchievementGrid({ achievements }: Props) {
 
                 {achievement.unlocked && achievement.unlockedDate && (
                   <span className="text-xs text-muted-foreground">
-                    {new Date(achievement.unlockedDate).toLocaleDateString()}
+                    {new Date(achievement.unlockedDate).toLocaleDateString('en-US')}
                   </span>
                 )}
               </div>

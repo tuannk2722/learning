@@ -11,8 +11,9 @@ import 'highlight.js/styles/github-dark.css';
 import { DetailLesson } from "@/app/lib/definitions/lessons";
 import Link from "next/link";
 import { showQuestToasts } from "@/app/ui/quests/quest-toast";
+import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
 import { QuestUpdateInfo } from "@/app/lib/definitions/quests";
-import { StreakResult } from "@/app/lib/actions/streak";
+import { StreakResult, UnlockedAchievement } from "@/app/lib/definitions/definitions";
 
 export function LessonContent({
   lesson,
@@ -24,23 +25,16 @@ export function LessonContent({
   lesson: DetailLesson,
   courseId: string,
   lessonId: string,
-  onComplete: () => Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult }>,
+  onComplete: () => Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult; unlockedAchievements?: UnlockedAchievement[] }>,
   isAlreadyCompleted?: boolean,
 }) {
   const [isCompleted, setIsCompleted] = useState(isAlreadyCompleted);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showXp, setShowXp] = useState(false);
   const [xpAmount, setXpAmount] = useState(0);
-  const [animTarget, setAnimTarget] = useState({ startX: 0, startY: 0, endX: 0 });
 
   const handleComplete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     if (isCompleted || isSubmitting) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const startX = rect.left + rect.width / 2 - 40;
-    const startY = rect.top - 20;
-    const endX = window.innerWidth - 80;
-    setAnimTarget({ startX, startY, endX });
 
     setIsSubmitting(true);
 
@@ -56,10 +50,16 @@ export function LessonContent({
       if (result.xpEarned > 0) {
         setXpAmount(result.xpEarned);
         setShowXp(true);
+        // Hide XP after animation finishes
+        setTimeout(() => setShowXp(false), 1500);
       }
 
       if (result.questUpdates?.length) {
         showQuestToasts(result.questUpdates);
+      }
+
+      if (result.unlockedAchievements?.length) {
+        showAchievementToasts(result.unlockedAchievements);
       }
     } catch {
       setIsSubmitting(false);
@@ -126,68 +126,57 @@ export function LessonContent({
           </p>
         </div>
 
-        {isCompleted ? (
-          <Link
-            href={`/dashboard/courses/${courseId}/lesson/${lessonId}/quiz/`}
-            className="px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 transition-all bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-500/20 hover:scale-105"
-          >
-            <CheckCircle2 className="w-6 h-6" />
-            Take Quiz →
-          </Link>
-        ) : (
-          <button
-            onClick={handleComplete}
-            disabled={isSubmitting}
-            className={`px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 transition-all ${isSubmitting
-              ? "bg-gray-400 text-white cursor-wait"
-              : "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:shadow-xl hover:shadow-violet-500/30 hover:scale-105"
-              }`}
-          >
-            {isSubmitting ? (
-              <>
-                <svg className="animate-spin w-6 h-6" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Submitting...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="w-6 h-6" />
-                Complete & Take a quiz
-              </>
-            )}
-          </button>
-        )}
-      </motion.div>
+        <div className="relative">
+          {isCompleted ? (
+            <Link
+              href={`/dashboard/courses/${courseId}/lesson/${lessonId}/quiz/`}
+              className="px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 transition-all bg-emerald-500 text-white hover:bg-emerald-600 hover:shadow-xl hover:shadow-emerald-500/20 hover:scale-105"
+            >
+              <CheckCircle2 className="w-6 h-6" />
+              Take Quiz →
+            </Link>
+          ) : (
+            <button
+              onClick={handleComplete}
+              disabled={isSubmitting}
+              className={`px-8 py-4 rounded-xl font-bold text-lg flex items-center gap-3 transition-all ${isSubmitting
+                ? "bg-gray-400 text-white cursor-wait"
+                : "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:shadow-xl hover:shadow-violet-500/30 hover:scale-105"
+                }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin w-6 h-6" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-6 h-6" />
+                  Complete & Take a quiz
+                </>
+              )}
+            </button>
+          )}
 
-      {/* Floating XP Animation */}
-      <AnimatePresence>
-        {showXp && (
-          <motion.div
-            initial={{
-              opacity: 0,
-              x: animTarget.startX,
-              y: animTarget.startY,
-              scale: 0.5
-            }}
-            animate={{
-              opacity: [0, 1, 1, 0],
-              x: [animTarget.startX, animTarget.startX, animTarget.endX],
-              y: [animTarget.startY, animTarget.startY - 100, 20],
-              scale: [0.5, 1.5, 1, 0.5]
-            }}
-            transition={{
-              duration: 2,
-              ease: "easeInOut",
-              times: [0, 0.2, 0.8, 1]
-            }}
-            className="fixed top-0 left-0 z-50 font-black text-3xl text-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.8)] pointer-events-none"
-          >
-            +{xpAmount} XP
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Floating XP Animation */}
+          <AnimatePresence>
+            {showXp && (
+              <motion.div
+                initial={{ opacity: 0, y: 0, x: "-50%", left: "50%" }}
+                animate={{ opacity: 1, y: -60 }}
+                exit={{ opacity: 0, y: -100 }}
+                transition={{ duration: 0.5 }}
+                className="absolute top-0 z-50 font-black text-3xl text-amber-500 drop-shadow-[0_0_15px_rgba(245,158,11,0.8)] pointer-events-none whitespace-nowrap"
+              >
+                +{xpAmount} XP
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
 
     </div>
   )

@@ -6,12 +6,14 @@ import { user_lesson_progress, lessons, sections, enrollments, users } from "../
 import { revalidatePath } from "next/cache";
 import { updateQuestProgress } from "./quests";
 import { QuestUpdateInfo } from "../definitions/quests";
-import { updateStreak, StreakResult } from "./streak";
+import { updateStreak } from "./streak";
+import { StreakResult, UnlockedAchievement } from "../definitions/definitions";
+import { evaluateAchievements } from "./achievements";
 
 export async function completeLesson(
   lessonId: string,
   userId: string
-): Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult }> {
+): Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult; unlockedAchievements?: UnlockedAchievement[] }> {
   try {
     // 0. Check if it was already completed to prevent duplicate XP farming
     const existingProgress = await db.select()
@@ -160,9 +162,13 @@ export async function completeLesson(
     }
 
     revalidatePath("/dashboard/courses", "layout");
-    return { success: true, xpEarned, questUpdates, streakResult };
+
+    // Evaluate achievements at the very end
+    const { unlocked } = await evaluateAchievements(userId);
+
+    return { success: true, xpEarned, questUpdates, streakResult, unlockedAchievements: unlocked };
   } catch (error) {
     console.error("Error completing lesson:", error);
-    return { success: false, xpEarned: 0, questUpdates: [] };  
+    return { success: false, xpEarned: 0, questUpdates: [] };
   }
 }

@@ -5,6 +5,7 @@ import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { unstable_update } from "@/auth";
+import { evaluateAchievements } from "./achievements";
 
 export async function updateOnboarding(userId: string, data: {
   name: string;
@@ -29,6 +30,8 @@ export async function updateOnboarding(userId: string, data: {
         is_onboarded: true,
       }
     } as any);
+
+    await evaluateAchievements(userId);
 
     revalidatePath('/onboarding');
     revalidatePath('/dashboard');

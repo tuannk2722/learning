@@ -20,7 +20,6 @@ export function calculateLevel(totalXp: number) {
   };
 }
 
-
 export function getRankName(level: number) {
   if (level >= 50) return "Diamond";
   if (level >= 30) return "Platinum";

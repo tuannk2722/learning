@@ -3,21 +3,7 @@
 import { db } from "../db";
 import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
-
-export interface StreakResult {
-  /** Streak có thực sự tăng lên trong lần gọi này không */
-  streakUpdated: boolean;
-  /** Streak hiện tại SAU khi update */
-  currentStreak: number;
-  /** Kỷ lục dài nhất SAU khi update */
-  longestStreak: number;
-  /** Vừa phá kỷ lục? */
-  isNewRecord: boolean;
-  /** Vừa đạt một mốc đặc biệt? (7, 14, 30, 50, 100, 365 ngày) */
-  isMilestone: boolean;
-  /** Giá trị mốc đạt được (nếu có) */
-  milestoneValue?: number;
-}
+import { StreakResult } from "../definitions/definitions";
 
 // Các mốc streak đặc biệt
 const STREAK_MILESTONES = [7, 14, 30, 50, 100, 365];

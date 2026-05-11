@@ -9,6 +9,7 @@ import QuizFooter from "./quiz-footer";
 import { QuizData } from "@/app/lib/definitions/quizzes";
 import { QuizSubmitResult } from "@/app/lib/definitions/quiz-results";
 import { showQuestToasts } from "@/app/ui/quests/quest-toast";
+import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
 
 export default function QuizContainer({
   quiz,
@@ -40,6 +41,10 @@ export default function QuizContainer({
       if (result.success && result.attemptId) {
         if (result.questUpdates && result.questUpdates.length > 0) {
           showQuestToasts(result.questUpdates);
+        }
+
+        if (result.unlockedAchievements && result.unlockedAchievements.length > 0) {
+          showAchievementToasts(result.unlockedAchievements);
         }
 
         router.push(

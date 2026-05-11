@@ -26,7 +26,7 @@ export default async function Courses() {
           <CourseTitle />
 
           {/* Enrolled Courses */}
-          <div className="mb-12">
+          <div className="-mb-20">
             <h2 className="text-xl mb-4 flex items-center gap-2">
               <BookOpen className="w-5 h-5" />
               Enrolled Courses
@@ -47,27 +47,7 @@ export default async function Courses() {
           </div>
 
           {/* Available Courses */}
-          <CourseListContainer initialCourses={notEnrolledCourses} />
-          {/* <div>
-            <h2 className="text-xl mb-4 flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              Available Courses
-            </h2>
-
-            <Suspense fallback={
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <CourseCardSkeleton />
-                <CourseCardSkeleton />
-                <CourseCardSkeleton />
-              </div>
-            }>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {notEnrolledCourses.map((course, index) => {
-                  return <CourseCardAvailable key={course.id} course={course} index={index} />;
-                })}
-              </div>
-            </Suspense>
-          </div> */}
+          <CourseListContainer initialCourses={notEnrolledCourses} />          
         </div>
       </div>
     )

@@ -16,16 +16,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   const course = await getCourseById(courseId, userId);
 
   if (!course) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Course Not Found</h1>
-          <Link href="/dashboard/courses" className="text-violet-600 hover:text-violet-700">
-            Return to Courses
-          </Link>
-        </div>
-      </div>
-    );
+    return <p>Course Not Found</p>
   }
 
   const curriculum = await getCourseCurriculum(Number(courseId), userId);

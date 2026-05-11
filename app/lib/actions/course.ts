@@ -5,8 +5,14 @@ import { enrollments, sections, lessons, user_lesson_progress } from "../db/sche
 import { eq, and, asc } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { evaluateAchievements } from "./achievements";
+import { UnlockedAchievement } from "../definitions/definitions";
 
-export async function enrollInCourse(courseId: number) {
+export async function enrollInCourse(courseId: number): Promise<{
+  success: boolean;
+  message: string;
+  unlockedAchievements?: UnlockedAchievement[];
+}> {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -67,7 +73,10 @@ export async function enrollInCourse(courseId: number) {
 
     revalidatePath(`/dashboard/courses/${courseId}`);
     revalidatePath(`/dashboard/courses`);
-    return { success: true, message: 'Successfully enrolled' };
+
+    const { unlocked } = await evaluateAchievements(userId);
+
+    return { success: true, message: 'Successfully enrolled', unlockedAchievements: unlocked };
 
   } catch (error) {
     console.error('Error enrolling in course:', error);

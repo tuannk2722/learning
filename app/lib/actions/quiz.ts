@@ -7,7 +7,9 @@ import { QuizSubmitResult, QuestionResult } from "../definitions/quiz-results";
 import { auth } from "@/auth";
 import { updateQuestProgress } from "./quests";
 import { QuestUpdateInfo } from "../definitions/quests";
-import { updateStreak, StreakResult } from "./streak";
+import { updateStreak } from "./streak";
+import { StreakResult } from "../definitions/definitions";
+import { evaluateAchievements } from "./achievements";
 
 export async function submitQuiz(
   lessonId: string,
@@ -137,6 +139,8 @@ export async function submitQuiz(
       attemptId = attempt[0].id;
     }
 
+    const { unlocked } = await evaluateAchievements(userId || "");
+
     return {
       success: true,
       attemptId,
@@ -148,6 +152,7 @@ export async function submitQuiz(
       results,
       questUpdates,
       streakResult,
+      unlockedAchievements: unlocked,
     };
   } catch (error) {
     console.error("Error submitting quiz:", error);
