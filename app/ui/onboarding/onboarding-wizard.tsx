@@ -99,6 +99,7 @@ export function OnboardingWizard({ user }: { user: any }) {
             <AvatarStep
               avatarUrl={formData.avatarUrl}
               setAvatarUrl={(url) => setFormData({ ...formData, avatarUrl: url })}
+              nickname={formData.nickname}
               onBack={() => setStep(1)}
               onFinish={handleUpdateProfile}
               isLoading={isLoading}

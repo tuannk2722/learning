@@ -12,21 +12,21 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
   const userId = session?.user?.id;
   const { courseId, lessonId } = await props.params;
 
+  if (!userId) {
+    return notFound();
+  }
+
   const lesson = await getLessonDetail(Number(lessonId), userId);
-  console.log(lesson);
 
   if (!lesson) {
     return notFound();
   }
 
   const curriculum = await getCourseCurriculum(Number(courseId), userId);
-  // console.log(curriculum);
-
-  const initialNoteContent = userId ? await getLessonNote(Number(lessonId), userId) : null;
+  const initialNoteContent = await getLessonNote(Number(lessonId), userId);
 
   const handleCompleteLesson = async () => {
     "use server";
-    if (!userId) return { success: false, xpEarned: 0 };
     return await completeLesson(lessonId, userId);
   }
 

@@ -3,11 +3,12 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Search } from "lucide-react";
-import { CourseFilters } from "./courses-filter";
+import { LevelFilter } from "./level-filter";
 import { CourseGrid } from "./courseGrid";
-import { Courses } from "@/app/lib/definitions/courses";
+import { Course } from "@/app/lib/definitions/courses";
 
-export function CourseListContainer({ initialCourses }: { initialCourses: Courses[] }) {
+
+export function CourseListContainer({ initialCourses }: { initialCourses: Course[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
 
@@ -21,9 +22,9 @@ export function CourseListContainer({ initialCourses }: { initialCourses: Course
 
   return (
     <>
-      <section className="pt-32 pb-12 px-6">
+      <section className="pb-12 px-6">
         <div className="max-w-7xl mx-auto text-center">
-          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-5xl font-bold mb-4">
+          <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-3xl font-bold mb-4 pt-32">
             Discover <span className="text-violet-600">New Challenges</span>
           </motion.h1>
           <div className="max-w-2xl mx-auto relative mt-8">
@@ -39,7 +40,7 @@ export function CourseListContainer({ initialCourses }: { initialCourses: Course
         </div>
       </section>
 
-      <CourseFilters
+      <LevelFilter
         selectedLevel={selectedLevel} setSelectedLevel={setSelectedLevel}
       />
 

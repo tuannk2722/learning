@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { DynamicIcon } from '../dynamic-icon';
 import { CourseListing } from '@/app/lib/definitions/courses';
 import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { updateLastAccessCourse } from '@/app/lib/actions/course';
 
 interface Props {
   course: CourseListing;
@@ -57,6 +58,7 @@ export const CourseCardEnrolled = ({ course, index }: Props) => {
       >
         <Link
           href={`/dashboard/courses/${course.id}`}
+          onClick={() => updateLastAccessCourse(course.id)}
           className="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors"
         >
           <Play className="w-4 h-4 fill-current" />

@@ -1,7 +1,7 @@
 import QuizResultsContainer from "@/app/ui/courses/course-detail/lesson-detail/quiz-detail/result-detail/result-container";
-import { getAttemptById } from "@/app/lib/data/quiz-history";
 import { getNextLessonId } from "@/app/lib/data/lessons";
 import { notFound } from "next/navigation";
+import { getAttemptById } from "@/app/lib/data/quiz";
 
 type Params = Promise<{ courseId: string; lessonId: string; attemptId: string }>;
 

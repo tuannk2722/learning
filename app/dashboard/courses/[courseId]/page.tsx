@@ -14,7 +14,6 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   const params = await props.params;
   const courseId = params.courseId.toString();
   const course = await getCourseById(courseId, userId);
-  // console.log(course);
 
   if (!course) {
     return (
@@ -30,10 +29,7 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
   }
 
   const curriculum = await getCourseCurriculum(Number(courseId), userId);
-  // console.log(curriculum);
-
   const listedLessons = curriculum.flatMap(section => section.lessons);
-  // console.log(listedLessons);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">

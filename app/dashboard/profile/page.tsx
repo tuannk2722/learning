@@ -1,18 +1,20 @@
 import { ProfileTitle } from '@/app/ui/profile/title';
 import { ProfileHeader } from '@/app/ui/profile/header';
-import { ProfileStatsGrid } from '@/app/ui/profile/stats-grid';
 import { ProfileSetting } from '@/app/ui/profile/setting';
 import { Suspense } from 'react';
-import { ProfileHeaderSkeleton, ProfileStatsGridSkeleton, ProfileSettingSkeleton } from '@/app/ui/skeletons';
+import { ProfileHeaderSkeleton, ProfileSettingSkeleton } from '@/app/ui/skeletons';
+import { auth } from "@/auth";
+import { getUserById } from "@/app/lib/data/users";
 
-export default function Profile() {
-  const userInfo = {
-    name: 'You',
-    email: 'student@studyhub.com',
-    joinDate: '2026-01-15',
-    location: 'San Francisco, CA',
-    bio: 'Passionate learner exploring mathematics, physics, and chemistry. Always curious about the world around us.',
-  };
+export default async function Profile() {
+  const session = await auth();
+  const user_id = session?.user?.id;
+
+  const userInfo = await getUserById(user_id!);
+
+  if (!userInfo) {
+    return <div>Error loading user data</div>;
+  }
 
   return (
     <div className="p-6">
@@ -23,11 +25,6 @@ export default function Profile() {
         {/* Profile Header */}
         <Suspense fallback={<ProfileHeaderSkeleton />}>
           <ProfileHeader userInfo={userInfo} />
-        </Suspense>
-
-        {/* Stats Grid */}
-        <Suspense fallback={<ProfileStatsGridSkeleton />}>
-          <ProfileStatsGrid />
         </Suspense>
 
         {/* Settings Section */}

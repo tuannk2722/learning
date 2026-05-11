@@ -5,11 +5,10 @@ import * as schema from "../db/schema";
 import { eq, asc, sql } from "drizzle-orm";
 import { QuizSubmitResult, QuestionResult } from "../definitions/quiz-results";
 import { auth } from "@/auth";
+import { updateQuestProgress } from "./quests";
+import { QuestUpdateInfo } from "../definitions/quests";
+import { updateStreak, StreakResult } from "./streak";
 
-/**
- * Server Action: Nhận đáp án từ client, so khớp với DB, tính điểm và trả kết quả chi tiết.
- * Đáp án đúng KHÔNG BAO GIỜ được gửi tới client trước khi submit.
- */
 export async function submitQuiz(
   lessonId: string,
   answers: { [questionIndex: number]: string | number }
@@ -100,10 +99,26 @@ export async function submitQuiz(
     const xpEarned = passed ? fullXp : Math.round(fullXp * (percentage / 100));
 
     // 5. Cộng XP cho user nếu đăng nhập
+    const questUpdates: QuestUpdateInfo[] = [];
+    let streakResult: StreakResult | undefined;
+
     if (userId && xpEarned > 0) {
       await db.execute(
         sql`UPDATE users SET total_xp = COALESCE(total_xp, 0) + ${xpEarned} WHERE id = ${userId}`
       );
+
+      // Cập nhật streak (quiz nộp bài = có học)
+      streakResult = await updateStreak(userId);
+
+      // Cập nhật tiến độ quest: kiếm XP
+      const res1 = await updateQuestProgress('EARN_XP', xpEarned, userId);
+      questUpdates.push(...res1.questUpdates);
+    }
+
+    // Cập nhật tiến độ quest: vượt qua quiz
+    if (userId && passed) {
+      const res2 = await updateQuestProgress('PASS_QUIZ', 1, userId);
+      questUpdates.push(...res2.questUpdates);
     }
 
     // 6. Lưu lịch sử làm quiz vào DB
@@ -131,6 +146,8 @@ export async function submitQuiz(
       xpEarned,
       passingScore,
       results,
+      questUpdates,
+      streakResult,
     };
   } catch (error) {
     console.error("Error submitting quiz:", error);

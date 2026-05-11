@@ -9,9 +9,10 @@ import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 
 import { DetailLesson } from "@/app/lib/definitions/lessons";
-import { useRouter } from "next/navigation";
-import { triggerConfetti } from "@/app/lib/utils/confetti";
 import Link from "next/link";
+import { showQuestToasts } from "@/app/ui/quests/quest-toast";
+import { QuestUpdateInfo } from "@/app/lib/definitions/quests";
+import { StreakResult } from "@/app/lib/actions/streak";
 
 export function LessonContent({
   lesson,
@@ -23,10 +24,9 @@ export function LessonContent({
   lesson: DetailLesson,
   courseId: string,
   lessonId: string,
-  onComplete: () => Promise<{ success: boolean; xpEarned: number }>,
+  onComplete: () => Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult }>,
   isAlreadyCompleted?: boolean,
 }) {
-  const router = useRouter();
   const [isCompleted, setIsCompleted] = useState(isAlreadyCompleted);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showXp, setShowXp] = useState(false);
@@ -47,15 +47,19 @@ export function LessonContent({
     try {
       const result = await onComplete();
 
-      if (result?.success) {
-        setIsCompleted(true);
-
-        if (result.xpEarned > 0) {
-          setXpAmount(result.xpEarned);
-          setShowXp(true);
-        }
-      } else {
+      if (!result?.success) {
         setIsSubmitting(false);
+        return;
+      }
+
+      setIsCompleted(true);
+      if (result.xpEarned > 0) {
+        setXpAmount(result.xpEarned);
+        setShowXp(true);
+      }
+
+      if (result.questUpdates?.length) {
+        showQuestToasts(result.questUpdates);
       }
     } catch {
       setIsSubmitting(false);

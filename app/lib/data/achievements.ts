@@ -1,7 +1,7 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, and } from "drizzle-orm";
-import { Achievement } from "../definitions/definitions";
+import { eq, and, desc } from "drizzle-orm";
+import { Achievement, AchievementPreview } from "../definitions/definitions";
 
 export async function getAchievements(userId?: string): Promise<Achievement[]> {
   try {
@@ -53,6 +53,43 @@ export async function getAchievements(userId?: string): Promise<Achievement[]> {
     return achievementsList;
   } catch (error) {
     console.error("Error fetching achievements:", error);
+    return [];
+  }
+}
+
+export async function getRecentAchievements(userId?: string): Promise<AchievementPreview[]> {
+  try {
+    const queryResult = await db
+      .select({
+        achievement: schema.achievements,
+        unlocked_at: schema.user_achievements.unlocked_at,
+      })
+      .from(schema.achievements)
+      .innerJoin(
+        schema.user_achievements,
+        and(
+          eq(schema.achievements.id, schema.user_achievements.achievement_id),
+          eq(schema.user_achievements.user_id, userId!)
+        )
+      )
+      .orderBy(desc(schema.user_achievements.unlocked_at))
+      .limit(3);
+
+    const achievementsList: AchievementPreview[] = queryResult.map((row) => {
+      const ach = row.achievement;
+
+      return {
+        id: ach.id,
+        icon: ach.icon_name || 'Trophy',
+        title: ach.title,
+        description: ach.description || '',
+        theme_color: ach.theme_color || 'gray',
+      };
+    });
+
+    return achievementsList;
+  } catch (error) {
+    console.error("Error fetching recent achievements:", error);
     return [];
   }
 }

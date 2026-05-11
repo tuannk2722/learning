@@ -2,7 +2,7 @@
 import { Eye, EyeOff, Lock, Mail, Trophy } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { useActionState, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ButtonFacebook, ButtonGoogle } from '../button';
 import { useSearchParams } from 'next/navigation';
 import { authenticate } from '@/app/lib/actions/auth';
@@ -11,19 +11,30 @@ import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 export function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
-  const [errorMessage, formAction, isPending] = useActionState(authenticate, undefined);
-  const [mounted, setMounted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
+  const [isPending, setIsPending] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsPending(true);
+    setErrorMessage(undefined);
 
-  if (!mounted) {
-    return <div className="bg-white rounded-3xl p-8 lg:p-12 shadow-2xl min-h-[500px]" />;
-  }
+    const formData = new FormData(e.currentTarget);
+    const result = await authenticate(undefined, formData);
+
+    if (result) {
+      // Có lỗi trả về → hiển thị lỗi
+      setErrorMessage(result);
+      setIsPending(false);
+    } else {
+      // Thành công → force hard reload để đảm bảo cookie được đồng bộ
+      // trước khi bất kỳ Server Action nào được gọi (tránh lỗi onboarding)
+      window.location.href = callbackUrl;
+    }
+  };
 
   return (
     <motion.div
@@ -51,7 +62,7 @@ export function LoginForm() {
         </Link>
       </p>
 
-      <form action={formAction} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Email
@@ -105,12 +116,11 @@ export function LoginForm() {
           </Link>
         </div>
 
-        <input type="hidden" name="redirectTo" value={callbackUrl} />
         <button
           type="submit"
-          className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-105"
-          aria-disabled={isPending}>
-          Log in
+          disabled={isPending}
+          className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100">
+          {isPending ? 'Logging in...' : 'Log in'}
         </button>
         <div
           className="flex h-8 items-end space-x-1"

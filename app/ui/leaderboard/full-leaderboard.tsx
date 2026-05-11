@@ -1,7 +1,7 @@
 'use client';
 
 import { LeaderboardEntry } from "@/app/lib/definitions/definitions";
-import { Crown, Medal, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { Crown, Flame, Medal, Zap } from "lucide-react";
 import { motion } from "motion/react";
 
 type FullLeaderboardProps = {
@@ -15,12 +15,6 @@ export function FullLeaderboard({ leaderboardData }: FullLeaderboardProps) {
     if (rank === 2) return <Medal className="w-6 h-6 text-gray-400" />;
     if (rank === 3) return <Medal className="w-6 h-6 text-orange-600" />;
     return null;
-  };
-
-  const getTrendIcon = (trend: string) => {
-    if (trend === 'up') return <TrendingUp className="w-4 h-4 text-green-500" />;
-    if (trend === 'down') return <TrendingDown className="w-4 h-4 text-red-500" />;
-    return <Minus className="w-4 h-4 text-gray-400" />;
   };
 
   return (
@@ -67,10 +61,13 @@ export function FullLeaderboard({ leaderboardData }: FullLeaderboardProps) {
           </div>
 
           <div className="col-span-2">{user.level}</div>
-          <div className="col-span-2 font-medium">{user.xp.toLocaleString('en-US')}</div>
+          <div className="col-span-2 font-medium flex items-center gap-2">
+            <Zap className="w-5 h-5 text-yellow-500" />
+            {user.xp.toLocaleString('en-US')}
+          </div>
           <div className="col-span-2 flex items-center gap-2">
+            <Flame className="w-4 h-4 text-orange-500" />
             <span>{user.streak} days</span>
-            {getTrendIcon(user.trend)}
           </div>
         </motion.div>
       ))}

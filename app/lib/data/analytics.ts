@@ -1,57 +1,115 @@
 import { db } from "../db";
-import { quiz_attempts, user_lesson_progress, lessons, courses, categories, sections } from "../db/schema";
+import { quiz_attempts, user_lesson_progress, lessons, user_daily_quests, daily_quest_definitions, user_achievements, achievements } from "../db/schema";
 import { eq, and, sql } from "drizzle-orm";
 
-export async function getOverviewStats(userId: string) {
-  try {
-    // 1. XP Earned this week
-    // XP từ quiz
-    const quizXpResult = await db.select({ xp: sql<number>`sum(${quiz_attempts.xp_earned})` })
+
+function generateLast7Days() {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dates = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.push({
+      dayName: days[d.getDay()],
+      dateString: d.toISOString().split('T')[0]
+    });
+  }
+  return dates;
+}
+
+async function fetchWeeklyXpSources(userId: string) {
+  const [quiz, lesson, dailyQuest, achievement] = await Promise.all([
+    // Quizzes XP
+    db.select({
+      date: sql<string>`DATE(${quiz_attempts.completed_at})`,
+      xp: sql<number>`sum(${quiz_attempts.xp_earned})`
+    })
       .from(quiz_attempts)
       .where(and(
         eq(quiz_attempts.user_id, userId),
-        sql`${quiz_attempts.completed_at} >= NOW() - INTERVAL '7 days'`
-      ));
+        sql`${quiz_attempts.completed_at} >= CURRENT_DATE - INTERVAL '6 days'`
+      ))
+      .groupBy(sql`DATE(${quiz_attempts.completed_at})`),
 
-    // XP từ bài học
-    const lessonXpResult = await db.select({ xp: sql<number>`sum(${lessons.xp_reward})` })
+    // Lessons XP
+    db.select({
+      date: sql<string>`DATE(${user_lesson_progress.completed_at})`,
+      xp: sql<number>`sum(${lessons.xp_reward})`
+    })
       .from(user_lesson_progress)
       .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
       .where(and(
         eq(user_lesson_progress.user_id, userId),
         eq(user_lesson_progress.status, 'completed'),
-        sql`${user_lesson_progress.completed_at} >= NOW() - INTERVAL '7 days'`
-      ));
+        sql`${user_lesson_progress.completed_at} >= CURRENT_DATE - INTERVAL '6 days'`
+      ))
+      .groupBy(sql`DATE(${user_lesson_progress.completed_at})`),
 
-    // TODO: Add XP from Daily Quests when implemented
-    const weeklyXp = (Number(quizXpResult[0]?.xp) || 0) + (Number(lessonXpResult[0]?.xp) || 0);
-
-    // 2. Lessons Learned
-    const lessonsResult = await db.select({ count: sql<number>`count(*)` })
-      .from(user_lesson_progress)
+    // Daily Quests XP
+    db.select({
+      date: sql<string>`DATE(${user_daily_quests.completed_at})`,
+      xp: sql<number>`sum(${daily_quest_definitions.reward_xp})`
+    })
+      .from(user_daily_quests)
+      .innerJoin(daily_quest_definitions, eq(user_daily_quests.quest_id, daily_quest_definitions.id))
       .where(and(
-        eq(user_lesson_progress.user_id, userId),
-        eq(user_lesson_progress.status, 'completed')
-      ));
+        eq(user_daily_quests.user_id, userId),
+        eq(user_daily_quests.is_completed, true),
+        sql`${user_daily_quests.completed_at} >= CURRENT_DATE - INTERVAL '6 days'`
+      ))
+      .groupBy(sql`DATE(${user_daily_quests.completed_at})`),
+
+    // Achievements XP
+    db.select({
+      date: sql<string>`DATE(${user_achievements.unlocked_at})`,
+      xp: sql<number>`sum(${achievements.reward_xp})`
+    })
+      .from(user_achievements)
+      .innerJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
+      .where(and(
+        eq(user_achievements.user_id, userId),
+        sql`${user_achievements.unlocked_at} >= CURRENT_DATE - INTERVAL '6 days'`
+      ))
+      .groupBy(sql`DATE(${user_achievements.unlocked_at})`)
+  ]);
+
+  return { quiz, lesson, dailyQuest, achievement };
+}
+
+export async function getOverviewStats(userId: string) {
+  try {
+    const [weeklyXpSources, lessonsResult, timeResult, scoreResult] = await Promise.all([
+      fetchWeeklyXpSources(userId),
+      db.select({ count: sql<number>`count(*)` })
+        .from(user_lesson_progress)
+        .where(and(
+          eq(user_lesson_progress.user_id, userId),
+          eq(user_lesson_progress.status, 'completed')
+        )),
+      db.select({ minutes: sql<number>`sum(${lessons.duration_minutes})` })
+        .from(user_lesson_progress)
+        .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
+        .where(and(
+          eq(user_lesson_progress.user_id, userId),
+          eq(user_lesson_progress.status, 'completed')
+        )),
+      db.select({ avg: sql<number>`avg(cast(${quiz_attempts.score} as float) / ${quiz_attempts.total} * 100)` })
+        .from(quiz_attempts)
+        .where(eq(quiz_attempts.user_id, userId))
+    ]);
+
+    // 1. Tính tổng XP trong tuần từ các nguồn
+    const sumXp = (arr: { xp: number }[]) => arr.reduce((sum, r) => sum + Number(r.xp || 0), 0);
+    const weeklyXp =
+      sumXp(weeklyXpSources.quiz) +
+      sumXp(weeklyXpSources.lesson) +
+      sumXp(weeklyXpSources.dailyQuest) +
+      sumXp(weeklyXpSources.achievement);
+
+    // 2-4. Các số liệu khác
     const lessonsCount = Number(lessonsResult[0]?.count) || 0;
-
-    // 3. Study Time (Total hours)
-    const timeResult = await db.select({ minutes: sql<number>`sum(${lessons.duration_minutes})` })
-      .from(user_lesson_progress)
-      .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
-      .where(and(
-        eq(user_lesson_progress.user_id, userId),
-        eq(user_lesson_progress.status, 'completed')
-      ));
     const totalMinutes = Number(timeResult[0]?.minutes) || 0;
     const studyHours = (totalMinutes / 60).toFixed(1);
-
-    // 4. Average Score
-    const scoreResult = await db.select({
-      avg: sql<number>`avg(cast(${quiz_attempts.score} as float) / ${quiz_attempts.total} * 100)`
-    })
-      .from(quiz_attempts)
-      .where(eq(quiz_attempts.user_id, userId));
     const avgScore = Math.round(Number(scoreResult[0]?.avg) || 0);
 
     return [
@@ -82,25 +140,13 @@ export async function getWeeklyActivity(userId: string) {
       ))
       .groupBy(sql`DATE(${user_lesson_progress.completed_at})`);
 
-    // Tạo mảng 7 ngày gần nhất
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const result = [];
-
-    // Khởi tạo mảng với 0 giờ
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dayName = days[d.getDay()];
-      const dateString = d.toISOString().split('T')[0]; // YYYY-MM-DD
-
+    for (const { dayName, dateString } of generateLast7Days()) {
       const found = activityResult.find(r => r.date === dateString);
-      const hours = found ? Number((Number(found.minutes) / 60).toFixed(1)) : 0;
-      const lessonsCount = found ? Number(found.lessonsCount) : 0;
-
       result.push({
         day: dayName,
-        hours: hours,
-        lessons: lessonsCount,
+        hours: found ? Number((Number(found.minutes) / 60).toFixed(1)) : 0,
+        lessons: found ? Number(found.lessonsCount) : 0,
         date: dateString
       });
     }
@@ -112,88 +158,20 @@ export async function getWeeklyActivity(userId: string) {
   }
 }
 
-export async function getSubjectBreakdown(userId: string) {
-  try {
-    const breakdownResult = await db.select({
-      subject: categories.name,
-      color: courses.theme_color,
-      minutes: sql<number>`sum(${lessons.duration_minutes})`
-    })
-      .from(user_lesson_progress)
-      .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
-      .innerJoin(sections, eq(lessons.section_id, sections.id))
-      .innerJoin(courses, eq(sections.course_id, courses.id))
-      .innerJoin(categories, eq(courses.category_id, categories.id))
-      .where(and(
-        eq(user_lesson_progress.user_id, userId),
-        eq(user_lesson_progress.status, 'completed')
-      ))
-      .groupBy(categories.id, courses.theme_color);
-
-    const totalMinutes = breakdownResult.reduce((sum, r) => sum + Number(r.minutes), 0);
-
-    return breakdownResult.map(r => {
-      const hours = Math.round(Number(r.minutes) / 60);
-      const percentage = totalMinutes > 0 ? Math.round((Number(r.minutes) / totalMinutes) * 100) : 0;
-
-      return {
-        subject: r.subject,
-        percentage,
-        color: `bg-${r.color}-500`,
-        hours
-      };
-    }).sort((a, b) => b.percentage - a.percentage);
-
-  } catch (error) {
-    console.error('Failed to fetch subject breakdown:', error);
-    return [];
-  }
-}
-
 export async function getWeeklyXP(userId: string) {
   try {
-    // Lấy XP từ quizzes trong 7 ngày
-    const quizXpResult = await db.select({
-      date: sql<string>`DATE(${quiz_attempts.completed_at})`,
-      xp: sql<number>`sum(${quiz_attempts.xp_earned})`
-    })
-      .from(quiz_attempts)
-      .where(and(
-        eq(quiz_attempts.user_id, userId),
-        sql`${quiz_attempts.completed_at} >= CURRENT_DATE - INTERVAL '6 days'`
-      ))
-      .groupBy(sql`DATE(${quiz_attempts.completed_at})`);
+    const { quiz, lesson, dailyQuest, achievement } = await fetchWeeklyXpSources(userId);
 
-    // Lấy XP từ lessons trong 7 ngày
-    const lessonXpResult = await db.select({
-      date: sql<string>`DATE(${user_lesson_progress.completed_at})`,
-      xp: sql<number>`sum(${lessons.xp_reward})`
-    })
-      .from(user_lesson_progress)
-      .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
-      .where(and(
-        eq(user_lesson_progress.user_id, userId),
-        eq(user_lesson_progress.status, 'completed'),
-        sql`${user_lesson_progress.completed_at} >= CURRENT_DATE - INTERVAL '6 days'`
-      ))
-      .groupBy(sql`DATE(${user_lesson_progress.completed_at})`);
-
-    // Gộp kết quả
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const result = [];
-
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const dayName = days[d.getDay()];
-      const dateString = d.toISOString().split('T')[0];
-
-      const quizXp = quizXpResult.find(r => r.date === dateString)?.xp || 0;
-      const lessonXp = lessonXpResult.find(r => r.date === dateString)?.xp || 0;
+    for (const { dayName, dateString } of generateLast7Days()) {
+      const quizXp = quiz.find(r => r.date === dateString)?.xp || 0;
+      const lessonXp = lesson.find(r => r.date === dateString)?.xp || 0;
+      const dailyQuestXp = dailyQuest.find(r => r.date === dateString)?.xp || 0;
+      const achievementXp = achievement.find(r => r.date === dateString)?.xp || 0;
 
       result.push({
         day: dayName,
-        xp: Number(quizXp) + Number(lessonXp)
+        xp: Number(quizXp) + Number(lessonXp) + Number(dailyQuestXp) + Number(achievementXp)
       });
     }
 

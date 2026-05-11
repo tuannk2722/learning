@@ -3,9 +3,9 @@ import { AnalyticsWeeklyXP } from '@/app/ui/analytics/analytics-weekly-xp';
 import { AnalyticsTitle } from '@/app/ui/analytics/title';
 import { AnalyticsWeeklyActivity } from '@/app/ui/analytics/weekly-activity';
 import { QuizHistorySection } from '@/app/ui/analytics/quiz-history-section';
-import { getQuizHistory } from '@/app/lib/data/quiz-history';
 import { getOverviewStats, getWeeklyActivity, getWeeklyXP } from '@/app/lib/data/analytics';
 import { auth } from '@/auth';
+import { getQuizHistory } from '@/app/lib/data/quiz';
 
 export default async function Analytics() {
   const session = await auth();

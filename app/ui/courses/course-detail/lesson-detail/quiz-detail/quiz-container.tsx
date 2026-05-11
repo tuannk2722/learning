@@ -8,6 +8,7 @@ import QuizHeader from "./quiz-header";
 import QuizFooter from "./quiz-footer";
 import { QuizData } from "@/app/lib/definitions/quizzes";
 import { QuizSubmitResult } from "@/app/lib/definitions/quiz-results";
+import { showQuestToasts } from "@/app/ui/quests/quest-toast";
 
 export default function QuizContainer({
   quiz,
@@ -37,6 +38,10 @@ export default function QuizContainer({
       const result = await onSubmit(selectedAnswers);
 
       if (result.success && result.attemptId) {
+        if (result.questUpdates && result.questUpdates.length > 0) {
+          showQuestToasts(result.questUpdates);
+        }
+
         router.push(
           `/dashboard/courses/${courseId}/lesson/${lessonId}/quiz/result/${result.attemptId}`
         );

@@ -50,31 +50,31 @@ export async function fetchAllCourses() {
   }
 }
 
-export async function fetchPopularCourses() {
-  try {
-    const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
-    const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
+// export async function fetchPopularCourses() {
+//   try {
+//     const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
+//     const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
 
-    const data = await db
-      .select({
-        ...getTableColumns(schema.courses),
-        category_name: schema.categories.name,
-        total_lessons: totalLessons,
-        enrolled_count: enrolledCount,
-      })
-      .from(schema.courses)
-      .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
-      .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
-      .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
-      .orderBy(desc(enrolledCount))
-      .limit(3);
+//     const data = await db
+//       .select({
+//         ...getTableColumns(schema.courses),
+//         category_name: schema.categories.name,
+//         total_lessons: totalLessons,
+//         enrolled_count: enrolledCount,
+//       })
+//       .from(schema.courses)
+//       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
+//       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
+//       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
+//       .orderBy(desc(enrolledCount))
+//       .limit(3);
 
-    return data as any as CourseListing[];
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch popular courses [DRIZZLE_FIX].');
-  }
-}
+//     return data as any as CourseListing[];
+//   } catch (error) {
+//     console.error('Database Error:', error);
+//     throw new Error('Failed to fetch popular courses [DRIZZLE_FIX].');
+//   }
+// }
 
 export async function getEnrolledCourses(userId: string) {
   try {
@@ -99,7 +99,8 @@ export async function getEnrolledCourses(userId: string) {
       .from(schema.courses)
       .innerJoin(schema.enrollments, eq(schema.courses.id, schema.enrollments.course_id))
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
-      .where(eq(schema.enrollments.user_id, userId));
+      .where(eq(schema.enrollments.user_id, userId))
+      .orderBy(desc(schema.enrollments.last_accessed_at));
 
     return data as any as CourseListing[];
   } catch (error) {
@@ -129,7 +130,8 @@ export async function getNotEnrolledCourses(userId: string) {
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
-      .where(notInArray(schema.courses.id, userEnrollments));
+      .where(notInArray(schema.courses.id, userEnrollments))
+      .orderBy(desc(enrolledCount));
 
     return data as any as CourseListing[];
   } catch (error) {

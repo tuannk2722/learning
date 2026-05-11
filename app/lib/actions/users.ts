@@ -22,7 +22,7 @@ export async function updateOnboarding(userId: string, data: {
         is_onboarded: true,
       })
       .where(eq(users.id, userId));
-    
+
     // Update the session token
     await unstable_update({
       user: {
@@ -35,6 +35,30 @@ export async function updateOnboarding(userId: string, data: {
     return { success: true };
   } catch (error) {
     console.error('Failed to update onboarding:', error);
+    return { success: false, error: 'Failed to update profile.' };
+  }
+}
+
+export async function updateUserProfile(userId: string, data: {
+  name: string;
+  bio: string | null;
+  location: string | null;
+  avatar_url: string | null;
+}) {
+  try {
+    await db.update(users)
+      .set({
+        name: data.name,
+        bio: data.bio,
+        location: data.location,
+        avatar_url: data.avatar_url,
+      })
+      .where(eq(users.id, userId));
+
+    revalidatePath('/dashboard/profile');
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to update user profile:', error);
     return { success: false, error: 'Failed to update profile.' };
   }
 }

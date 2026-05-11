@@ -7,6 +7,7 @@ import { Suspense } from 'react';
 import { CourseCardSkeleton } from '@/app/ui/skeletons';
 import { auth } from '@/auth';
 import { getEnrolledCourses, getNotEnrolledCourses } from '@/app/lib/data/courses';
+import { CourseListContainer } from '@/app/ui/courses/list-container';
 
 export default async function Courses() {
   const session = await auth();
@@ -46,7 +47,8 @@ export default async function Courses() {
           </div>
 
           {/* Available Courses */}
-          <div>
+          <CourseListContainer initialCourses={notEnrolledCourses} />
+          {/* <div>
             <h2 className="text-xl mb-4 flex items-center gap-2">
               <Lock className="w-5 h-5" />
               Available Courses
@@ -65,7 +67,7 @@ export default async function Courses() {
                 })}
               </div>
             </Suspense>
-          </div>
+          </div> */}
         </div>
       </div>
     )

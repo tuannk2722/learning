@@ -1,7 +1,8 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, desc } from "drizzle-orm";
 import { QuestionType, QuizData } from "../definitions/quizzes";
+import { QuizAttemptSummary, QuizAttemptDetail, QuestionResult } from "../definitions/quiz-results";
 
 /**
  * Lấy quiz và danh sách questions thuộc một lesson cụ thể.
@@ -52,5 +53,92 @@ export async function getQuizByLessonId(lessonId: number): Promise<QuizData | nu
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch quiz data.");
+  }
+}
+
+/**
+ * Lấy toàn bộ lịch sử làm quiz của user (cho trang Analytics).
+ * Join qua quizzes → lessons → sections để lấy tên quiz, lesson, courseId.
+ */
+export async function getQuizHistory(userId: string): Promise<QuizAttemptSummary[]> {
+  try {
+    const data = await db
+      .select({
+        id: schema.quiz_attempts.id,
+        score: schema.quiz_attempts.score,
+        total: schema.quiz_attempts.total,
+        passed: schema.quiz_attempts.passed,
+        xpEarned: schema.quiz_attempts.xp_earned,
+        completedAt: schema.quiz_attempts.completed_at,
+        quizTitle: schema.quizzes.title,
+        lessonTitle: schema.lessons.title,
+        lessonId: schema.lessons.id,
+        courseId: schema.sections.course_id,
+      })
+      .from(schema.quiz_attempts)
+      .innerJoin(schema.quizzes, eq(schema.quiz_attempts.quiz_id, schema.quizzes.id))
+      .innerJoin(schema.lessons, eq(schema.quizzes.lesson_id, schema.lessons.id))
+      .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
+      .where(eq(schema.quiz_attempts.user_id, userId))
+      .orderBy(desc(schema.quiz_attempts.completed_at));
+
+    return data.map((row) => ({
+      id: row.id,
+      quizTitle: row.quizTitle,
+      lessonTitle: row.lessonTitle,
+      courseId: row.courseId || 0,
+      lessonId: row.lessonId,
+      score: row.score,
+      total: row.total,
+      passed: row.passed,
+      xpEarned: row.xpEarned || 0,
+      completedAt: row.completedAt?.toISOString() || "",
+    }));
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch quiz history.");
+  }
+}
+
+/**
+ * Lấy chi tiết 1 lần làm quiz (cho trang result/[attemptId]).
+ * Trả về null nếu không tìm thấy.
+ */
+export async function getAttemptById(attemptId: number): Promise<QuizAttemptDetail | null> {
+  try {
+    const data = await db
+      .select({
+        id: schema.quiz_attempts.id,
+        score: schema.quiz_attempts.score,
+        total: schema.quiz_attempts.total,
+        passed: schema.quiz_attempts.passed,
+        xpEarned: schema.quiz_attempts.xp_earned,
+        answers: schema.quiz_attempts.answers,
+        completedAt: schema.quiz_attempts.completed_at,
+        quizTitle: schema.quizzes.title,
+        passingScore: schema.quizzes.passing_score,
+      })
+      .from(schema.quiz_attempts)
+      .innerJoin(schema.quizzes, eq(schema.quiz_attempts.quiz_id, schema.quizzes.id))
+      .where(eq(schema.quiz_attempts.id, attemptId))
+      .limit(1);
+
+    if (data.length === 0) return null;
+
+    const row = data[0];
+    return {
+      id: row.id,
+      quizTitle: row.quizTitle,
+      score: row.score,
+      total: row.total,
+      passed: row.passed,
+      xpEarned: row.xpEarned || 0,
+      passingScore: row.passingScore || 50,
+      completedAt: row.completedAt?.toISOString() || "",
+      answers: (row.answers || []) as QuestionResult[],
+    };
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch attempt detail.");
   }
 }

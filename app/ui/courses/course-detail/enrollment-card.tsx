@@ -1,12 +1,32 @@
 'use client';
 
 import { CourseDetail } from "@/app/lib/definitions/courses";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
 import { getColorClasses } from "@/app/lib/utils/color-classes";
+import { enrollInCourse } from "@/app/lib/actions/course";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export function EnrollmentCard({ course }: { course: CourseDetail }) {
   const colorClasses = getColorClasses(course.theme_color);
+  const [isPending, setIsPending] = useState(false);
+
+  const handleEnroll = async () => {
+    setIsPending(true);
+    try {
+      const result = await enrollInCourse(course.id);
+      if (result.success) {
+        toast.success(result.message || 'Successfully enrolled in course!');
+      } else {
+        toast.error(result.message || 'Failed to enroll');
+      }
+    } catch (error) {
+      toast.error('An error occurred during enrollment');
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   return (
     <motion.div
@@ -53,8 +73,18 @@ export function EnrollmentCard({ course }: { course: CourseDetail }) {
             <div className="text-sm text-gray-600">Start learning today</div>
           </div>
 
-          <button className={`w-full py-4 rounded-xl ${colorClasses.bg} text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all mb-3`}>
-            Enroll in Course
+          <button
+            onClick={handleEnroll}
+            disabled={isPending}
+            className={`w-full py-4 rounded-xl ${colorClasses.bg} text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all mb-3 disabled:opacity-70 disabled:cursor-not-allowed`}>
+            {isPending ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Enrolling...
+              </>
+            ) : (
+              'Enroll in Course'
+            )}
           </button>
 
           <div className="space-y-3 pt-6 border-t border-gray-200">

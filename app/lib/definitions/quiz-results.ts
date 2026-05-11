@@ -1,8 +1,7 @@
-// ============================================================
-// Kiểu dữ liệu cho kết quả Quiz (dùng trong result page)
-// ============================================================
-
 /** Kết quả chi tiết cho từng câu hỏi sau khi chấm */
+import { QuestUpdateInfo } from "./quests";
+import type { StreakResult } from "../actions/streak";
+
 export interface QuestionResult {
   id: number;
   question: string;
@@ -22,6 +21,8 @@ export interface QuizSubmitResult {
   xpEarned: number;
   passingScore: number;
   results: QuestionResult[];
+  questUpdates?: QuestUpdateInfo[];
+  streakResult?: StreakResult;
 }
 
 /** Tóm tắt 1 lần làm quiz (dùng cho list ở Analytics) */

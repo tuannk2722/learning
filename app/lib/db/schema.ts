@@ -160,3 +160,26 @@ export const lesson_notes = pgTable('lesson_notes', {
 }, (t) => ({
   pk: primaryKey({ columns: [t.user_id, t.lesson_id] }),
 }));
+
+// 13. BẢNG DAILY_QUEST_DEFINITIONS (Template các quest)
+export const daily_quest_definitions = pgTable('daily_quest_definitions', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  icon_name: varchar('icon_name', { length: 50 }),
+  quest_type: varchar('quest_type', { length: 50 }).notNull(), // COMPLETE_LESSONS | EARN_XP | PASS_QUIZ | STUDY_TIME
+  target_value: integer('target_value').notNull(),
+  reward_xp: integer('reward_xp').notNull().default(50),
+});
+
+// 14. BẢNG USER_DAILY_QUESTS (Tiến độ quest của user theo ngày)
+export const user_daily_quests = pgTable('user_daily_quests', {
+  id: serial('id').primaryKey(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  quest_id: integer('quest_id').notNull().references(() => daily_quest_definitions.id, { onDelete: 'cascade' }),
+  quest_date: text('quest_date').notNull(), // 'YYYY-MM-DD'
+  current_progress: integer('current_progress').default(0),
+  is_completed: boolean('is_completed').default(false),
+  completed_at: timestamp('completed_at'),
+  reward_claimed: boolean('reward_claimed').default(false),
+});

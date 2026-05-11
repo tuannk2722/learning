@@ -1,18 +1,10 @@
 
-export type Customer = {
-  id: string;
-  name: string;
-  email: string;
-  image_url: string;
-};
-
 export type LeaderboardEntry = {
   rank: number;
   name: string;
   level: number;
   xp: number;
   streak: number;
-  trend: string;
   isCurrentUser?: boolean; // Thuộc tính optional để đánh dấu người dùng hiện tại
   avatar: string;
 }
@@ -29,71 +21,20 @@ export type Achievement = {
   reward_xp: number
 }
 
+export type AchievementPreview = {
+  id: number,
+  icon: string,
+  title: string,
+  description: string,
+  theme_color: string,
+}
+
 export type AnalyticsStats = {
   label: string;
   value: number | string;
   icon: string;
   color: string;
 };
-
-// Định nghĩa các loại câu hỏi cho phép
-export type QuestionType = "multiple-choice" | "true-false" | "fill-blank" | "code";
-
-// Base interface chứa các thuộc tính chung
-interface BaseQuestion {
-  id: number;
-  type: QuestionType;
-  question: string;
-  explanation: string;
-}
-
-// Các interface cụ thể cho từng loại
-interface MultipleChoiceQuestion extends BaseQuestion {
-  type: "multiple-choice" | "code"; // Cả 2 loại này đều dùng options và index số
-  options: string[];
-  correctAnswer: number;
-  code?: string; // Riêng loại code thì có thêm thuộc tính này
-}
-
-interface TrueFalseQuestion extends BaseQuestion {
-  type: "true-false";
-  correctAnswer: "true" | "false";
-}
-
-interface FillBlankQuestion extends BaseQuestion {
-  type: "fill-blank";
-  correctAnswer: string;
-}
-
-// Tổng hợp lại thành một Union Type
-// export type Question = MultipleChoiceQuestion | TrueFalseQuestion | FillBlankQuestion;
-
-// Interface cho toàn bộ object Quiz
-export interface QuizData {
-  title: string;
-  totalQuestions: number;
-  passingScore: number;
-  xpReward: number;
-  questions: Question[];
-}
-
-export interface Question {
-  id: number;
-  type: QuestionType;
-  question: string;
-  options?: string[];
-  correctAnswer: string | number;
-  code?: string;
-  explanation?: string;
-}
-
-export interface QuizData {
-  title: string;
-  totalQuestions: number;
-  passingScore: number;
-  xpReward: number;
-  questions: Question[];
-}
 
 export type Invoice = {
   id: string;

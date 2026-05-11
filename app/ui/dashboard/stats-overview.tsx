@@ -5,7 +5,13 @@ import { Crown, Flame, Star, Zap } from "lucide-react";
 import { User } from "@/app/lib/definitions/user";
 import { calculateLevel, getRankName } from "@/app/lib/utils/xp";
 
-export function StatsOverview({ userInfo, rankPosition }: { userInfo: User, rankPosition: number }) {
+interface StatsOverviewProps {
+  userInfo: User;
+  rankPosition: number;
+  currentStreak: number;
+};
+
+export function StatsOverview({ userInfo, rankPosition, currentStreak }: StatsOverviewProps) {
   const { level, currentXpInLevel, nextLevelXp, progress } = calculateLevel(userInfo.total_xp || 0);
   const rank = getRankName(level);
 
@@ -69,7 +75,7 @@ export function StatsOverview({ userInfo, rankPosition }: { userInfo: User, rank
           </div>
           <div>
             <div className="text-sm text-gray-600">Current Streak</div>
-            <div className="text-3xl font-bold text-gray-900">{userInfo.current_streak || 0} days</div>
+            <div className="text-3xl font-bold text-gray-900">{currentStreak} days</div>
           </div>
         </div>
         <div className="text-sm text-orange-600 font-medium">🔥 Continue the streak!</div>
