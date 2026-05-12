@@ -50,9 +50,18 @@ export type StreakResult = {
   currentStreak: number;
   longestStreak: number;
   isNewRecord: boolean;
-  isMilestone: boolean;   // Vừa đạt một mốc đặc biệt? (7, 14, 30, 50, 100, 365 ngày)
-  milestoneValue?: number;    // Giá trị mốc đạt được (nếu có)
 }
+
+export type ActivityType = 'lesson' | 'quiz' | 'achievement';
+
+export type HistoryEvent = {
+  id: string;
+  type: ActivityType;
+  title: string;
+  course: string | null;
+  xp: number;
+  completedAt: Date;
+};
 
 export type Invoice = {
   id: string;

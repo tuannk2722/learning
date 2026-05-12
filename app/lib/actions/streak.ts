@@ -4,19 +4,8 @@ import { db } from "../db";
 import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { StreakResult } from "../definitions/definitions";
+import { getVNDateString } from "../utils/date";
 
-// Các mốc streak đặc biệt
-const STREAK_MILESTONES = [7, 14, 30, 50, 100, 365];
-
-/**
- * Trả về chuỗi ngày "YYYY-MM-DD" theo giờ Việt Nam (UTC+7).
- */
-export async function getVNDateString(date: Date): Promise<string> {
-  // Tính offset UTC+7 = +7 * 60 phút
-  const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
-  const vnDate = new Date(date.getTime() + VN_OFFSET_MS);
-  return vnDate.toISOString().split('T')[0]; // "YYYY-MM-DD"
-}
 
 /**
  * Trả về streak thực tế trên UI. Nếu quá hạn (không học ngày hôm qua), streak trả về 0.
@@ -67,7 +56,6 @@ export async function updateStreak(userId: string): Promise<StreakResult> {
         currentStreak: 0,
         longestStreak: 0,
         isNewRecord: false,
-        isMilestone: false,
       };
     }
 
@@ -86,7 +74,6 @@ export async function updateStreak(userId: string): Promise<StreakResult> {
           currentStreak: current_streak ?? 0,
           longestStreak: longest_streak ?? 0,
           isNewRecord: false,
-          isMilestone: false,
         };
       }
 
@@ -116,7 +103,6 @@ export async function updateStreak(userId: string): Promise<StreakResult> {
       currentStreak: 0,
       longestStreak: 0,
       isNewRecord: false,
-      isMilestone: false,
     };
   }
 }
@@ -132,10 +118,6 @@ async function _saveAndReturn(
   const newLongest = Math.max(oldLongest, newStreak);
   const isNewRecord = newStreak > oldLongest;
 
-  // Kiểm tra milestone
-  const milestoneValue = STREAK_MILESTONES.find(m => m === newStreak);
-  const isMilestone = milestoneValue !== undefined;
-
   await db
     .update(users)
     .set({
@@ -150,7 +132,5 @@ async function _saveAndReturn(
     currentStreak: newStreak,
     longestStreak: newLongest,
     isNewRecord,
-    isMilestone,
-    milestoneValue,
   };
 }

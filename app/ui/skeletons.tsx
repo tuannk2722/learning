@@ -488,3 +488,29 @@ export function CoursesSkeleton() {
     </div>
   );
 }
+
+export function HistoryTimelineSkeleton() {
+  return (
+    <div className="space-y-12 relative">
+      {/* Connecting Line */}
+      <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-100" />
+      
+      {[1, 2].map((group) => (
+        <div key={group} className="relative">
+          <div className={`${shimmer} h-4 w-24 bg-gray-200 rounded mb-6 ml-16 relative overflow-hidden`} />
+          <div className="space-y-6">
+            {[1, 2].map((item) => (
+              <div key={item} className="flex items-start gap-4 relative">
+                <div className={`${shimmer} w-12 h-12 rounded-full bg-gray-200 shrink-0 z-10 relative overflow-hidden`} />
+                <div className={`${shimmer} flex-1 bg-white rounded-xl p-4 border border-gray-100 shadow-sm min-h-[80px] relative overflow-hidden`}>
+                  <div className="h-5 w-2/3 bg-gray-200 rounded mb-2" />
+                  <div className="h-4 w-1/3 bg-gray-200 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
