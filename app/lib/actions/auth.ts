@@ -77,3 +77,7 @@ export async function register(
     redirect('/login');
   }
 }
+
+export async function signInWithGoogle() {
+  await signIn('google', { redirectTo: '/dashboard/courses' });
+}

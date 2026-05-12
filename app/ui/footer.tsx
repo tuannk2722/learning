@@ -12,9 +12,9 @@ export function Footer() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center">
             <BookOpen className="w-5 h-5 text-white" />
           </div>
-          <span className="text-xl font-bold text-gray-900">LearnQuest</span>
+          <span className="text-xl font-bold text-gray-900">Gamified Learning</span>
         </div>
-        <p className="text-sm">© 2026 LearnQuest. Transform learning into an adventure.</p>
+        <p className="text-sm">© 2026 Gamified Learning. Transform learning into an adventure.</p>
       </div>
     </footer>
   )

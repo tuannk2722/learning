@@ -3,7 +3,7 @@ import { Eye, EyeOff, Lock, Mail, Sparkles, Trophy, User, CheckCircle2, AlertCir
 import { motion } from "motion/react";
 import Link from "next/link";
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
-import { register } from "@/app/lib/actions/auth";
+import { register, signInWithGoogle } from "@/app/lib/actions/auth";
 import { useActionState, useState } from "react";
 import { ButtonFacebook, ButtonGoogle } from "../button";
 
@@ -41,7 +41,7 @@ export function SignUpForm() {
             <Trophy className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-            GamifiedLearning
+            Gamified Learning
           </span>
         </Link>
       </div>
@@ -170,20 +170,6 @@ export function SignUpForm() {
           </div>
         </div>
 
-        <div className="flex items-start gap-2">
-          <input type="checkbox" className="w-4 h-4 mt-1 rounded border-gray-300 text-violet-600 focus:ring-violet-500" required />
-          <label className="text-sm text-gray-600">
-            Agree to the{" "}
-            <Link href="#" className="text-violet-600 hover:text-violet-700 font-medium">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="#" className="text-violet-600 hover:text-violet-700 font-medium">
-              Privacy Policy
-            </Link>
-          </label>
-        </div>
-
         <button
           type="submit"
           disabled={isPending || !passwordsMatch || !isPasswordStrong}
@@ -193,7 +179,7 @@ export function SignUpForm() {
           <Sparkles className="w-5 h-5" />
           Create an account
         </button>
-        
+
         <div className="flex h-8 items-end space-x-1" aria-live="polite" aria-atomic="true">
           {errorMessage && (
             <>
@@ -215,7 +201,9 @@ export function SignUpForm() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <ButtonGoogle />
+          <form action={signInWithGoogle} className="w-full">
+            <ButtonGoogle className="w-full" type="submit" />
+          </form>
           <ButtonFacebook />
         </div>
       </div>

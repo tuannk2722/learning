@@ -1,7 +1,6 @@
 /** Kết quả chi tiết cho từng câu hỏi sau khi chấm */
 import { QuestUpdateInfo } from "./quests";
-import type { StreakResult } from "../definitions/definitions";
-import type { UnlockedAchievement } from "../actions/achievements";
+import type { StreakResult, UnlockedAchievement } from "../definitions/definitions";
 
 export interface QuestionResult {
   id: number;

@@ -17,6 +17,6 @@ export type UserInfoLogin = {
   id: string;
   name: string;
   email: string;
-  password_hash: string;
+  password_hash?: string;
   is_onboarded: boolean;
 };

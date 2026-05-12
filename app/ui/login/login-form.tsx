@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { ButtonFacebook, ButtonGoogle } from '../button';
 import { useSearchParams } from 'next/navigation';
-import { authenticate } from '@/app/lib/actions/auth';
+import { authenticate, signInWithGoogle } from '@/app/lib/actions/auth';
 import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
 
 export function LoginForm() {
@@ -26,12 +26,9 @@ export function LoginForm() {
     const result = await authenticate(undefined, formData);
 
     if (result) {
-      // Có lỗi trả về → hiển thị lỗi
       setErrorMessage(result);
       setIsPending(false);
     } else {
-      // Thành công → force hard reload để đảm bảo cookie được đồng bộ
-      // trước khi bất kỳ Server Action nào được gọi (tránh lỗi onboarding)
       window.location.href = callbackUrl;
     }
   };
@@ -49,7 +46,7 @@ export function LoginForm() {
             <Trophy className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-            LearnQuest
+            Gamified Learning
           </span>
         </Link>
       </div>
@@ -147,7 +144,9 @@ export function LoginForm() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <ButtonGoogle />
+          <form action={signInWithGoogle} className="w-full">
+            <ButtonGoogle className="w-full" type="submit" />
+          </form>
           <ButtonFacebook />
         </div>
       </div>

@@ -14,15 +14,12 @@ export const authConfig = {
 
       if (isLoggedIn) {
         if (!is_onboarded && !isOnOnboarding) {
-          // If logged in but not onboarded, and not on onboarding page, redirect to onboarding
           return Response.redirect(new URL('/onboarding', nextUrl));
         }
         if (is_onboarded && isOnOnboarding) {
-          // If already onboarded but trying to access onboarding, redirect to dashboard
           return Response.redirect(new URL('/dashboard/courses', nextUrl));
         }
         if (isOnAuthPages) {
-          // If logged in and on auth pages, redirect to dashboard (or onboarding if needed)
           const target = is_onboarded ? '/dashboard/courses' : '/onboarding';
           return Response.redirect(new URL(target, nextUrl));
         }
@@ -30,7 +27,7 @@ export const authConfig = {
 
       if (isOnDashboard || isOnOnboarding) {
         if (isLoggedIn) return true;
-        return false; // Redirect to login
+        return false;
       }
 
       return true;
