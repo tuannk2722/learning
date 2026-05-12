@@ -30,6 +30,15 @@ export const users = pgTable('users', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
+// 15. BẢNG PASSWORD_RESET_TOKENS
+export const password_reset_tokens = pgTable('password_reset_tokens', {
+  id: serial('id').primaryKey(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  expires_at: timestamp('expires_at').notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+});
+
 // 2. BẢNG CATEGORIES
 export const categories = pgTable('categories', {
   id: serial('id').primaryKey(),

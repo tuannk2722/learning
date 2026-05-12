@@ -18,15 +18,7 @@ export function SignUpForm() {
     confirmPassword: ""
   });
 
-  // Hàm handleSubmit cũ đã được gỡ bỏ vì sử dụng formAction của Server.
-  // Password validation logic
-  const pass = formData.password;
-  const hasMinLength = pass.length >= 8;
-  const hasUppercase = /[A-Z]/.test(pass);
-  const hasNumberOrSymbol = /[0-9!@#\$%\^\&*\)\(+=._-]/.test(pass);
-  const isPasswordStrong = hasMinLength && hasUppercase && hasNumberOrSymbol;
-
-  const passwordsMatch = pass.length > 0 && pass === formData.confirmPassword;
+  const passwordsMatch = formData.password === formData.confirmPassword;
 
   return (
     <motion.div
@@ -114,22 +106,6 @@ export function SignUpForm() {
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          {/* Password Requirements Text */}
-          <div className="mt-3 text-xs space-y-1 text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100">
-            <p className="font-medium text-gray-700 mb-1">Password must contain:</p>
-            <div className={`flex items-center gap-2 ${hasMinLength ? 'text-emerald-600' : ''}`}>
-              {hasMinLength ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />}
-              <span>At least 8 characters</span>
-            </div>
-            <div className={`flex items-center gap-2 ${hasUppercase ? 'text-emerald-600' : ''}`}>
-              {hasUppercase ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />}
-              <span>At least 1 uppercase letter</span>
-            </div>
-            <div className={`flex items-center gap-2 ${hasNumberOrSymbol ? 'text-emerald-600' : ''}`}>
-              {hasNumberOrSymbol ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />}
-              <span>At least 1 number or special symbol</span>
-            </div>
-          </div>
         </div>
 
         <div>
@@ -172,7 +148,7 @@ export function SignUpForm() {
 
         <button
           type="submit"
-          disabled={isPending || !passwordsMatch || !isPasswordStrong}
+          disabled={isPending || !passwordsMatch}
           aria-disabled={isPending}
           className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
         >

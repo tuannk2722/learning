@@ -11,12 +11,6 @@ export function SignUpBranding() {
       transition={{ duration: 0.6 }}
       className="text-white hidden lg:block"
     >
-      <Link href="/" className="flex items-center gap-3 mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/30">
-          <BookOpen className="w-10 h-10 text-white" />
-        </div>
-        <span className="text-4xl font-bold">Gamified Learning</span>
-      </Link>
 
       <h1 className="text-5xl font-bold mb-6 leading-tight">
         Start your<br />

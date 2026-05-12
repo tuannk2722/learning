@@ -3,6 +3,7 @@
 import { handleLogout } from '@/app/lib/actions/auth';
 import { Settings, LogOut, History } from 'lucide-react';
 import { motion } from 'motion/react';
+import Link from 'next/link';
 
 export function ProfileSetting() {
 
@@ -30,15 +31,17 @@ export function ProfileSetting() {
           </svg>
         </button>
 
-        <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-violet-50 transition-colors group">
-          <div className="flex items-center gap-3">
-            <Settings className="w-5 h-5 text-gray-600 group-hover:text-violet-600" />
-            <span className="font-medium text-gray-900">Change Password</span>
-          </div>
-          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+        <Link href="/forgot-password">
+          <button className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-violet-50 transition-colors group">
+            <div className="flex items-center gap-3">
+              <Settings className="w-5 h-5 text-gray-600 group-hover:text-violet-600" />
+              <span className="font-medium text-gray-900">Change Password</span>
+            </div>
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </Link>
 
         <button
           onClick={() => handleLogout()}

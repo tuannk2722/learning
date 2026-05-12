@@ -11,6 +11,10 @@ export const authConfig = {
       const isOnDashboard = nextUrl.pathname.startsWith('/dashboard');
       const isOnOnboarding = nextUrl.pathname.startsWith('/onboarding');
       const isOnAuthPages = nextUrl.pathname === '/login' || nextUrl.pathname === '/signup' || nextUrl.pathname === '/' || nextUrl.pathname === '/courses';
+      // Các trang reset mật khẩu luôn public, không cần đăng nhập
+      const isOnPasswordResetPages = nextUrl.pathname === '/forgot-password' || nextUrl.pathname === '/reset-password';
+
+      if (isOnPasswordResetPages) return true;
 
       if (isLoggedIn) {
         if (!is_onboarded && !isOnOnboarding) {
