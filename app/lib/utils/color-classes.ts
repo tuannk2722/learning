@@ -52,7 +52,7 @@ export function getColorClasses(colorName: string | undefined | null) {
       bg: 'bg-gray-900',
       text: 'text-white',
       gradient: 'from-gray-900 to-gray-700',
-      gradientLight: 'from-gray-200 to-gray-100', // added light variant for black
+      gradientLight: 'from-gray-200 to-gray-100',
     },
     green: {
       bg: 'bg-green-100',
@@ -80,5 +80,5 @@ export function getColorClasses(colorName: string | undefined | null) {
     },
   };
 
-  return colors[colorName as string] || colors.indigo; // Default to indigo if not found
+  return colors[colorName as string] || colors.indigo;
 }

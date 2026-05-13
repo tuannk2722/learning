@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { users, enrollments, user_lesson_progress, lessons } from "../db/schema";
+import { users, user_lesson_progress, lessons } from "../db/schema";
 import { eq, desc, sql, and } from "drizzle-orm";
 import type { User, UserInfoLogin } from "../definitions/user";
 import type { LeaderboardEntry } from "../definitions/definitions";

@@ -44,7 +44,6 @@ export const categories = pgTable('categories', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
-  theme_color: varchar('theme_color', { length: 50 }),
 });
 
 // 3. BẢNG COURSES

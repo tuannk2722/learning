@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, BarChart3, BookOpen, Crown, Flame, User } from 'lucide-react';
+import { Home, BarChart3, BookOpen, Crown, Flame, User, LayoutDashboard, Users, Award, Target } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -13,14 +13,38 @@ const navItems = [
   { path: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
 ];
 
+const adminNavItems = [
+  { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { path: "/admin/course", icon: BookOpen, label: "Course Management" },
+  { path: "/admin/user-management", icon: Users, label: "User Management" },
+  { path: "/admin/achievement", icon: Award, label: "Achievements System" },
+  { path: "/admin/quests", icon: Target, label: "Quests System" },
+]
+
 interface Props {
   type: 'desktop' | 'mobile';
   setIsOpen?: (value: boolean) => void;
+  isAdmin?: boolean;
 }
 
-export default function NavLinks({ type, setIsOpen }: Props) {
+export default function NavLinks({ type, setIsOpen, isAdmin = false }: Props) {
   const pathname = usePathname();
   const isMobile = type === 'mobile';
+
+  const isAdminPath = pathname.startsWith('/admin');
+
+  // Nếu là admin và đang ở trang admin, hiển thị admin menu + nút User View
+  // Nếu là admin nhưng đang ở trang user, hiển thị menu user bình thường
+  let items = (isAdmin && isAdminPath) ? [...adminNavItems] : [...navItems];
+
+  // Thêm mục "User View" nếu đang ở admin
+  if (isAdmin && isAdminPath) {
+    items.push({ path: '/dashboard', icon: User, label: 'User View' });
+  }
+  // (Tùy chọn) Thêm mục "Admin Panel" nếu là admin nhưng đang ở trang user để dễ dàng quay lại
+  else if (isAdmin && !isAdminPath) {
+    items.push({ path: '/admin', icon: LayoutDashboard, label: 'Admin Panel' });
+  }
 
   const handleLinkClick = () => {
     if (isMobile && setIsOpen) {
@@ -31,7 +55,7 @@ export default function NavLinks({ type, setIsOpen }: Props) {
   return (
     <>
       <div className={isMobile ? "flex flex-col gap-2" : "flex items-center gap-2"}>
-        {navItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.path;
 

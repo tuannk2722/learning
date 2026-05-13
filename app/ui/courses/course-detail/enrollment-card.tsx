@@ -80,7 +80,7 @@ export function EnrollmentCard({ course }: { course: CourseDetail }) {
           <button
             onClick={handleEnroll}
             disabled={isPending}
-            className={`w-full py-4 rounded-xl ${colorClasses.bg} text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all mb-3 disabled:opacity-70 disabled:cursor-not-allowed`}>
+            className={`w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-400 text-white font-bold text-lg flex items-center justify-center gap-2 hover:shadow-xl transition-all mb-3 disabled:opacity-70 disabled:cursor-not-allowed`}>
             {isPending ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />

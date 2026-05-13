@@ -13,9 +13,10 @@ interface SideNavProps {
   avatarUrl?: string | null;
   userName?: string | null;
   currentStreak?: number;
+  isAdmin?: boolean;
 }
 
-export default function SideNav({ avatarUrl, userName, currentStreak = 0 }: SideNavProps) {
+export default function SideNav({ avatarUrl, userName, currentStreak = 0, isAdmin = false }: SideNavProps) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
@@ -48,7 +49,7 @@ export default function SideNav({ avatarUrl, userName, currentStreak = 0 }: Side
 
         {/* Desktop Links (Hidden on Mobile) */}
         <div className="hidden md:flex flex-1 items-center justify-center gap-8">
-          <NavLinks setIsOpen={setIsOpen} type={'desktop'} />
+          <NavLinks setIsOpen={setIsOpen} type={'desktop'} isAdmin={isAdmin} />
         </div>
 
         {/* Desktop Profile (Hidden on Mobile) */}
@@ -93,7 +94,7 @@ export default function SideNav({ avatarUrl, userName, currentStreak = 0 }: Side
             <div className="px-6 py-6 flex flex-col gap-6">
 
               {/* Menu Links */}
-              <NavLinks setIsOpen={setIsOpen} type={'mobile'} />
+              <NavLinks setIsOpen={setIsOpen} type={'mobile'} isAdmin={isAdmin} />
 
             </div>
           </motion.div>

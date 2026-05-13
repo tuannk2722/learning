@@ -15,6 +15,7 @@ export default async function RootLayout({
 }) {
   const session = await auth();
   const isLoggedIn = !!session?.user;
+  const isAdmin = (session?.user as any)?.role === 'admin';
   let avatarUrl = null;
   let userName = null;
   let currentStreak = 0;
@@ -31,7 +32,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased bg-slate-100`}>
-        {isLoggedIn ? (<SideNav avatarUrl={avatarUrl} userName={userName} currentStreak={currentStreak} />) : (<Navigation />)}
+        {isLoggedIn ? (<SideNav avatarUrl={avatarUrl} userName={userName} currentStreak={currentStreak} isAdmin={isAdmin} />) : (<Navigation />)}
         <main className="min-h-screen">
           {children}
         </main>
