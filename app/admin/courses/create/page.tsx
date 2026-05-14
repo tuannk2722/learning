@@ -481,7 +481,7 @@ export default function CourseBuilder() {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <Link href={`/admin/course/create/${lesson.id}/lesson-builder`}>
+                                      <Link href={`/admin/courses/draft/lessons/${lesson.id}`}>
                                         <button className="px-3 py-1.5 text-xs font-bold border border-gray-200 rounded-lg hover:bg-slate-50 transition-colors uppercase tracking-wider">
                                           Edit
                                         </button>
@@ -630,7 +630,7 @@ export default function CourseBuilder() {
                                 </div>
                               </div>
                               <Link
-                                href="/admin/courses/1/quiz"
+                                href={`/admin/courses/draft/quiz/${lesson.id}`}
                                 className="px-6 py-2 bg-white border-2 border-indigo-600 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
                               >
                                 {index === 0 ? "Create Quiz" : "Edit Quiz"}

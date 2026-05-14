@@ -1,6 +1,4 @@
-import { BookOpen, Lock } from 'lucide-react';
-import { CourseCardEnrolled } from '@/app/ui/courses/enrolled-course-card';
-import { CourseCardAvailable } from '@/app/ui/courses/available-course-card';
+import { BookOpen } from 'lucide-react';
 import { CourseTitle } from '@/app/ui/courses/title';
 import AllCoursesPage from '@/app/courses/page';
 import { Suspense } from 'react';
@@ -8,6 +6,7 @@ import { CourseCardSkeleton } from '@/app/ui/skeletons';
 import { auth } from '@/auth';
 import { getEnrolledCourses, getNotEnrolledCourses } from '@/app/lib/data/courses';
 import { CourseListContainer } from '@/app/ui/courses/list-container';
+import CourseCardEnrolled from '@/app/ui/courses/enrolled-course-card';
 
 export default async function Courses() {
   const session = await auth();
@@ -38,16 +37,17 @@ export default async function Courses() {
                 <CourseCardSkeleton />
               </div>
             }>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {enrolledCourses.map((course, index) => {
                   return <CourseCardEnrolled key={course.id} course={course} index={index} />;
                 })}
-              </div>
+              </div> */}
+              <CourseCardEnrolled enrolledCourses={enrolledCourses} />
             </Suspense>
           </div>
 
           {/* Available Courses */}
-          <CourseListContainer initialCourses={notEnrolledCourses} />          
+          <CourseListContainer initialCourses={notEnrolledCourses} />
         </div>
       </div>
     )
