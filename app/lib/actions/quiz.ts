@@ -3,13 +3,14 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { eq, asc, sql } from "drizzle-orm";
-import { QuizSubmitResult, QuestionResult } from "../definitions/quiz-results";
+import { QuizSubmitResult, QuestionResult } from "../definitions/quizzes";
 import { auth } from "@/auth";
 import { updateQuestProgress } from "./quests";
 import { QuestUpdateInfo } from "../definitions/quests";
 import { updateStreak } from "./streak";
 import { StreakResult } from "../definitions/definitions";
 import { evaluateAchievements } from "./achievements";
+import { revalidatePath } from "next/cache";
 
 export async function submitQuiz(
   lessonId: string,
@@ -88,6 +89,7 @@ export async function submitQuiz(
         correctAnswer: correctAnswerDisplay,
         isCorrect,
         explanation: q.explanation || "",
+        xpReward: q.xp_reward || 0,
       };
     });
 
@@ -96,25 +98,30 @@ export async function submitQuiz(
     const passingScore = quiz.passing_score || 50;
     const passed = percentage >= passingScore;
 
-    // 4. Tính XP thưởng: đạt → full XP, không đạt → tỉ lệ theo phần trăm
-    const fullXp = quiz.xp_reward || 0;
-    const xpEarned = passed ? fullXp : Math.round(fullXp * (percentage / 100));
+    // 4. Tính XP thưởng: cộng dồn XP từ các câu hỏi trả lời đúng
+    let xpEarned = 0;
+    questionsData.forEach((q, index) => {
+      if (results[index].isCorrect) {
+        xpEarned += q.xp_reward || 0;
+      }
+    });
 
     // 5. Cộng XP cho user nếu đăng nhập
     const questUpdates: QuestUpdateInfo[] = [];
     let streakResult: StreakResult | undefined;
 
-    if (userId && xpEarned > 0) {
-      await db.execute(
-        sql`UPDATE users SET total_xp = COALESCE(total_xp, 0) + ${xpEarned} WHERE id = ${userId}`
-      );
-
-      // Cập nhật streak (quiz nộp bài = có học)
+    if (userId) {
       streakResult = await updateStreak(userId);
 
-      // Cập nhật tiến độ quest: kiếm XP
-      const res1 = await updateQuestProgress('EARN_XP', xpEarned, userId);
-      questUpdates.push(...res1.questUpdates);
+      if (xpEarned > 0) {
+        await db.execute(
+          sql`UPDATE users SET total_xp = COALESCE(total_xp, 0) + ${xpEarned} WHERE id = ${userId}`
+        );
+
+        // Cập nhật tiến độ quest: kiếm XP
+        const res1 = await updateQuestProgress('EARN_XP', xpEarned, userId);
+        questUpdates.push(...res1.questUpdates);
+      }
     }
 
     // Cập nhật tiến độ quest: vượt qua quiz
@@ -140,6 +147,9 @@ export async function submitQuiz(
     }
 
     const { unlocked } = await evaluateAchievements(userId || "");
+
+    // Revalidate paths to update the streak and progress badge in RootLayout / SideNav
+    revalidatePath("/dashboard/courses", "layout");
 
     return {
       success: true,

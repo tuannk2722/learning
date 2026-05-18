@@ -1,8 +1,13 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { eq, asc, desc } from "drizzle-orm";
-import { QuestionType, QuizData } from "../definitions/quizzes";
-import { QuizAttemptSummary, QuizAttemptDetail, QuestionResult } from "../definitions/quiz-results";
+import {
+  QuestionType,
+  QuizData,
+  QuizAttemptSummary,
+  QuizAttemptDetail,
+  QuestionResult,
+} from "../definitions/quizzes";
 
 /**
  * Lấy quiz và danh sách questions thuộc một lesson cụ thể.
@@ -39,15 +44,18 @@ export async function getQuizByLessonId(lessonId: number): Promise<QuizData | nu
         question: q.question_text,
         options: meta.options || undefined,
         code: meta.code || undefined,
+        xpReward: q.xp_reward || 0,
       };
     });
+
+    const xpReward = questionsData.reduce((sum, q) => sum + (q.xp_reward || 0), 0);
 
     // 4. Trả về object QuizData cho frontend
     return {
       title: quiz.title,
       totalQuestions: questions.length,
       passingScore: quiz.passing_score || 50,
-      xpReward: quiz.xp_reward || 0,
+      xpReward,
       questions,
     };
   } catch (error) {

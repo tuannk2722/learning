@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import QuestionCard from "./quiz-question-card";
 import QuizHeader from "./quiz-header";
 import QuizFooter from "./quiz-footer";
-import { QuizData } from "@/app/lib/definitions/quizzes";
-import { QuizSubmitResult } from "@/app/lib/definitions/quiz-results";
+import { QuizData, QuizSubmitResult } from "@/app/lib/definitions/quizzes";
 import { showQuestToasts } from "@/app/ui/quests/quest-toast";
 import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
 

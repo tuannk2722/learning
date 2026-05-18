@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { Trophy, Star, Target, TrendingUp, CheckCircle2, XCircle, Zap, ChevronRight, RotateCcw, Award } from "lucide-react";
 import confetti from 'canvas-confetti';
-import { QuestionResult } from "@/app/lib/definitions/quiz-results";
+import { QuestionResult } from "@/app/lib/definitions/quizzes";
 import ResultDetailCard from "./result-detail-card";
 
 interface Props {

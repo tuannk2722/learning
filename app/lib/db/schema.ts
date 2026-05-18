@@ -58,7 +58,9 @@ export const courses = pgTable('courses', {
   estimated_hours: integer('estimated_hours'),
   rating: numeric('rating', { precision: 2, scale: 1 }).default('0.0'),
   reviews_count: integer('reviews_count').default(0),
+  status: varchar('status', { length: 50 }).default('draft'),
   created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 4. BẢNG SECTIONS
@@ -67,6 +69,8 @@ export const sections = pgTable('sections', {
   course_id: integer('course_id').references(() => courses.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   order_index: integer('order_index').notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 5. BẢNG LESSONS
@@ -80,6 +84,9 @@ export const lessons = pgTable('lessons', {
   content: text('content'),
   video_url: text('video_url'),
   order_index: integer('order_index').notNull(),
+  status: varchar('status', { length: 50 }).default('draft'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 6. BẢNG ENROLLMENTS
@@ -111,7 +118,8 @@ export const quizzes = pgTable('quizzes', {
   lesson_id: integer('lesson_id').references(() => lessons.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   passing_score: integer('passing_score').default(50),
-  xp_reward: integer('xp_reward').default(0),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 9. BẢNG QUESTIONS
@@ -121,9 +129,12 @@ export const questions = pgTable('questions', {
   question_type: varchar('question_type', { length: 50 }).notNull(),
   question_text: text('question_text').notNull(),
   explanation: text('explanation'),
+  xp_reward: integer('xp_reward').default(0),
   metadata: jsonb('metadata'),
   correct_answer: text('correct_answer').notNull(),
   order_index: integer('order_index').notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 10. BẢNG QUIZ_ATTEMPTS (Lịch sử làm quiz)

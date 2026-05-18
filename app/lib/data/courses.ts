@@ -50,32 +50,6 @@ export async function fetchAllCourses() {
   }
 }
 
-// export async function fetchPopularCourses() {
-//   try {
-//     const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
-//     const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
-
-//     const data = await db
-//       .select({
-//         ...getTableColumns(schema.courses),
-//         category_name: schema.categories.name,
-//         total_lessons: totalLessons,
-//         enrolled_count: enrolledCount,
-//       })
-//       .from(schema.courses)
-//       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
-//       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
-//       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
-//       .orderBy(desc(enrolledCount))
-//       .limit(3);
-
-//     return data as any as CourseListing[];
-//   } catch (error) {
-//     console.error('Database Error:', error);
-//     throw new Error('Failed to fetch popular courses [DRIZZLE_FIX].');
-//   }
-// }
-
 export async function getEnrolledCourses(userId: string) {
   try {
     const data = await db
@@ -234,10 +208,10 @@ export async function getUserCourseRating(courseId: number, userId: string): Pro
         )
       )
       .limit(1);
-    
+
     return enrollment.length > 0 ? enrollment[0].rating : null;
   } catch (error) {
     console.error('Database Error:', error);
     return null;
   }
-}
+}

@@ -1,6 +1,5 @@
 'use client';
 import { motion } from 'motion/react';
-import { BookOpen, Users } from 'lucide-react';
 import { DynamicIcon } from '../../dynamic-icon';
 
 interface CourseStatsProps {

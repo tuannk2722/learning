@@ -20,9 +20,16 @@ export default function QuestionCard({ question, index, selectedAnswer, onSelect
       className="bg-white rounded-3xl p-8 shadow-sm border border-violet-100"
     >
       <div className="mb-6">
-        <span className="text-xs font-bold uppercase tracking-wider text-violet-500 px-3 py-1 bg-violet-50 rounded-full">
-          {question.type}
-        </span>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-violet-500 px-3 py-1 bg-violet-50 rounded-full">
+            {question.type}
+          </span>
+          {question.xpReward !== undefined && question.xpReward > 0 && (
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-600 px-3 py-1 bg-amber-50 rounded-full flex items-center gap-1">
+              ⭐ +{question.xpReward} XP
+            </span>
+          )}
+        </div>
         <h2 className="text-2xl font-bold text-gray-800 mt-4">{question.question}</h2>
 
         {question.code && (

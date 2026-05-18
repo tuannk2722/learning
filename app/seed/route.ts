@@ -172,9 +172,9 @@ function Welcome(props) {
 async function seedQuizzesAndQuestions() {
   console.log('Seeding quizzes...');
   await db.insert(schema.quizzes).values([
-    { id: 1, lesson_id: 1, title: 'React Basics Quiz', passing_score: 80, xp_reward: 100 },
-    { id: 2, lesson_id: 4, title: 'State & Hook Quiz', passing_score: 80, xp_reward: 150 },
-    { id: 3, lesson_id: 13, title: 'Pandas Basics Quiz', passing_score: 85, xp_reward: 200 },
+    { id: 1, lesson_id: 1, title: 'React Basics Quiz', passing_score: 80 },
+    { id: 2, lesson_id: 4, title: 'State & Hook Quiz', passing_score: 80 },
+    { id: 3, lesson_id: 13, title: 'Pandas Basics Quiz', passing_score: 85 },
   ]).onConflictDoNothing();
 
   console.log('Seeding questions...');
@@ -187,6 +187,7 @@ async function seedQuizzesAndQuestions() {
       explanation: 'React is a JavaScript library for building user interfaces.',
       metadata: { options: ['A Library', 'A Framework', 'A Language'] },
       correct_answer: '0',
+      xp_reward: 100,
       order_index: 1,
     },
     {
@@ -197,6 +198,7 @@ async function seedQuizzesAndQuestions() {
       explanation: 'useState is the primary hook for managing state in functional components.',
       metadata: { options: ['useEffect', 'useState', 'useContext'] },
       correct_answer: '1',
+      xp_reward: 150,
       order_index: 1,
     },
     {
@@ -207,6 +209,7 @@ async function seedQuizzesAndQuestions() {
       explanation: 'A DataFrame is a 2-dimensional labeled data structure with columns of potentially different types.',
       metadata: { options: ['A 1D array', 'A 2D table', 'A Database'] },
       correct_answer: '1',
+      xp_reward: 50,
       order_index: 1,
     },
     {

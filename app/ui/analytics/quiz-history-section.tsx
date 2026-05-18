@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { CheckCircle2, XCircle, Zap, ClipboardList, ChevronRight } from "lucide-react";
-import { QuizAttemptSummary } from "@/app/lib/definitions/quiz-results";
+import { QuizAttemptSummary } from "@/app/lib/definitions/quizzes";
 
 interface Props {
   attempts: QuizAttemptSummary[];

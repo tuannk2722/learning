@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "motion/react";
 import { CheckCircle2, XCircle, Lightbulb } from "lucide-react";
-import { QuestionResult } from "@/app/lib/definitions/quiz-results";
+import { QuestionResult } from "@/app/lib/definitions/quizzes";
 
 export default function ResultDetailCard({ result, index }: { result: QuestionResult; index: number }) {
   const isCorrect = result.isCorrect;
@@ -21,12 +21,21 @@ export default function ResultDetailCard({ result, index }: { result: QuestionRe
         </div>
 
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Question {index + 1}</span>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${isCorrect ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Question {index + 1}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${isCorrect ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                }`}>
+                {isCorrect ? "Correct" : "Incorrect"}
+              </span>
+            </div>
+            {result.xpReward !== undefined && result.xpReward > 0 && (
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                isCorrect ? "text-emerald-700 bg-emerald-50" : "text-gray-500 bg-gray-50"
               }`}>
-              {isCorrect ? "Correct" : "Incorrect"}
-            </span>
+                {isCorrect ? `⭐ +${result.xpReward} XP` : `0 / ${result.xpReward} XP`}
+              </span>
+            )}
           </div>
 
           <h3 className="text-lg font-bold text-gray-800 mb-4 leading-tight">{result.question}</h3>
