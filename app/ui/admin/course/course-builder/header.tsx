@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { motion } from 'motion/react';
 import { ArrowLeft, Save, Eye } from 'lucide-react';
 import Link from 'next/link';
+import { motion } from 'motion/react';
 
-interface QuizHeaderProps {
-  courseId: string;
-  lessonId: string;
+interface HeaderProps {
+  isNew: boolean;
+  isSaving: boolean;
   onSave: () => void;
 }
 
-export default function QuizHeader({ courseId, lessonId, onSave }: QuizHeaderProps) {
+export default function Header({ isNew, isSaving, onSave }: HeaderProps) {
   return (
     <div className="flex items-center justify-between mb-8">
       <div className="flex items-center gap-4">
-        <Link href={`/admin/courses/${courseId}`}>
+        <Link href="/admin/courses">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -24,8 +24,10 @@ export default function QuizHeader({ courseId, lessonId, onSave }: QuizHeaderPro
           </motion.button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">Quiz Builder</h1>
-          <p className="text-muted-foreground">Create interactive assessments</p>
+          <h1 className="text-3xl font-bold">{isNew ? "Create New Course" : "Edit Course"}</h1>
+          <p className="text-muted-foreground">
+            {isNew ? "Build engaging learning experiences" : "Update course content and quizzes"}
+          </p>
         </div>
       </div>
 
@@ -42,10 +44,11 @@ export default function QuizHeader({ courseId, lessonId, onSave }: QuizHeaderPro
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={onSave}
-          className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2"
+          disabled={isSaving}
+          className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 disabled:opacity-70"
         >
           <Save className="w-4 h-4" />
-          Save Quiz
+          {isSaving ? "Saving..." : isNew ? "Save Course & Continue" : "Update Course"}
         </motion.button>
       </div>
     </div>

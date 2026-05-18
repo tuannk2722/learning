@@ -33,6 +33,7 @@ export default async function LessonBuilderPage({ params }: Props) {
 
   return (
     <LessonBuilderClient
+      courseId={courseId}
       initialLesson={initialLesson}
       initialBlocks={initialBlocks}
     />

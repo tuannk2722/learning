@@ -4,15 +4,16 @@ import { ArrowLeft, Eye, Save } from 'lucide-react';
 import Link from 'next/link';
 
 interface LessonHeaderProps {
+  courseId: string;
   onSave: () => void;
   onPreview: () => void;
 }
 
-export default function LessonHeader({ onSave, onPreview }: LessonHeaderProps) {
+export default function LessonHeader({ courseId, onSave, onPreview }: LessonHeaderProps) {
   return (
     <div className="flex items-center justify-between mb-8">
       <div className="flex items-center gap-4">
-        <Link href="/admin/course/create">
+        <Link href={`/admin/courses/${courseId}`}>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

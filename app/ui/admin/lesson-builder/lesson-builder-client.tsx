@@ -20,11 +20,12 @@ interface LessonData {
 }
 
 interface LessonBuilderClientProps {
+  courseId: string;
   initialLesson: LessonData;
   initialBlocks: Block[];
 }
 
-export default function LessonBuilderClient({ initialLesson, initialBlocks }: LessonBuilderClientProps) {
+export default function LessonBuilderClient({ courseId, initialLesson, initialBlocks }: LessonBuilderClientProps) {
   const [lessonData, setLessonData] = useState<LessonData>(initialLesson);
   const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
 
@@ -62,7 +63,7 @@ export default function LessonBuilderClient({ initialLesson, initialBlocks }: Le
   return (
     <div className="min-h-screen bg-slate-50/50 p-6">
       <div className="max-w-7xl mx-auto">
-        <LessonHeader onSave={handleSave} onPreview={handlePreview} />
+        <LessonHeader courseId={courseId} onSave={handleSave} onPreview={handlePreview} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-8">
