@@ -1,20 +1,9 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, sql, desc, notInArray, getTableColumns, and } from "drizzle-orm";
+import { eq, sql, desc, notInArray, getTableColumns, and, inArray } from "drizzle-orm";
 import { CourseListing, CourseDetail, Category } from "../definitions/courses";
+import { CourseBuilderResult, CourseBuilderSection } from "../definitions/lessons";
 
-export async function getCategory() {
-  try {
-    const data = await db
-      .select()
-      .from(schema.categories)
-      .orderBy(schema.categories.name);
-    return data as any as Category[];
-  } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch all categories [DRIZZLE_FIX].');
-  }
-}
 // 1. Định nghĩa các Subqueries để đếm (Dùng chung cho toàn bộ file)
 const lessonStats = db
   .select({
@@ -36,6 +25,28 @@ const enrollmentStats = db
   .from(schema.enrollments)
   .groupBy(schema.enrollments.course_id)
   .as('es');
+
+const sectionStats = db
+  .select({
+    courseId: schema.sections.course_id,
+    total: sql<number>`cast(count(${schema.sections.id}) as int)`.as('s_count'),
+  })
+  .from(schema.sections)
+  .groupBy(schema.sections.course_id)
+  .as('ss');
+
+export async function getCategory() {
+  try {
+    const data = await db
+      .select()
+      .from(schema.categories)
+      .orderBy(schema.categories.name);
+    return data as any as Category[];
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch all categories [DRIZZLE_FIX].');
+  }
+}
 
 export async function fetchAllCourses() {
   try {
@@ -226,5 +237,80 @@ export async function getUserCourseRating(courseId: number, userId: string): Pro
   } catch (error) {
     console.error('Database Error:', error);
     return null;
+  }
+}
+
+export async function getCourseForBuilder(id: string): Promise<CourseBuilderResult | null> {
+  try {
+    const courseId = Number(id);
+
+    // 1. Lấy thông tin cơ bản của course + category
+    const courseRows = await db
+      .select({
+        id: schema.courses.id,
+        name: schema.courses.name,
+        description: schema.courses.description,
+        category_id: schema.courses.category_id,
+        category_name: schema.categories.name,
+        level: schema.courses.level,
+        icon: schema.courses.icon_name,
+        theme_color: schema.courses.theme_color,
+      })
+      .from(schema.courses)
+      .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
+      .where(eq(schema.courses.id, courseId))
+      .limit(1);
+
+    if (courseRows.length === 0) return null;
+
+    // 2. Lấy danh sách sections theo thứ tự
+    const sectionRows = await db
+      .select()
+      .from(schema.sections)
+      .where(eq(schema.sections.course_id, courseId))
+      .orderBy(schema.sections.order_index);
+
+    // 3. Lấy tất cả lessons thuộc các sections trên
+    let lessonRows: {
+      id: number; section_id: number | null; title: string;
+      lesson_type: string | null; duration_minutes: number | null; xp_reward: number | null;
+    }[] = [];
+
+    const sectionIds = sectionRows.map(s => s.id);
+
+    if (sectionIds.length > 0) {
+      lessonRows = await db
+        .select({
+          id: schema.lessons.id,
+          section_id: schema.lessons.section_id,
+          title: schema.lessons.title,
+          lesson_type: schema.lessons.lesson_type,
+          duration_minutes: schema.lessons.duration_minutes,
+          xp_reward: schema.lessons.xp_reward,
+        })
+        .from(schema.lessons)
+        .where(inArray(schema.lessons.section_id, sectionIds))
+        .orderBy(schema.lessons.section_id, schema.lessons.order_index);
+    }
+
+    // 4. Ghép lessons vào từng section
+    const sections: CourseBuilderSection[] = sectionRows.map(section => ({
+      id: section.id,
+      title: section.title,
+      lessons: lessonRows
+        .filter(l => l.section_id === section.id)
+        .map(l => ({
+          id: l.id,
+          title: l.title,
+          type: l.lesson_type || 'video',
+          duration: l.duration_minutes || 0,
+          xp: l.xp_reward || 0,
+        })),
+    }));
+
+    return { ...courseRows[0], sections };
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch course for builder.');
   }
 }

@@ -1,26 +1,19 @@
-import {
-  Code2, Brain, Palette, Database, Rocket, Star,
-  Globe, Smartphone, Shield, Box, Cloud, Cpu
-} from 'lucide-react';
 
 export const iconOptions = [
-  { name: "Code2", icon: Code2 },
-  { name: "Brain", icon: Brain },
-  { name: "Palette", icon: Palette },
-  { name: "Database", icon: Database },
-  { name: "Rocket", icon: Rocket },
-  { name: "Star", icon: Star },
-  { name: "Globe", icon: Globe },
-  { name: "Smartphone", icon: Smartphone },
-  { name: "Shield", icon: Shield },
-  { name: "Box", icon: Box },
-  { name: "Cloud", icon: Cloud },
-  { name: "Cpu", icon: Cpu },
-];
-
-export const categories = [
-  'Mathematics', 'Physics', 'Chemistry', 'History', 
-  'Computer Science', 'Art', 'Language'
+  { name: "atom", icon: 'atom' },
+  { name: "zap", icon: 'zap' },
+  { name: "code2", icon: 'code2' },
+  { name: "brain", icon: 'brain' },
+  { name: "palette", icon: 'palette' },
+  { name: "database", icon: 'database' },
+  { name: "rocket", icon: 'rocket' },
+  { name: "star", icon: 'star' },
+  { name: "globe", icon: 'globe' },
+  { name: "smartphone", icon: 'smartphone' },
+  { name: "shield", icon: 'shield' },
+  { name: "box", icon: 'box' },
+  { name: "cloud", icon: 'cloud' },
+  { name: "cpu", icon: 'cpu' },
 ];
 
 export const levels = ['Beginner', 'Intermediate', 'Advanced'];
@@ -36,35 +29,3 @@ export const colorOptions = [
   { name: "red", bg: "bg-red-100", text: "text-red-600" },
   { name: "orange", bg: "bg-orange-100", text: "text-orange-600" },
 ];
-
-export interface Lesson {
-  id: string | number;
-  title: string;
-  type: string;
-  duration: number;
-  xp: number;
-}
-
-export interface Section {
-  id: string | number;
-  title: string;
-  lessons: Lesson[];
-}
-
-export interface CourseData {
-  name: string;
-  description: string;
-  category: string;
-  level: string;
-  icon: string;
-  theme_color: string;
-  text_color: string;
-  duration: string;
-  curriculum: Section[];
-}
-
-export interface CourseBuilderClientProps {
-  isNew?: boolean;
-  courseId?: string;
-  initialData?: CourseData;
-}

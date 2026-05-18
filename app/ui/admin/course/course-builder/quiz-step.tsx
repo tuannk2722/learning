@@ -3,12 +3,12 @@
 import { motion } from 'motion/react';
 import { HelpCircle } from 'lucide-react';
 import Link from 'next/link';
-import { CourseData } from './course-types';
+import { CourseBuilderResult } from '@/app/lib/definitions/lessons';
 
 interface QuizStepProps {
   isNew: boolean;
   courseId: string;
-  courseData: CourseData;
+  courseData: CourseBuilderResult;
   isSaving: boolean;
   onBack: () => void;
   onSave: () => void;
@@ -47,7 +47,7 @@ export default function QuizStep({
           </div>
         )}
 
-        {courseData.curriculum.length === 0 ? (
+        {courseData.sections.length === 0 ? (
           <div className="text-center py-16 border-2 border-dashed border-gray-100 rounded-3xl bg-slate-50/50">
             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs mb-6">No sections or lessons found</p>
             <button
@@ -59,7 +59,7 @@ export default function QuizStep({
           </div>
         ) : (
           <div className="grid gap-6">
-            {courseData.curriculum.map((section) => (
+            {courseData.sections.map((section) => (
               <div key={section.id} className="bg-slate-50/50 border border-gray-100 rounded-2xl p-6 hover:bg-white hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-bold text-gray-900 text-lg flex items-center gap-3">

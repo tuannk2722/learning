@@ -1,4 +1,3 @@
-// components/course-list/course-row.tsx
 'use client';
 import { motion } from 'motion/react';
 import { Eye, Edit2, Trash2 } from 'lucide-react';

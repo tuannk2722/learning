@@ -4,44 +4,52 @@ import { useState } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
-import { CourseData, Section, Lesson, CourseBuilderClientProps, categories, levels, iconOptions, colorOptions } from './course-types';
+import { levels, iconOptions, colorOptions } from './course-types';
 import Header from './header';
 import ProgressSteps from './progress-steps';
 import CourseInfoStep from '../course-info-step';
 import CurriculumStep from './curriculum-step';
 import QuizStep from './quiz-step';
+import { CourseBuilderLesson, CourseBuilderResult, CourseBuilderSection } from '@/app/lib/definitions/lessons';
+import { Category } from '@/app/lib/definitions/courses';
 
-const defaultCourseData: CourseData = {
+const defaultCourseData: CourseBuilderResult = {
+  id: 0,
   name: '',
   description: '',
-  category: categories[0],
+  category_id: 1,
+  category_name: 'Web Development',
   level: levels[0],
   icon: iconOptions[0].name,
   theme_color: colorOptions[0].bg,
-  text_color: colorOptions[0].text,
-  duration: '',
-  curriculum: [
+  sections: [
     {
       id: 1,
-      title: 'Introduction',
-      lessons: [
-        { id: 1, title: 'Getting Started', type: 'video', duration: 15, xp: 50 },
-        { id: 2, title: 'Basic Concepts', type: 'lesson', duration: 10, xp: 30 }
-      ]
+      title: "New Section",
+      lessons: []
     }
   ]
 };
 
+
+export interface CourseBuilderClientProps {
+  isNew?: boolean;
+  courseId?: string;
+  initialData?: CourseBuilderResult;
+  categories: Category[];
+}
+
 // --- Main Component ---
 export default function CourseBuilderClient({
   isNew = false,
-  courseId = "draft",
-  initialData
+  courseId,
+  initialData,
+  categories
 }: CourseBuilderClientProps) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [expandedCurriculum, setExpandedCurriculum] = useState<number[]>([0]);
-  const [courseData, setCourseData] = useState<CourseData>(initialData || defaultCourseData);
+  const [courseData, setCourseData] = useState<CourseBuilderResult>(initialData || defaultCourseData);
   const [isSaving, setIsSaving] = useState(false);
 
   // --- Handlers ---
@@ -52,49 +60,49 @@ export default function CourseBuilderClient({
   };
 
   const addCurriculum = () => {
-    const newSection: Section = {
+    const newSection: CourseBuilderSection = {
       id: Date.now(),
       title: 'New Section',
       lessons: []
     };
 
     setCourseData(prev => {
-      const newCurriculum = [...prev.curriculum, newSection];
+      const newCurriculum = [...prev.sections, newSection];
       setExpandedCurriculum(ex => [...ex, newCurriculum.length - 1]);
-      return { ...prev, curriculum: newCurriculum };
+      return { ...prev, sections: newCurriculum };
     });
   };
 
   const addLesson = (sectionIndex: number) => {
-    const newLesson: Lesson = {
+    const newLesson: CourseBuilderLesson = {
       id: Date.now(),
-      title: `Lesson ${courseData.curriculum[sectionIndex].lessons.length + 1}`,
+      title: `Lesson ${courseData.sections[sectionIndex].lessons.length + 1}`,
       type: 'video',
       duration: 15,
       xp: 50
     };
 
     setCourseData(prev => {
-      const newCurriculum = prev.curriculum.map((section, idx) => {
+      const newCurriculum = prev.sections.map((section, idx) => {
         if (idx === sectionIndex) {
           return { ...section, lessons: [...section.lessons, newLesson] };
         }
         return section;
       });
-      return { ...prev, curriculum: newCurriculum };
+      return { ...prev, sections: newCurriculum };
     });
   };
 
   const deleteSection = (index: number) => {
     setCourseData(prev => ({
       ...prev,
-      curriculum: prev.curriculum.filter((_, i) => i !== index)
+      sections: prev.sections.filter((_, i) => i !== index)
     }));
   };
 
   const deleteLesson = (sectionIndex: number, lessonId: string | number) => {
     setCourseData(prev => {
-      const newCurriculum = prev.curriculum.map((section, idx) => {
+      const newCurriculum = prev.sections.map((section, idx) => {
         if (idx === sectionIndex) {
           return {
             ...section,
@@ -103,14 +111,14 @@ export default function CourseBuilderClient({
         }
         return section;
       });
-      return { ...prev, curriculum: newCurriculum };
+      return { ...prev, sections: newCurriculum };
     });
   };
 
   const updateSectionTitle = (currIndex: number, newTitle: string) => {
     setCourseData(prev => ({
       ...prev,
-      curriculum: prev.curriculum.map((s, idx) =>
+      sections: prev.sections.map((s, idx) =>
         idx === currIndex ? { ...s, title: newTitle } : s
       )
     }));
@@ -138,7 +146,7 @@ export default function CourseBuilderClient({
     }
   };
 
-  const totalLessons = courseData.curriculum.reduce(
+  const totalLessons = courseData.sections.reduce(
     (sum, section) => sum + section.lessons.length,
     0
   );
@@ -160,6 +168,7 @@ export default function CourseBuilderClient({
               key="step1"
               courseData={courseData}
               setCourseData={setCourseData}
+              categories={categories}
               onNext={() => setStep(2)}
             />
           )}
@@ -168,7 +177,7 @@ export default function CourseBuilderClient({
             <CurriculumStep
               key="step2"
               isNew={isNew}
-              courseId={courseId}
+              courseId={courseId!}
               courseData={courseData}
               expandedCurriculum={expandedCurriculum}
               totalLessons={totalLessons}
@@ -187,7 +196,7 @@ export default function CourseBuilderClient({
             <QuizStep
               key="step3"
               isNew={isNew}
-              courseId={courseId}
+              courseId={courseId!}
               courseData={courseData}
               isSaving={isSaving}
               onBack={() => setStep(2)}

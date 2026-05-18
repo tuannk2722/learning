@@ -52,3 +52,31 @@ export interface DetailLesson {
   video_url: string | null;
   xp_reward: number;
 }
+
+
+// ADMIN
+export type CourseBuilderLesson = {
+  id: number;
+  title: string;
+  type: string;
+  duration: number;
+  xp: number;
+};
+
+export type CourseBuilderSection = {
+  id: number;
+  title: string;
+  lessons: CourseBuilderLesson[];
+};
+
+export type CourseBuilderResult = {
+  id: number;
+  name: string;
+  description: string | null;
+  category_id: number | null;
+  category_name?: string | null;
+  level: string | null;
+  icon: string | null;
+  theme_color: string | null;
+  sections: CourseBuilderSection[];
+};

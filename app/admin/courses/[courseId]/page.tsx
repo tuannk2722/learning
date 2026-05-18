@@ -1,14 +1,35 @@
+import { notFound } from 'next/navigation';
+import { getCategory, getCourseForBuilder } from '@/app/lib/data/courses';
 import CourseBuilderClient from '@/app/ui/admin/course/course-builder/course-builder-client';
+import { colorOptions, iconOptions } from '@/app/ui/admin/course/course-builder/course-types';
+import { CourseBuilderResult } from '@/app/lib/definitions/lessons';
 
 interface Props {
-  params: { courseId: string };
+  params: Promise<{ courseId: string }>;
 }
 
 export default async function EditCoursePage({ params }: Props) {
-  const { courseId } = params;
+  const { courseId } = await params;
+  const course = await getCourseForBuilder(courseId);
+  const categories = await getCategory();
 
-  // TODO: Fetch from DB using courseId
-  // const course = await getCourseById(courseId);
+  if (!course) return notFound();
 
-  return <CourseBuilderClient isNew={false} courseId={courseId} />;
+  // Tìm text_color tương ứng với theme_color đang lưu trong DB
+  const matchedColor = colorOptions.find(c => c.bg === course.theme_color);
+
+  // Map dữ liệu từ DB sang kiểu CourseBuilderResult mà CourseBuilderClient hiểu được
+  const initialData: CourseBuilderResult = {
+    id: course.id,
+    name: course.name,
+    description: course.description || '',
+    category_id: course.category_id,
+    category_name: course.category_name || categories[0].name,
+    level: course.level || 'Beginner',
+    icon: course.icon || iconOptions[0].name,
+    theme_color: matchedColor?.bg || colorOptions[0].bg,
+    sections: course.sections,
+  };
+
+  return <CourseBuilderClient isNew={false} courseId={courseId} initialData={initialData} categories={categories} />;
 }

@@ -3,12 +3,12 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, GripVertical, ChevronDown, ChevronRight, Video, Code, FileText, HelpCircle } from 'lucide-react';
 import Link from 'next/link';
-import { CourseData } from './course-types';
+import { CourseBuilderResult } from '@/app/lib/definitions/lessons';
 
 interface CurriculumStepProps {
   isNew: boolean;
   courseId: string;
-  courseData: CourseData;
+  courseData: CourseBuilderResult;
   expandedCurriculum: number[];
   totalLessons: number;
   onToggleCurriculum: (index: number) => void;
@@ -69,7 +69,7 @@ export default function CurriculumStep({
 
           <div className="space-y-4">
             <AnimatePresence mode="popLayout">
-              {courseData.curriculum.map((section, currIndex) => (
+              {courseData.sections.map((section, currIndex) => (
                 <motion.div
                   key={section.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -129,8 +129,6 @@ export default function CurriculumStep({
                             <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm border border-gray-50">
                               {lesson.type === 'video' ? (
                                 <Video className="w-5 h-5 text-red-500" />
-                              ) : lesson.type === 'code' ? (
-                                <Code className="w-5 h-5 text-indigo-500" />
                               ) : (
                                 <FileText className="w-5 h-5 text-blue-500" />
                               )}
@@ -211,7 +209,7 @@ export default function CurriculumStep({
             <div className="space-y-4">
               <div className="p-4 bg-violet-50 rounded-2xl border border-violet-100 transition-all hover:shadow-md">
                 <div className="text-[10px] font-bold text-violet-600 uppercase tracking-tight mb-1">Total Sections</div>
-                <div className="text-3xl font-black text-violet-900">{courseData.curriculum.length}</div>
+                <div className="text-3xl font-black text-violet-900">{courseData.sections.length}</div>
               </div>
 
               <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 transition-all hover:shadow-md">

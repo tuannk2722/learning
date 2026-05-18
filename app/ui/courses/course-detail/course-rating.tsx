@@ -22,7 +22,7 @@ export function CourseRating({ courseId, initialRating }: Props) {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setRating(value);
-    
+
     try {
       const res = await rateCourse(courseId, value);
       if (res.success) {
@@ -42,7 +42,7 @@ export function CourseRating({ courseId, initialRating }: Props) {
 
   return (
     <>
-      <button 
+      <button
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors"
       >
@@ -54,20 +54,24 @@ export function CourseRating({ courseId, initialRating }: Props) {
 
       <AnimatePresence>
         {isOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div
+            onClick={() => setIsOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          >
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white rounded-2xl p-6 shadow-xl w-full max-w-sm relative"
             >
-              <button 
+              <button
                 onClick={() => setIsOpen(false)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
-              
+
               <div className="text-center mb-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-1">Rate this Course</h3>
                 <p className="text-sm text-gray-500">How would you rate your learning experience?</p>
