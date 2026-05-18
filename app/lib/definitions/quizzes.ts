@@ -73,3 +73,15 @@ export interface QuizAttemptDetail {
   completedAt: string;
   answers: QuestionResult[];
 }
+
+export interface QuizResultContainer {
+  courseId: string;
+  lessonId: string;
+  nextLessonId: number | null;
+  score: number;
+  total: number;
+  xpEarned: number;
+  passed: boolean;
+  passingScore: number;
+  results: QuestionResult[];
+}

@@ -4,39 +4,23 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { Trophy, Star, Target, TrendingUp, CheckCircle2, XCircle, Zap, ChevronRight, RotateCcw, Award } from "lucide-react";
-import confetti from 'canvas-confetti';
-import { QuestionResult } from "@/app/lib/definitions/quizzes";
+import { QuizResultContainer } from "@/app/lib/definitions/quizzes";
 import ResultDetailCard from "./result-detail-card";
+import { triggerConfetti } from "@/app/lib/utils/confetti";
+import StatBox from "./stat-box";
 
-interface Props {
-  courseId: string;
-  lessonId: string;
-  nextLessonId: number | null;
-  score: number;
-  total: number;
-  xpEarned: number;
-  passed: boolean;
-  passingScore: number;
-  results: QuestionResult[];
-}
-
-export default function QuizResultsContainer({ courseId, lessonId, nextLessonId, score, total, xpEarned, passed, results }: Props) {
+export default function QuizResultsContainer({ courseId, lessonId, nextLessonId, score, total, xpEarned, passed, results }: QuizResultContainer) {
   const [showConfetti, setShowConfetti] = useState(false);
 
   const percentage = Math.round((score / total) * 100);
 
   useEffect(() => {
-    if (passed && !showConfetti) {
-      setShowConfetti(true);
-      const duration = 1500;
-      const end = Date.now() + duration;
-
-      const frame = () => {
-        confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#8B5CF6', '#A78BFA'] });
-        confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#8B5CF6', '#A78BFA'] });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      };
-      frame();
+    if (passed && !showConfetti && typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('new') === 'true') {
+        setShowConfetti(true);
+        triggerConfetti();
+      }
     }
   }, [passed, showConfetti]);
 
@@ -124,16 +108,4 @@ export default function QuizResultsContainer({ courseId, lessonId, nextLessonId,
       </div>
     </div>
   );
-}
-
-function StatBox({ label, value, icon: Icon, color, bg }: any) {
-  return (
-    <div className={`${bg} p-6 rounded-3xl border border-black/5`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-500">{label}</span>
-        <Icon className={`w-5 h-5 ${color}`} />
-      </div>
-      <div className={`text-3xl font-bold ${color}`}>{value}</div>
-    </div>
-  )
 }

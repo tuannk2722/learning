@@ -1,25 +1,41 @@
 'use client';
 import { useState } from 'react';
-import { Course } from '@/app/lib/definitions/definitions';
 import { CourseFilter } from './course-filter';
 import { CourseRow } from './course-row';
 import { CoursePagination } from './course-pagination';
+import { Category, CourseListing } from '@/app/lib/definitions/courses';
 
 interface CourseListProps {
-  initialCourses: Course[];
+  initialCourses: CourseListing[];
+  categories: Category[];
 }
 
-export default function CourseList({ initialCourses }: CourseListProps) {
+export default function CourseList({ initialCourses, categories }: CourseListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedLevel, setSelectedLevel] = useState("All");
 
-  const filteredCourses = initialCourses.filter(course =>
-    course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCourses = initialCourses.filter(course => {
+    const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.category_name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesCategory = selectedCategory === "All" || course.category_name === selectedCategory;
+    const matchesLevel = selectedLevel === "All" || course.level === selectedLevel;
+
+    return matchesSearch && matchesCategory && matchesLevel;
+  });
 
   return (
     <>
-      <CourseFilter searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <CourseFilter
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        selectedLevel={selectedLevel}
+        onLevelChange={setSelectedLevel}
+        categories={categories}
+      />
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">

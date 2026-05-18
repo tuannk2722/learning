@@ -55,7 +55,6 @@ export const courses = pgTable('courses', {
   level: varchar('level', { length: 50 }),
   icon_name: varchar('icon_name', { length: 50 }),
   theme_color: varchar('theme_color', { length: 50 }),
-  estimated_hours: integer('estimated_hours'),
   rating: numeric('rating', { precision: 2, scale: 1 }).default('0.0'),
   reviews_count: integer('reviews_count').default(0),
   status: varchar('status', { length: 50 }).default('draft'),

@@ -1,15 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { CheckCircle2, XCircle, Zap, ClipboardList, ChevronRight } from "lucide-react";
 import { QuizAttemptSummary } from "@/app/lib/definitions/quizzes";
+import { Pagination } from "@/app/ui/pagination";
 
 interface Props {
   attempts: QuizAttemptSummary[];
 }
 
 export function QuizHistorySection({ attempts }: Props) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
+
   if (attempts.length === 0) {
     return (
       <motion.div
@@ -23,6 +28,10 @@ export function QuizHistorySection({ attempts }: Props) {
       </motion.div>
     );
   }
+
+  const totalPages = Math.ceil(attempts.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentAttempts = attempts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <motion.div
@@ -50,7 +59,7 @@ export function QuizHistorySection({ attempts }: Props) {
         </div>
 
         {/* Rows */}
-        {attempts.map((attempt, idx) => {
+        {currentAttempts.map((attempt, idx) => {
           const percentage = Math.round((attempt.score / attempt.total) * 100);
           const formattedDate = new Date(attempt.completedAt).toLocaleDateString("en-US", {
             month: "short",
@@ -68,7 +77,7 @@ export function QuizHistorySection({ attempts }: Props) {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className={`grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 items-center border-b border-gray-50 hover:bg-violet-50/50 transition-colors ${idx === attempts.length - 1 ? "border-b-0" : ""}`}
+                className={`grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 items-center border-b border-gray-50 hover:bg-violet-50/50 transition-colors ${idx === currentAttempts.length - 1 ? "border-b-0" : ""}`}
               >
                 {/* Quiz & Lesson Name */}
                 <div className="col-span-4">
@@ -113,6 +122,17 @@ export function QuizHistorySection({ attempts }: Props) {
             </Link>
           );
         })}
+
+        {/* Pagination Section */}
+        {totalPages > 1 && (
+          <div className="px-6 pb-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
+        )}
       </div>
     </motion.div>
   );

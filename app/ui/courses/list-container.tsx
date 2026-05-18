@@ -5,10 +5,9 @@ import { motion } from "motion/react";
 import { Search } from "lucide-react";
 import { LevelFilter } from "./level-filter";
 import { CourseGrid } from "./courseGrid";
-import { Course } from "@/app/lib/definitions/courses";
+import { CourseListing } from "@/app/lib/definitions/courses";
 
-
-export function CourseListContainer({ initialCourses }: { initialCourses: Course[] }) {
+export function CourseListContainer({ initialCourses }: { initialCourses: CourseListing[] }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("All");
 

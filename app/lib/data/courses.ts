@@ -1,8 +1,20 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { eq, sql, desc, notInArray, getTableColumns, and } from "drizzle-orm";
-import { CourseListing, CourseDetail } from "../definitions/courses";
+import { CourseListing, CourseDetail, Category } from "../definitions/courses";
 
+export async function getCategory() {
+  try {
+    const data = await db
+      .select()
+      .from(schema.categories)
+      .orderBy(schema.categories.name);
+    return data as any as Category[];
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch all categories [DRIZZLE_FIX].');
+  }
+}
 // 1. Định nghĩa các Subqueries để đếm (Dùng chung cho toàn bộ file)
 const lessonStats = db
   .select({
@@ -35,6 +47,7 @@ export async function fetchAllCourses() {
         ...getTableColumns(schema.courses),
         category_name: schema.categories.name,
         total_lessons: totalLessons,
+        total_duration: sql<number>`coalesce(${lessonStats.total_duration}, 0)`,
         enrolled_count: enrolledCount,
       })
       .from(schema.courses)

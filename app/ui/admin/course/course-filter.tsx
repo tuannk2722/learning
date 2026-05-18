@@ -1,12 +1,28 @@
 'use client';
 import { Search } from 'lucide-react';
+import { Category } from '@/app/lib/definitions/courses';
 
 interface CourseFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  selectedCategory: string;
+  onCategoryChange: (value: string) => void;
+  selectedLevel: string;
+  onLevelChange: (value: string) => void;
+  categories: Category[];
 }
 
-export function CourseFilter({ searchQuery, onSearchChange }: CourseFilterProps) {
+const levels = ["Beginner", "Intermediate", "Advanced"];
+
+export function CourseFilter({
+  searchQuery,
+  onSearchChange,
+  selectedCategory,
+  onCategoryChange,
+  selectedLevel,
+  onLevelChange,
+  categories
+}: CourseFilterProps) {
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
       <div className="flex flex-col md:flex-row items-center gap-4">
@@ -21,16 +37,25 @@ export function CourseFilter({ searchQuery, onSearchChange }: CourseFilterProps)
           />
         </div>
         <div className="flex w-full md:w-auto gap-4">
-          <select className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium">
-            <option>All Categories</option>
-            <option>Programming</option>
-            <option>Web Development</option>
-            <option>AI & ML</option>
+          <select
+            value={selectedCategory}
+            onChange={(e) => onCategoryChange(e.target.value)}
+            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white"
+          >
+            <option value="All">All Categories</option>
+            {categories.map(c => (
+              <option key={c.id} value={c.name}>{c.name}</option>
+            ))}
           </select>
-          <select className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium">
-            <option>All Status</option>
-            <option>Published</option>
-            <option>Draft</option>
+          <select
+            value={selectedLevel}
+            onChange={(e) => onLevelChange(e.target.value)}
+            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white"
+          >
+            <option value="All">All Levels</option>
+            {levels.map(l => (
+              <option key={l} value={l}>{l}</option>
+            ))}
           </select>
         </div>
       </div>

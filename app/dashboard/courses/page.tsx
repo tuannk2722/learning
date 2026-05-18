@@ -37,11 +37,6 @@ export default async function Courses() {
                 <CourseCardSkeleton />
               </div>
             }>
-              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {enrolledCourses.map((course, index) => {
-                  return <CourseCardEnrolled key={course.id} course={course} index={index} />;
-                })}
-              </div> */}
               <CourseCardEnrolled enrolledCourses={enrolledCourses} />
             </Suspense>
           </div>

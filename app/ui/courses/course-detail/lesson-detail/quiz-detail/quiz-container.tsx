@@ -47,7 +47,7 @@ export default function QuizContainer({
         }
 
         router.push(
-          `/dashboard/courses/${courseId}/lesson/${lessonId}/quiz/result/${result.attemptId}`
+          `/dashboard/courses/${courseId}/lesson/${lessonId}/quiz/result/${result.attemptId}?new=true`
         );
       } else {
         setIsSubmitting(false);

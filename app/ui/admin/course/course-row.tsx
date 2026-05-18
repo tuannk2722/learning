@@ -3,16 +3,16 @@
 import { motion } from 'motion/react';
 import { Eye, Edit2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { Course } from '@/app/lib/definitions/definitions';
+import { CourseListing } from '@/app/lib/definitions/courses';
 
 interface CourseRowProps {
-  course: Course;
+  course: CourseListing;
   index: number;
 }
 
 export function CourseRow({ course, index }: CourseRowProps) {
   const handleDelete = () => {
-    if (window.confirm(`Delete "${course.title}"?`)) {
+    if (window.confirm(`Delete "${course.name}"?`)) {
       console.log('Delete course:', course.id);
     }
   };
@@ -26,20 +26,20 @@ export function CourseRow({ course, index }: CourseRowProps) {
     >
       <td className="px-6 py-4 whitespace-nowrap">
         <div>
-          <div className="font-bold text-gray-900">{course.title}</div>
-          <div className="text-sm text-gray-500 font-medium">{course.category}</div>
+          <div className="font-bold text-gray-900">{course.name}</div>
+          <div className="text-sm text-gray-500 font-medium">{course.category_name}</div>
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="text-sm font-medium text-gray-700">{course.lessons} lessons</div>
+        <div className="text-sm font-medium text-gray-700">{course.total_lessons} lessons</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r ${course.bgGradient}`}>
+        <span className={`px-3 py-1 rounded-full text-xs font-bold bg-gray-200`}>
           {course.level}
         </span>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <div className="font-bold text-gray-900">{course.students.toLocaleString()}</div>
+        <div className="font-bold text-gray-900">{course.enrolled_count.toLocaleString()}</div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span className={`px-3 py-1 rounded-full text-xs font-bold ${course.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
