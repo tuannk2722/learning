@@ -1,8 +1,8 @@
-import QuizContainer from "@/app/ui/courses/course-detail/lesson-detail/quiz-detail/quiz-container";
+import QuizContainer from "@/app/ui/quiz/quiz-container";
 import { getQuizByLessonId } from "@/app/lib/data/quiz";
 import { submitQuiz } from "@/app/lib/actions/quiz";
 import { getNextLessonId } from "@/app/lib/data/lessons";
-import { NotFound } from "@/app/ui/courses/course-detail/lesson-detail/quiz-detail/result-detail/not-found";
+import { NotFound } from "@/app/ui/result/not-found";
 
 export default async function QuizPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const params = await props.params;

@@ -1,4 +1,4 @@
-import QuizResultsContainer from "@/app/ui/courses/course-detail/lesson-detail/quiz-detail/result-detail/result-container";
+import QuizResultsContainer from "@/app/ui/result/result-container";
 import { getNextLessonId } from "@/app/lib/data/lessons";
 import { notFound } from "next/navigation";
 import { getAttemptById } from "@/app/lib/data/quiz";

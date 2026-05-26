@@ -2,7 +2,7 @@
 import { DetailLesson } from "@/app/lib/definitions/lessons";
 import { ChevronLeft, Clock } from "lucide-react";
 import Link from "next/link";
-import { CourseRating } from "../course-rating";
+import { CourseRating } from "../course-detail/course-rating";
 
 export function LessonDetailHeader({ lesson, initialRating }: { lesson: DetailLesson, initialRating?: number | null }) {
 

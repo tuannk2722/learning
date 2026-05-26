@@ -7,7 +7,7 @@ import { getColorClasses } from "@/app/lib/utils/color-classes";
 import { enrollInCourse } from "@/app/lib/actions/course";
 import { useState } from "react";
 import { toast } from "sonner";
-import { showAchievementToasts } from "../../achievement/achievement-toast";
+import { showAchievementToasts } from "../achievement/achievement-toast";
 
 export function EnrollmentCard({ course }: { course: CourseDetail }) {
   const colorClasses = getColorClasses(course.theme_color);

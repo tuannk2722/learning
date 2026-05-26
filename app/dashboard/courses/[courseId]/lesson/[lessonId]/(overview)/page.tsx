@@ -1,11 +1,11 @@
-import { LessonContent } from "@/app/ui/courses/course-detail/lesson-detail/lesson-content";
-import { LessonDetailHeader } from "@/app/ui/courses/course-detail/lesson-detail/lesson-header";
-import { LessonNote } from "@/app/ui/courses/course-detail/lesson-detail/lesson-note";
+import { LessonContent } from "@/app/ui/lesson/lesson-content";
+import { LessonDetailHeader } from "@/app/ui/lesson/lesson-header";
+import { LessonNote } from "@/app/ui/lesson/lesson-note";
 import { getCourseCurriculum, getLessonDetail, getLessonNote } from "@/app/lib/data/lessons";
 import { getUserCourseRating } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
-import { CurriculumSection } from "@/app/ui/courses/course-detail/course-curriculum";
+import { CurriculumSection } from "@/app/ui/course-detail/course-curriculum";
 import { completeLesson } from "@/app/lib/actions/lesson";
 import { Suspense } from "react";
 import { LessonContentSkeleton, LessonDetailHeaderSkeleton, LessonNoteSkeleton } from "@/app/ui/skeleton/lesson";

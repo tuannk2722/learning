@@ -1,10 +1,10 @@
-import { CourseInfo } from "@/app/ui/courses/course-detail/course-info";
-import { EnrollmentCard } from "@/app/ui/courses/course-detail/enrollment-card";
-import { CurriculumSection } from "@/app/ui/courses/course-detail/course-curriculum";
+import { CourseInfo } from "@/app/ui/course-detail/course-info";
+import { EnrollmentCard } from "@/app/ui/course-detail/enrollment-card";
+import { CurriculumSection } from "@/app/ui/course-detail/course-curriculum";
 import { auth } from "@/auth";
 import { getCourseById, getUserCourseRating } from "@/app/lib/data/courses";
 import { getCourseCurriculum } from "@/app/lib/data/lessons";
-import { WillLearned } from "@/app/ui/courses/course-detail/will-learned";
+import { WillLearned } from "@/app/ui/course-detail/will-learned";
 import { Suspense } from "react";
 import { CourseHeroSectionSkeleton, CurriculumSectionSkeleton } from "@/app/ui/skeleton/course-detail";
 

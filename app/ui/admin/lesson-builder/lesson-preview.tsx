@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
-import { CodeBlock } from '@/app/ui/courses/course-detail/lesson-detail/lesson-code-block';
+import { CodeBlock } from '@/app/ui/lesson/lesson-code-block';
 import { LessonBlock, LessonBuilderData } from '@/app/lib/definitions/lessons';
 
 interface LessonPreviewModalProps {
