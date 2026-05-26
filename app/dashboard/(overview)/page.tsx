@@ -6,18 +6,18 @@ import { LeaderboardPreview } from "@/app/ui/dashboard/leaderboard-preview";
 import { HeaderDashboard } from "@/app/ui/dashboard/header";
 import { Suspense } from "react";
 import {
-  StatsOverviewSkeleton,
   DailyQuestsSkeleton,
   ContinueCoursesSkeleton,
   AchievementsCardSkeleton,
   LeaderboardPreviewSkeleton
-} from "@/app/ui/skeletons";
+} from "@/app/ui/skeleton/dashboard";
 import { getEnrolledCourses } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
 import { getUserById, getLeaderboardData, getRankByUserId } from "@/app/lib/data/users";
 import { getRecentAchievements } from "@/app/lib/data/achievements";
 import { getOrAssignDailyQuests } from "@/app/lib/data/quests";
 import { getEffectiveStreak } from "@/app/lib/actions/streak";
+import { StatsOverviewSkeleton } from "@/app/ui/skeleton/skeletons";
 
 export default async function DashboardHome() {
   const session = await auth();
@@ -34,8 +34,6 @@ export default async function DashboardHome() {
   if (userInfo) {
     currentStreak = await getEffectiveStreak(userInfo.current_streak, userInfo.last_study_date);
   }
-
-  // const handleClose = (e) => 
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">

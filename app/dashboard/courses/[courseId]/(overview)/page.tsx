@@ -5,6 +5,8 @@ import { auth } from "@/auth";
 import { getCourseById, getUserCourseRating } from "@/app/lib/data/courses";
 import { getCourseCurriculum } from "@/app/lib/data/lessons";
 import { WillLearned } from "@/app/ui/courses/course-detail/will-learned";
+import { Suspense } from "react";
+import { CourseHeroSectionSkeleton, CurriculumSectionSkeleton } from "@/app/ui/skeleton/course-detail";
 
 export default async function CourseDetailPage(props: { params: Promise<{ courseId: string }> }) {
   const session = await auth();
@@ -26,33 +28,38 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
 
       {/* Course Hero */}
-      <section className="pt-32 pb-12 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Course Info */}
-            <CourseInfo course={course} initialRating={initialRating} />
+      <Suspense fallback={<CourseHeroSectionSkeleton />}>
+        <section className="pt-32 pb-12 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* Course Info */}
+              <CourseInfo course={course} initialRating={initialRating} />
 
-            {/* Enrollment Card */}
-            <EnrollmentCard course={course} />
+              {/* Enrollment Card */}
+              <EnrollmentCard course={course} />
 
-          </div>
-        </div>
-      </section>
-
-      <section className="pb-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              {/* Curriculum */}
-              <CurriculumSection curriculum={curriculum} courseId={courseId} />
             </div>
-
-            {/* What You'll Learn */}
-            <WillLearned listedLessons={listedLessons} />
-
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </Suspense>
+
+      <Suspense fallback={<CurriculumSectionSkeleton />}>
+        <section className="pb-20 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                {/* Curriculum */}
+                <CurriculumSection curriculum={curriculum} courseId={courseId} />
+              </div>
+
+              {/* What You'll Learn */}
+              <WillLearned listedLessons={listedLessons} />
+
+            </div>
+          </div>
+        </section>
+      </Suspense>
+
+    </div >
   );
 }

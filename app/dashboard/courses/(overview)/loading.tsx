@@ -1,4 +1,4 @@
-import { CoursesSkeleton } from "@/app/ui/skeletons";
+import { CoursesSkeleton } from "@/app/ui/skeleton/course";
 
 export default function Loading() {
   return <CoursesSkeleton />

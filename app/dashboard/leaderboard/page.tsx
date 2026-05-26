@@ -2,7 +2,7 @@ import { LeaderboardTitle } from "@/app/ui/leaderboard/title";
 import { Top3Podium } from "@/app/ui/leaderboard/top-3-podium";
 import { FullLeaderboard } from "@/app/ui/leaderboard/full-leaderboard";
 import { Suspense } from "react";
-import { Top3PodiumSkeleton, FullLeaderboardSkeleton } from "@/app/ui/skeletons";
+import { Top3PodiumSkeleton, FullLeaderboardSkeleton } from "@/app/ui/skeleton/skeletons";
 
 import { getLeaderboardData } from "@/app/lib/data/users";
 import { auth } from "@/auth";
@@ -10,9 +10,8 @@ import { auth } from "@/auth";
 export default async function Leaderboard() {
   const session = await auth();
   const userId = session?.user?.id;
-  
-  const leaderboardData = await getLeaderboardData(userId);
 
+  const leaderboardData = await getLeaderboardData(userId);
 
   return (
     <div className="p-6">

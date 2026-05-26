@@ -40,12 +40,12 @@ export async function getCategory() {
   }
 }
 
-export async function fetchAllCourses() {
+export async function fetchAllCourses(options?: { status?: 'published' | 'draft' }) {
   try {
     const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
     const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
 
-    const data = await db
+    const query = db
       .select({
         ...getTableColumns(schema.courses),
         category_name: schema.categories.name,
@@ -56,15 +56,22 @@ export async function fetchAllCourses() {
       .from(schema.courses)
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
-      .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
-      .orderBy(desc(enrolledCount));
+      .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId));
 
+    if (options?.status) {
+      query.where(eq(schema.courses.status, options.status));
+    }
+
+    query.orderBy(desc(enrolledCount));
+
+    const data = await query;
     return data as any as CourseListing[];
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch all courses [DRIZZLE_FIX].');
+    throw new Error('Failed to fetch courses.');
   }
 }
+
 
 export async function getEnrolledCourses(userId: string) {
   try {

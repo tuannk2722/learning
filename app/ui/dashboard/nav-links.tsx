@@ -17,8 +17,6 @@ const adminNavItems = [
   { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/admin/courses", icon: BookOpen, label: "Course Management" },
   { path: "/admin/user-management", icon: Users, label: "User Management" },
-  { path: "/admin/achievement", icon: Award, label: "Achievements System" },
-  { path: "/admin/quests", icon: Target, label: "Quests System" },
 ]
 
 interface Props {

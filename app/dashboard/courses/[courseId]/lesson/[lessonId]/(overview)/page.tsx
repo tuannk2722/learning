@@ -7,6 +7,9 @@ import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import { CurriculumSection } from "@/app/ui/courses/course-detail/course-curriculum";
 import { completeLesson } from "@/app/lib/actions/lesson";
+import { Suspense } from "react";
+import { LessonContentSkeleton, LessonDetailHeaderSkeleton, LessonNoteSkeleton } from "@/app/ui/skeleton/lesson";
+import { CurriculumSkeleton } from "@/app/ui/skeleton/course-detail";
 
 export default async function LessonDetailPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const session = await auth();
@@ -36,19 +39,25 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       <div className="pt-24">
         {/* Lesson Header */}
-        <LessonDetailHeader lesson={lesson} initialRating={initialRating} />
+        <Suspense fallback={<LessonDetailHeaderSkeleton />}>
+          <LessonDetailHeader lesson={lesson} initialRating={initialRating} />
+        </Suspense>
 
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-3 gap-8 items-start">
               <div className="lg:col-span-2">
                 {/* Lesson Content */}
-                <LessonContent lesson={lesson} courseId={courseId} lessonId={lessonId} onComplete={handleCompleteLesson} isAlreadyCompleted={lesson.isCompleted} />
+                <Suspense fallback={<LessonContentSkeleton />}>
+                  <LessonContent lesson={lesson} courseId={courseId} lessonId={lessonId} onComplete={handleCompleteLesson} isAlreadyCompleted={lesson.isCompleted} />
+                </Suspense>
               </div>
 
               {/* Curriculum */}
               <div className="lg:col-span-1 sticky top-32">
-                <CurriculumSection curriculum={curriculum} courseId={courseId} activeLessonId={lessonId} />
+                <Suspense fallback={<CurriculumSkeleton />}>
+                  <CurriculumSection curriculum={curriculum} courseId={courseId} activeLessonId={lessonId} />
+                </Suspense>
               </div>
 
             </div>
@@ -56,7 +65,9 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
         </section>
 
         {/* Lesson Note */}
-        <LessonNote lessonId={lessonId} initialContent={initialNoteContent} />
+        <Suspense fallback={<LessonNoteSkeleton />}>
+          <LessonNote lessonId={lessonId} initialContent={initialNoteContent} />
+        </Suspense>
       </div>
     </div>
   );
