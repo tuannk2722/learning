@@ -1,6 +1,6 @@
 'use client';
 import { DetailLesson } from "@/app/lib/definitions/lessons";
-import { ChevronLeft, Clock, Code2, FileText, Play } from "lucide-react";
+import { ChevronLeft, Clock } from "lucide-react";
 import Link from "next/link";
 import { CourseRating } from "../course-rating";
 
@@ -23,24 +23,6 @@ export function LessonDetailHeader({ lesson, initialRating }: { lesson: DetailLe
               <span className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-sm font-medium">
                 Lessons {lesson.lessonNumber}/{lesson.totalLessons}
               </span>
-              {lesson.lesson_type === "video" && (
-                <span className="flex items-center gap-1 text-sm text-gray-600">
-                  <Play className="w-4 h-4" />
-                  Video
-                </span>
-              )}
-              {lesson.lesson_type === "md" && (
-                <span className="flex items-center gap-1 text-sm text-gray-600">
-                  <FileText className="w-4 h-4" />
-                  Markdown
-                </span>
-              )}
-              {lesson.lesson_type === "code" && (
-                <span className="flex items-center gap-1 text-sm text-gray-600">
-                  <Code2 className="w-4 h-4" />
-                  Coding
-                </span>
-              )}
               <span className="flex items-center gap-1 text-sm text-gray-600">
                 <Clock className="w-4 h-4" />
                 {lesson.duration_minutes} minutes

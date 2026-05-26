@@ -3,7 +3,7 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { eq, asc, sql } from "drizzle-orm";
-import { QuizSubmitResult, QuestionResult } from "../definitions/quizzes";
+import { QuizSubmitResult, QuestionResult, Question, QuestionType } from "../definitions/quizzes";
 import { auth } from "@/auth";
 import { updateQuestProgress } from "./quests";
 import { QuestUpdateInfo } from "../definitions/quests";
@@ -167,5 +167,134 @@ export async function submitQuiz(
   } catch (error) {
     console.error("Error submitting quiz:", error);
     return { success: false, score: 0, total: 0, passed: false, xpEarned: 0, passingScore: 0, results: [] };
+  }
+}
+
+export async function saveQuizBuilder(
+  lessonId: number,
+  data: {
+    quizId?: number;
+    title: string;
+    passingScore: number;
+    questions: Question[];
+  }
+): Promise<{ success: boolean; error?: string; quizId?: number; questions?: Question[] }> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    let finalQuizId: number | undefined;
+
+    await db.transaction(async (tx) => {
+      let quizId = data.quizId;
+
+      // ── Bước 1: Upsert quiz ──
+      if (quizId) {
+        // Quiz đã tồn tại → UPDATE
+        await tx.update(schema.quizzes).set({
+          title: data.title,
+          passing_score: data.passingScore,
+          updated_at: new Date(),
+        }).where(eq(schema.quizzes.id, quizId));
+      } else {
+        // Quiz chưa tồn tại → INSERT
+        const inserted = await tx.insert(schema.quizzes).values({
+          lesson_id: lessonId,
+          title: data.title,
+          passing_score: data.passingScore,
+        }).returning({ id: schema.quizzes.id });
+        quizId = inserted[0].id;
+      }
+
+      finalQuizId = quizId;
+
+      // ── Bước 2: Xử lý questions ──
+      // Lấy danh sách question IDs hiện có trong DB
+      const existingQuestions = await tx.select({ id: schema.questions.id })
+        .from(schema.questions)
+        .where(eq(schema.questions.quiz_id, quizId));
+      const existingIds = new Set(existingQuestions.map(q => q.id));
+
+      // Phân loại: câu hỏi mới (id < 0) vs câu hỏi cũ (id > 0)
+      const incomingPositiveIds = new Set(
+        data.questions.filter(q => q.id > 0).map(q => q.id)
+      );
+
+      // Xóa những câu hỏi không còn trong danh sách
+      const idsToDelete = [...existingIds].filter(id => !incomingPositiveIds.has(id));
+      for (const id of idsToDelete) {
+        await tx.delete(schema.questions).where(eq(schema.questions.id, id));
+      }
+
+      // Upsert từng câu hỏi
+      for (let i = 0; i < data.questions.length; i++) {
+        const q = data.questions[i];
+        const metadata: Record<string, any> = {};
+        if (q.options) metadata.options = q.options;
+        if (q.code) metadata.code = q.code;
+
+        if (q.id > 0 && existingIds.has(q.id)) {
+          // UPDATE câu hỏi cũ
+          await tx.update(schema.questions).set({
+            question_type: q.type,
+            question_text: q.question,
+            correct_answer: String(q.correctAnswer ?? ''),
+            explanation: q.explanation || '',
+            xp_reward: q.xpReward || 0,
+            metadata,
+            order_index: i,
+            updated_at: new Date(),
+          }).where(eq(schema.questions.id, q.id));
+        } else {
+          // INSERT câu hỏi mới
+          await tx.insert(schema.questions).values({
+            quiz_id: quizId,
+            question_type: q.type,
+            question_text: q.question,
+            correct_answer: String(q.correctAnswer ?? ''),
+            explanation: q.explanation || '',
+            xp_reward: q.xpReward || 0,
+            metadata,
+            order_index: i,
+          });
+        }
+      }
+    });
+
+    // ── Bước 3: Fetch lại questions từ DB để trả về client (với ID thật) ──
+    const savedQuestions = await db.select()
+      .from(schema.questions)
+      .where(eq(schema.questions.quiz_id, finalQuizId!))
+      .orderBy(asc(schema.questions.order_index));
+
+    const questions: Question[] = savedQuestions.map((q) => {
+      const meta = (q.metadata || {}) as Record<string, any>;
+      let correctAnswer: string | number = q.correct_answer;
+      if (q.question_type === 'multiple-choice' || q.question_type === 'code') {
+        const parsed = Number(q.correct_answer);
+        if (!isNaN(parsed)) correctAnswer = parsed;
+      }
+      return {
+        id: q.id,
+        type: q.question_type as QuestionType,
+        question: q.question_text,
+        options: meta.options || undefined,
+        code: meta.code || undefined,
+        xpReward: q.xp_reward || 0,
+        correctAnswer,
+        explanation: q.explanation || '',
+        order_index: q.order_index,
+      };
+    });
+
+    revalidatePath(`/admin/courses`, "layout");
+    revalidatePath(`/dashboard/courses`, "layout");
+
+    return { success: true, quizId: finalQuizId, questions };
+  } catch (error) {
+    console.error("Error saving quiz:", error);
+    return { success: false, error: (error as Error).message };
   }
 }

@@ -1,36 +1,28 @@
 'use client';
 
 import { HelpCircle } from 'lucide-react';
-import { QuizData, Question, QUESTION_TYPES } from './types';
+import { Question, QUESTION_TYPES } from '@/app/lib/definitions/quizzes';
 
 interface QuizPreviewSidebarProps {
-  quizData: QuizData;
+  title: string;
+  passingScore: number;
   questions: Question[];
 }
 
-export default function QuizPreviewSidebar({ quizData, questions }: QuizPreviewSidebarProps) {
-  const totalXpAvailable = questions.reduce((sum, q) => sum + q.xp, 0);
+export default function QuizPreviewSidebar({ title, passingScore, questions }: QuizPreviewSidebarProps) {
+  const totalXpAvailable = questions.reduce((sum, q) => sum + (q.xpReward || 0), 0);
 
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm sticky top-6">
-      <h3 className="font-semibold mb-4">Quiz Preview</h3>
+      <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Quick Preview</h3>
 
       <div className="space-y-4">
-        <div>
-          <h4 className="font-medium text-lg">{quizData.title || 'Untitled Quiz'}</h4>
-          <p className="text-sm text-muted-foreground mt-1">
-            {quizData.description || 'No description yet'}
-          </p>
-        </div>
+        <h4 className="font-medium text-lg">{title || 'Untitled Quiz'}</h4>
 
         <div className="flex items-center gap-3 text-sm">
-          <div className="flex items-center gap-1 text-yellow-600">
-            <span className="font-medium">+{quizData.totalXp}</span>
-            <span>XP</span>
-          </div>
           <span className="text-muted-foreground">•</span>
           <div className="text-muted-foreground">
-            {quizData.passingScore}% to pass
+            {passingScore}% to pass
           </div>
         </div>
 
@@ -52,7 +44,7 @@ export default function QuizPreviewSidebar({ quizData, questions }: QuizPreviewS
                     </span>
                   </div>
                   <span className="text-xs text-yellow-600 font-medium">
-                    +{question.xp}
+                    +{question.xpReward || 0} XP
                   </span>
                 </div>
               );
@@ -68,7 +60,7 @@ export default function QuizPreviewSidebar({ quizData, questions }: QuizPreviewS
               <div className="flex items-center justify-between text-sm mt-2">
                 <span className="text-muted-foreground">Total XP Available</span>
                 <span className="font-medium text-yellow-600">
-                  +{totalXpAvailable}
+                  +{totalXpAvailable} XP
                 </span>
               </div>
             </div>

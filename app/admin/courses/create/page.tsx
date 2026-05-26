@@ -4,5 +4,5 @@ import CourseBuilderClient from '@/app/ui/admin/course/course-builder/course-bui
 export default async function CreateCoursePage() {
   const categories = await getCategory();
 
-  return <CourseBuilderClient isNew={true} categories={categories} />;
+  return <CourseBuilderClient categories={categories} />;
 }

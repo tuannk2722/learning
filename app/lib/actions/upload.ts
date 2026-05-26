@@ -48,3 +48,43 @@ export async function uploadAvatar(formData: FormData): Promise<{ success: boole
     return { success: false, error: 'Failed to upload file.' };
   }
 }
+
+export async function uploadLessonImage(formData: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
+  try {
+    const file = formData.get('file') as File;
+
+    if (!file || file.size === 0) {
+      return { success: false, error: 'No file provided.' };
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      return { success: false, error: 'Invalid file type. Only JPG, PNG, WEBP, GIF are allowed.' };
+    }
+
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+      return { success: false, error: 'File too large. Maximum size is 10MB.' };
+    }
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    const timestamp = Date.now();
+    const ext = file.name.split('.').pop() || 'jpg';
+    const filename = `lesson-${timestamp}.${ext}`;
+
+    const uploadDir = join(process.cwd(), 'public', 'uploads', 'lessons');
+    await mkdir(uploadDir, { recursive: true });
+
+    const filepath = join(uploadDir, filename);
+    await writeFile(filepath, buffer);
+
+    const publicUrl = `/uploads/lessons/${filename}`;
+    return { success: true, url: publicUrl };
+
+  } catch (error) {
+    console.error('Failed to upload lesson image:', error);
+    return { success: false, error: 'Failed to upload file.' };
+  }
+}

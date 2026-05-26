@@ -60,7 +60,7 @@ export default function QuizContainer({
   return (
     <div className="max-w-4xl mx-auto">
       <QuizHeader
-        xpReward={quiz.xpReward}
+        xpReward={quiz.xpReward || 0}
         currentQuestion={currentQuestion}
         totalQuestions={quiz.questions.length}
       />

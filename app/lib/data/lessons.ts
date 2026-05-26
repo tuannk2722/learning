@@ -76,13 +76,11 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
       .select({
         id: schema.lessons.id,
         title: schema.lessons.title,
-        content: schema.lessons.content,
-        video_url: schema.lessons.video_url,
-        lesson_type: schema.lessons.lesson_type,
         xp_reward: schema.lessons.xp_reward,
         duration_minutes: schema.lessons.duration_minutes,
         course_id: schema.sections.course_id,
         courseTitle: schema.courses.name,
+        blocks: schema.lessons.blocks,
       })
       .from(schema.lessons)
       .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
@@ -130,9 +128,6 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
     return {
       id: lesson.id,
       title: lesson.title,
-      content: lesson.content || null,
-      video_url: lesson.video_url || null,
-      lesson_type: lesson.lesson_type || 'doc',
       xp_reward: lesson.xp_reward || 0,
       duration_minutes: lesson.duration_minutes || 0,
       course_id: lesson.course_id,
@@ -140,6 +135,7 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
       isCompleted,
       lessonNumber,
       totalLessons,
+      blocks: lesson.blocks as any,
     };
   } catch (error) {
     console.error('Database Error:', error);
@@ -147,10 +143,6 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
   }
 }
 
-/**
- * Tìm ID bài học tiếp theo trong course, theo thứ tự section → lesson order_index.
- * Trả về null nếu đây là bài cuối cùng.
- */
 export async function getNextLessonId(courseId: number, currentLessonId: number): Promise<number | null> {
   try {
     const courseLessons = await db
@@ -173,9 +165,6 @@ export async function getNextLessonId(courseId: number, currentLessonId: number)
   }
 }
 
-/**
- * Lấy ghi chú của user cho bài học cụ thể
- */
 export async function getLessonNote(lessonId: number, userId: string): Promise<string | null> {
   try {
     const noteData = await db
@@ -193,6 +182,23 @@ export async function getLessonNote(lessonId: number, userId: string): Promise<s
       return noteData[0].content;
     }
     return null;
+  } catch (error) {
+    console.error('Database Error:', error);
+    return null;
+  }
+}
+
+export async function getLessonById(lessonId: number) {
+  try {
+    const lesson = await db
+      .select()
+      .from(schema.lessons)
+      .where(eq(schema.lessons.id, lessonId))
+      .limit(1);
+    if (lesson.length === 0) {
+      return null;
+    }
+    return lesson[0];
   } catch (error) {
     console.error('Database Error:', error);
     return null;

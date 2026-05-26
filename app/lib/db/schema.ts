@@ -79,11 +79,8 @@ export const lessons = pgTable('lessons', {
   title: text('title').notNull(),
   duration_minutes: integer('duration_minutes'),
   xp_reward: integer('xp_reward').default(0),
-  lesson_type: varchar('lesson_type', { length: 50 }).default('video'),
-  content: text('content'),
-  video_url: text('video_url'),
+  blocks: jsonb('blocks'),
   order_index: integer('order_index').notNull(),
-  status: varchar('status', { length: 50 }).default('draft'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });

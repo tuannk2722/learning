@@ -15,10 +15,8 @@ export default async function EditCoursePage({ params }: Props) {
 
   if (!course) return notFound();
 
-  // Tìm text_color tương ứng với theme_color đang lưu trong DB
   const matchedColor = colorOptions.find(c => c.bg === course.theme_color);
 
-  // Map dữ liệu từ DB sang kiểu CourseBuilderResult mà CourseBuilderClient hiểu được
   const initialData: CourseBuilderResult = {
     id: course.id,
     name: course.name,
@@ -28,8 +26,9 @@ export default async function EditCoursePage({ params }: Props) {
     level: course.level || 'Beginner',
     icon: course.icon || iconOptions[0].name,
     theme_color: matchedColor?.bg || colorOptions[0].bg,
+    status: course.status,
     sections: course.sections,
   };
 
-  return <CourseBuilderClient isNew={false} courseId={courseId} initialData={initialData} categories={categories} />;
+  return <CourseBuilderClient initialData={initialData} categories={categories} />;
 }

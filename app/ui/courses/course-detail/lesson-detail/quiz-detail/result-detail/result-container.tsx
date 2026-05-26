@@ -83,22 +83,17 @@ export default function QuizResultsContainer({ courseId, lessonId, nextLessonId,
 
       {/* Navigation */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-        {!passed ? (
+        {nextLessonId ? (
           <>
-            <Link href={`/dashboard/courses/${courseId}/lesson/${lessonId}/quiz`}
+            {!passed && (<Link href={`/dashboard/courses/${courseId}/lesson/${lessonId}/quiz`}
               className="w-full sm:w-auto px-8 py-4 rounded-2xl border-2 border-violet-200 text-violet-700 font-bold hover:bg-violet-50 transition-all flex items-center justify-center gap-2">
               <RotateCcw className="w-5 h-5" /> Try again
-            </Link>
-            <Link href={`/dashboard/courses/${courseId}`}
+            </Link>)}
+            <Link href={`/dashboard/courses/${courseId}/lesson/${nextLessonId}`}
               className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-700 shadow-lg shadow-violet-200 transition-all flex items-center justify-center gap-2">
-              Back to course <ChevronRight className="w-5 h-5" />
+              Next lesson <ChevronRight className="w-5 h-5" />
             </Link>
           </>
-        ) : nextLessonId ? (
-          <Link href={`/dashboard/courses/${courseId}/lesson/${nextLessonId}`}
-            className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-700 shadow-lg shadow-violet-200 transition-all flex items-center justify-center gap-2">
-            Next lesson <ChevronRight className="w-5 h-5" />
-          </Link>
         ) : (
           <Link href={`/dashboard/courses/${courseId}`}
             className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2">

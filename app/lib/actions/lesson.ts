@@ -4,6 +4,7 @@ import { and, eq, asc, sql } from "drizzle-orm";
 import { db } from "../db";
 import { user_lesson_progress, lessons, sections, enrollments, users } from "../db/schema";
 import { revalidatePath } from "next/cache";
+import { LessonBlock } from "../definitions/lessons";
 import { updateQuestProgress } from "./quests";
 import { QuestUpdateInfo } from "../definitions/quests";
 import { updateStreak } from "./streak";
@@ -170,5 +171,35 @@ export async function completeLesson(
   } catch (error) {
     console.error("Error completing lesson:", error);
     return { success: false, xpEarned: 0, questUpdates: [] };
+  }
+}
+
+export async function saveLessonBlocks(
+  lessonId: number,
+  data: {
+    title: string;
+    duration_minutes: number;
+    xp_reward: number;
+    blocks: LessonBlock[];
+  }
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await db.update(lessons)
+      .set({
+        title: data.title,
+        duration_minutes: data.duration_minutes,
+        xp_reward: data.xp_reward,
+        blocks: data.blocks,
+        updated_at: new Date(),
+      })
+      .where(eq(lessons.id, lessonId));
+
+    revalidatePath(`/admin/courses`, "layout");
+    revalidatePath(`/dashboard/courses`, "layout");
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving lesson blocks:", error);
+    return { success: false, error: (error as Error).message };
   }
 }

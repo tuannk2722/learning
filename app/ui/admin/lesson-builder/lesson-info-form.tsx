@@ -2,7 +2,6 @@
 
 interface LessonData {
   title: string;
-  description: string;
   xp: number;
   estimate_time: number;
 }
@@ -28,17 +27,6 @@ export default function LessonInfoForm({ data, onChange }: LessonInfoFormProps) 
             onChange={(e) => onChange({ ...data, title: e.target.value })}
             placeholder="e.g., Introduction to Derivatives"
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold mb-2 text-slate-700">Short Description</label>
-          <textarea
-            rows={2}
-            value={data.description}
-            onChange={(e) => onChange({ ...data, description: e.target.value })}
-            placeholder="Brief overview of what students will learn"
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
           />
         </div>
 

@@ -7,6 +7,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
+import { parseLessonBlocks } from "@/app/lib/definitions/lessons";
+import { CodeBlock } from "./lesson-code-block";
 
 import { DetailLesson } from "@/app/lib/definitions/lessons";
 import Link from "next/link";
@@ -15,19 +17,21 @@ import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
 import { QuestUpdateInfo } from "@/app/lib/definitions/quests";
 import { StreakResult, UnlockedAchievement } from "@/app/lib/definitions/definitions";
 
+interface LessonContentProps {
+  lesson: DetailLesson;
+  courseId: string;
+  lessonId: string;
+  onComplete: () => Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult; unlockedAchievements?: UnlockedAchievement[] }>;
+  isAlreadyCompleted?: boolean;
+}
+
 export function LessonContent({
   lesson,
   courseId,
   lessonId,
   onComplete,
   isAlreadyCompleted = false,
-}: {
-  lesson: DetailLesson,
-  courseId: string,
-  lessonId: string,
-  onComplete: () => Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult; unlockedAchievements?: UnlockedAchievement[] }>,
-  isAlreadyCompleted?: boolean,
-}) {
+}: LessonContentProps) {
   const [isCompleted, setIsCompleted] = useState(isAlreadyCompleted);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showXp, setShowXp] = useState(false);
@@ -66,46 +70,69 @@ export function LessonContent({
     }
   };
 
+  const blocks = parseLessonBlocks(lesson.blocks);
+
   return (
     <div className="max-w-4xl mx-auto">
-      {lesson.lesson_type === "video" && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
-          <div className="aspect-video bg-gray-900 rounded-3xl overflow-hidden shadow-2xl">
-            <iframe
-              width="100%"
-              height="100%"
-              src={lesson.video_url || ""}
-              title={lesson.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="w-full h-full"
-            ></iframe>
-          </div>
-        </motion.div>
-      )}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-2 border-violet-100/50 space-y-6 mb-8"
+      >
+        {blocks.map((block) => (
+          <div key={block.id}>
+            {block.type === 'text' && (
+              <div className="prose prose-lg prose-violet max-w-none">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeHighlight]}
+                >
+                  {block.content}
+                </ReactMarkdown>
+              </div>
+            )}
 
-      {(lesson.lesson_type === "md" || lesson.lesson_type === "doc") && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
-        >
-          <div className="prose prose-lg prose-violet max-w-none bg-white rounded-3xl p-12 shadow-lg border-2 border-violet-100">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-            >
-              {lesson.content || ""}
-            </ReactMarkdown>
+            {block.type === 'video' && (
+              <div className="my-8 aspect-video bg-gray-900 rounded-2xl overflow-hidden shadow-lg border border-slate-200">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src={block.content}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full"
+                ></iframe>
+              </div>
+            )}
+
+            {block.type === 'image' && (
+              <div className="my-8 flex flex-col items-center">
+                <img
+                  src={block.content}
+                  alt={block.metadata?.caption || 'Lesson Illustration'}
+                  className="rounded-2xl max-h-[500px] object-contain w-full shadow-md border border-slate-100"
+                />
+                {block.metadata?.caption && (
+                  <p className="text-xs font-bold text-slate-400 mt-3 uppercase tracking-widest text-center">
+                    {block.metadata.caption}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {block.type === 'code' && (
+              <div className="my-8">
+                <CodeBlock
+                  code={block.content}
+                  filename={block.metadata?.filename}
+                  language={block.metadata?.language}
+                />
+              </div>
+            )}
           </div>
-        </motion.div>
-      )}
+        ))}
+      </motion.div>
 
       {/* Complete Lesson / Take Quiz Section */}
       <motion.div
@@ -179,5 +206,5 @@ export function LessonContent({
       </motion.div>
 
     </div>
-  )
+  );
 }

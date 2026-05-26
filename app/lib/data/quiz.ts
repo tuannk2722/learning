@@ -7,7 +7,67 @@ import {
   QuizAttemptSummary,
   QuizAttemptDetail,
   QuestionResult,
+  Question,
 } from "../definitions/quizzes";
+
+/**
+ * Lấy quiz + questions ĐẦY ĐỦ cho Admin Builder (bao gồm correctAnswer, explanation).
+ * Trả về null nếu lesson chưa có quiz.
+ */
+export async function getQuizForBuilder(lessonId: number): Promise<{
+  quizId: number;
+  title: string;
+  passingScore: number;
+  questions: Question[];
+} | null> {
+  try {
+    // 1. Lấy quiz thuộc lesson
+    const quizData = await db.select().from(schema.quizzes)
+      .where(eq(schema.quizzes.lesson_id, lessonId)).limit(1);
+
+    if (quizData.length === 0) return null;
+    const quiz = quizData[0];
+
+    // 2. Lấy questions đầy đủ (bao gồm correctAnswer, explanation)
+    const questionsData = await db.select().from(schema.questions)
+      .where(eq(schema.questions.quiz_id, quiz.id))
+      .orderBy(asc(schema.questions.order_index));
+
+    const questions: Question[] = questionsData.map((q) => {
+      const meta = (q.metadata || {}) as Record<string, any>;
+      // Convert correctAnswer back based on question type
+      let correctAnswer: string | number = q.correct_answer;
+      if (q.question_type === 'multiple-choice' || q.question_type === 'code') {
+        const parsed = Number(q.correct_answer);
+        if (!isNaN(parsed)) {
+          correctAnswer = parsed;
+        }
+      }
+
+      return {
+        id: q.id,
+        type: q.question_type as QuestionType,
+        question: q.question_text,
+        options: meta.options || undefined,
+        code: meta.code || undefined,
+        xpReward: q.xp_reward || 0,
+        correctAnswer,
+        explanation: q.explanation || '',
+        order_index: q.order_index,
+      };
+    });
+
+    return {
+      quizId: quiz.id,
+      title: quiz.title,
+      passingScore: quiz.passing_score || 50,
+      questions,
+    };
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch quiz data for builder.");
+  }
+}
 
 /**
  * Lấy quiz và danh sách questions thuộc một lesson cụ thể.

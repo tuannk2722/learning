@@ -1,3 +1,4 @@
+import { CourseBuilderResult } from "@/app/lib/definitions/lessons";
 
 export const iconOptions = [
   { name: "atom", icon: 'atom' },
@@ -28,4 +29,29 @@ export const colorOptions = [
   { name: "emerald", bg: "bg-emerald-100", text: "text-emerald-600" },
   { name: "red", bg: "bg-red-100", text: "text-red-600" },
   { name: "orange", bg: "bg-orange-100", text: "text-orange-600" },
+];
+
+export const defaultCourseData: CourseBuilderResult = {
+  id: -1,
+  name: '',
+  description: '',
+  category_id: 1,
+  category_name: 'Web Development',
+  level: levels[0],
+  icon: iconOptions[0].name,
+  theme_color: colorOptions[0].bg,
+  status: 'draft',
+  sections: [
+    {
+      id: -Date.now(),
+      title: "New Section",
+      lessons: []
+    }
+  ]
+};
+
+export const steps = [
+  { num: 1, label: 'Basic Info' },
+  { num: 2, label: 'Curriculum' },
+  { num: 3, label: 'Quiz' }
 ];

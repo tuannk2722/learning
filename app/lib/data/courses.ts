@@ -26,14 +26,6 @@ const enrollmentStats = db
   .groupBy(schema.enrollments.course_id)
   .as('es');
 
-const sectionStats = db
-  .select({
-    courseId: schema.sections.course_id,
-    total: sql<number>`cast(count(${schema.sections.id}) as int)`.as('s_count'),
-  })
-  .from(schema.sections)
-  .groupBy(schema.sections.course_id)
-  .as('ss');
 
 export async function getCategory() {
   try {
@@ -97,7 +89,10 @@ export async function getEnrolledCourses(userId: string) {
       .from(schema.courses)
       .innerJoin(schema.enrollments, eq(schema.courses.id, schema.enrollments.course_id))
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
-      .where(eq(schema.enrollments.user_id, userId))
+      .where(and(
+        eq(schema.enrollments.user_id, userId),
+        eq(schema.courses.status, 'published')
+      ))
       .orderBy(desc(schema.enrollments.last_accessed_at));
 
     return data as any as CourseListing[];
@@ -128,7 +123,10 @@ export async function getNotEnrolledCourses(userId: string) {
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
-      .where(notInArray(schema.courses.id, userEnrollments))
+      .where(and(
+        notInArray(schema.courses.id, userEnrollments),
+        eq(schema.courses.status, 'published')
+      ))
       .orderBy(desc(enrolledCount));
 
     return data as any as CourseListing[];
@@ -255,6 +253,7 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
         level: schema.courses.level,
         icon: schema.courses.icon_name,
         theme_color: schema.courses.theme_color,
+        status: schema.courses.status,
       })
       .from(schema.courses)
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
@@ -273,7 +272,7 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
     // 3. Lấy tất cả lessons thuộc các sections trên
     let lessonRows: {
       id: number; section_id: number | null; title: string;
-      lesson_type: string | null; duration_minutes: number | null; xp_reward: number | null;
+      duration_minutes: number | null; xp_reward: number | null;
     }[] = [];
 
     const sectionIds = sectionRows.map(s => s.id);
@@ -284,7 +283,6 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
           id: schema.lessons.id,
           section_id: schema.lessons.section_id,
           title: schema.lessons.title,
-          lesson_type: schema.lessons.lesson_type,
           duration_minutes: schema.lessons.duration_minutes,
           xp_reward: schema.lessons.xp_reward,
         })
@@ -302,7 +300,6 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
         .map(l => ({
           id: l.id,
           title: l.title,
-          type: l.lesson_type || 'video',
           duration: l.duration_minutes || 0,
           xp: l.xp_reward || 0,
         })),
