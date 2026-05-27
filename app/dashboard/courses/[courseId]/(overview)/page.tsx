@@ -7,17 +7,24 @@ import { getCourseCurriculum } from "@/app/lib/data/lessons";
 import { WillLearned } from "@/app/ui/course-detail/will-learned";
 import { Suspense } from "react";
 import { CourseHeroSectionSkeleton, CurriculumSectionSkeleton } from "@/app/ui/skeleton/course-detail";
+import { NotFound } from "@/app/ui/course-detail/not-found";
 
 export default async function CourseDetailPage(props: { params: Promise<{ courseId: string }> }) {
   const session = await auth();
   const userId = session?.user?.id;
+  const userRole = (session?.user as any)?.role;
 
   const params = await props.params;
   const courseId = params.courseId.toString();
   const course = await getCourseById(courseId, userId);
 
   if (!course) {
-    return <p>Course Not Found</p>
+    return <NotFound />
+  }
+
+  // Chặn user thường truy cập course chưa published
+  if (course.status !== 'published' && userRole !== 'admin') {
+    return <NotFound />
   }
 
   const curriculum = await getCourseCurriculum(Number(courseId), userId);

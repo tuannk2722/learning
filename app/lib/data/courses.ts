@@ -147,7 +147,6 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
   try {
     const courseId = Number(id);
 
-    // 1. Lấy thông tin cơ bản + số liệu tổng của khóa học
     const courseData = await db
       .select({
         ...getTableColumns(schema.courses),
@@ -169,14 +168,12 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
 
     const course = courseData[0] as any as CourseDetail;
 
-    // Thiết lập giá trị mặc định cho các trường tiến độ
     course.is_enrolled = false;
     course.completed_lessons = 0;
     course.xp_earned = 0;
     course.learned_minutes = 0;
 
     if (userId) {
-      // 2. Kiểm tra trạng thái đăng ký
       const enrollment = await db
         .select()
         .from(schema.enrollments)
@@ -192,7 +189,6 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
         course.is_enrolled = true;
         course.progress_percent = enrollment[0].progress_percent || 0;
 
-        // 3. Lấy tiến độ học tập thực tế
         const progress = await db
           .select({
             completed_count: sql<number>`cast(count(${schema.user_lesson_progress.lesson_id}) as int)`,
@@ -243,6 +239,15 @@ export async function getUserCourseRating(courseId: number, userId: string): Pro
     console.error('Database Error:', error);
     return null;
   }
+}
+
+export async function getCourseStatus(courseId: number): Promise<string | null> {
+  const result = await db
+    .select({ status: schema.courses.status })
+    .from(schema.courses)
+    .where(eq(schema.courses.id, courseId))
+    .limit(1);
+  return result.length > 0 ? result[0].status : null;
 }
 
 export async function getCourseForBuilder(id: string): Promise<CourseBuilderResult | null> {

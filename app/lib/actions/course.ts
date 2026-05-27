@@ -343,3 +343,22 @@ export async function saveCourseBuilder(
     };
   }
 }
+
+export async function DeleteCourse(courseId: number) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "You must be logged in" };
+    }
+
+    await db.delete(courses).where(eq(courses.id, courseId));
+
+    revalidatePath(`/admin/courses`);
+    revalidatePath(`/dashboard/courses`);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting course:', error);
+    return { success: false, error: 'Failed to delete course' };
+  }
+}

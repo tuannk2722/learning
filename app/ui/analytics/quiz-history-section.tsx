@@ -125,7 +125,7 @@ export function QuizHistorySection({ attempts }: Props) {
 
         {/* Pagination Section */}
         {totalPages > 1 && (
-          <div className="px-6 pb-6">
+          <div className="px-6 py-4 border-t border-gray-100 flex justify-center bg-slate-50/30">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

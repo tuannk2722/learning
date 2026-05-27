@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { CourseFilter } from './course-filter';
 import { CourseRow } from './course-row';
-import { CoursePagination } from './course-pagination';
 import { Category, CourseListing } from '@/app/lib/definitions/courses';
+import { Pagination } from '../../pagination';
 
 interface CourseListProps {
   initialCourses: CourseListing[];
@@ -14,6 +14,7 @@ export default function CourseList({ initialCourses, categories }: CourseListPro
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredCourses = initialCourses.filter(course => {
     const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -24,6 +25,11 @@ export default function CourseList({ initialCourses, categories }: CourseListPro
 
     return matchesSearch && matchesCategory && matchesLevel;
   });
+
+  const ITEM_PER_PAGE = 6;
+  const totalPages = Math.ceil(filteredCourses.length / ITEM_PER_PAGE);
+  const startPage = (currentPage - 1) * ITEM_PER_PAGE;
+  const currentCourses = filteredCourses.slice(startPage, startPage + ITEM_PER_PAGE)
 
   return (
     <>
@@ -51,15 +57,25 @@ export default function CourseList({ initialCourses, categories }: CourseListPro
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredCourses.map((course, index) => (
-                <CourseRow key={course.id} course={course} index={index} />
+              {currentCourses.map((course, index) => (
+                <CourseRow
+                  key={course.id}
+                  course={course}
+                  index={index}
+                />
               ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      <CoursePagination filteredItems={filteredCourses.length} totalItems={initialCourses.length} />
+      <div className="px-6 py-4 border-t border-gray-100 flex justify-center bg-slate-50/30">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </div>
     </>
   );
 }

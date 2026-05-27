@@ -1,6 +1,6 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { Achievement, AchievementPreview } from "../definitions/definitions";
 
 export async function getAchievements(userId?: string): Promise<Achievement[]> {
@@ -21,7 +21,8 @@ export async function getAchievements(userId?: string): Promise<Achievement[]> {
             eq(schema.achievements.id, schema.user_achievements.achievement_id),
             eq(schema.user_achievements.user_id, userId)
           )
-        );
+        )
+        .orderBy(sql`${schema.user_achievements.unlocked_at} DESC NULLS LAST`);
     } else {
       // Nếu chưa đăng nhập, chỉ query danh sách achievements (tất cả đều khóa)
       const allAchievements = await db.select().from(schema.achievements);

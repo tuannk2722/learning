@@ -23,7 +23,10 @@ export default async function CourseManagementPage() {
           totalEnrollments={totalEnrollments}
         />
 
-        <CourseList categories={categories} initialCourses={courses} />
+        <CourseList
+          categories={categories}
+          initialCourses={courses}
+        />
       </div>
     </div>
   );

@@ -1,9 +1,24 @@
 import { db } from "../db";
 import { users, user_lesson_progress, lessons } from "../db/schema";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, notInArray } from "drizzle-orm";
 import type { User, UserInfoLogin } from "../definitions/user";
 import type { LeaderboardEntry } from "../definitions/definitions";
 import { calculateLevel } from "../utils/xp";
+import { ADMIN_EMAILS } from "../../../auth.config";
+
+export async function getAllUsers(): Promise<User[]> {
+  try {
+    const allUsers = await db
+      .select()
+      .from(users)
+      .orderBy(desc(users.last_study_date));
+
+    return allUsers as User[];
+  } catch (error) {
+    console.error('Failed to fetch all users:', error);
+    throw new Error('Failed to fetch all users.');
+  }
+}
 
 export async function getUserById(id: string): Promise<User | undefined> {
   try {
@@ -20,7 +35,7 @@ export async function getUserById(id: string): Promise<User | undefined> {
         last_study_date: users.last_study_date,
         is_onboarded: users.is_onboarded,
         avatar_url: users.avatar_url,
-        joinDate: users.created_at,
+        created_at: users.created_at,
       })
       .from(users)
       .where(eq(users.id, id))
@@ -59,7 +74,16 @@ export async function getUserByEmail(email: string): Promise<UserInfoLogin | und
 
 export async function getLeaderboardData(currentUserId?: string): Promise<LeaderboardEntry[]> {
   try {
-    const allUsers = await db.select().from(users).where(eq(users.is_onboarded, true)).orderBy(desc(users.total_xp));
+    const allUsers = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.is_onboarded, true),
+          notInArray(users.email, ADMIN_EMAILS)
+        )
+      )
+      .orderBy(desc(users.total_xp));
 
     return allUsers.map((user, index) => {
       const levelObj = calculateLevel(user.total_xp || 0);
@@ -104,7 +128,17 @@ export async function getRankByUserId(userId: string): Promise<number> {
 
 export async function getTop1User() {
   try {
-    const topUsers = await db.select().from(users).where(eq(users.is_onboarded, true)).orderBy(desc(users.total_xp)).limit(1);
+    const topUsers = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.is_onboarded, true),
+          notInArray(users.email, ADMIN_EMAILS)
+        )
+      )
+      .orderBy(desc(users.total_xp))
+      .limit(1);
     if (!topUsers.length) return null;
 
     const user = topUsers[0];

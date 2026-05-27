@@ -2,7 +2,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationProps {
-  currentPage: number;   // Bắt đầu từ 1
+  currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
 }
@@ -46,8 +46,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
               key={page}
               onClick={() => onPageChange(page)}
               className={`w-10 h-10 rounded-lg font-bold transition-all ${currentPage === page
-                  ? "bg-violet-600 text-white shadow-md shadow-violet-200"
-                  : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                ? "bg-violet-600 text-white shadow-md shadow-violet-200"
+                : "border border-gray-200 text-gray-600 hover:bg-gray-50"
                 }`}
             >
               {page}

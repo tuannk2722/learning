@@ -1,7 +1,7 @@
 import type { NextAuthConfig } from 'next-auth';
 
 // Danh sách email có quyền admin
-const ADMIN_EMAILS = ['admin@learnquest.com', 'admin@gmail.com'];
+export const ADMIN_EMAILS = ["admin@gmail.com"];
 
 export const authConfig = {
   pages: {

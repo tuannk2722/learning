@@ -2,7 +2,7 @@ import { LessonContent } from "@/app/ui/lesson/lesson-content";
 import { LessonDetailHeader } from "@/app/ui/lesson/lesson-header";
 import { LessonNote } from "@/app/ui/lesson/lesson-note";
 import { getCourseCurriculum, getLessonDetail, getLessonNote } from "@/app/lib/data/lessons";
-import { getUserCourseRating } from "@/app/lib/data/courses";
+import { getUserCourseRating, getCourseStatus } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import { CurriculumSection } from "@/app/ui/course-detail/course-curriculum";
@@ -10,10 +10,12 @@ import { completeLesson } from "@/app/lib/actions/lesson";
 import { Suspense } from "react";
 import { LessonContentSkeleton, LessonDetailHeaderSkeleton, LessonNoteSkeleton } from "@/app/ui/skeleton/lesson";
 import { CurriculumSkeleton } from "@/app/ui/skeleton/course-detail";
+import { NotFound } from "@/app/ui/lesson/not-found";
 
 export default async function LessonDetailPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const session = await auth();
   const userId = session?.user?.id;
+  const userRole = (session?.user as any)?.role;
   const { courseId, lessonId } = await props.params;
 
   if (!userId) {
@@ -23,7 +25,13 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
   const lesson = await getLessonDetail(Number(lessonId), userId);
 
   if (!lesson) {
-    return notFound();
+    return <NotFound courseId={courseId} />
+  }
+
+  // Chặn user thường truy cập lesson của course chưa published
+  const courseStatus = await getCourseStatus(Number(courseId));
+  if (courseStatus !== 'published' && userRole !== 'admin') {
+    return <NotFound courseId={courseId} />
   }
 
   const curriculum = await getCourseCurriculum(Number(courseId), userId);

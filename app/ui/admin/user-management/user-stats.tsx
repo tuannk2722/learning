@@ -3,9 +3,9 @@ import { motion } from 'motion/react';
 import { Users, BarChart3 } from 'lucide-react';
 
 interface UserStatsProps {
-  total: string;
-  activeThisWeek: string;
-  newThisMonth: string;
+  total: number;
+  activeThisWeek: number;
+  newThisMonth: number;
 }
 
 export default function UserStats({ total, activeThisWeek, newThisMonth }: UserStatsProps) {

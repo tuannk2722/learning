@@ -23,6 +23,12 @@ export function CourseFilter({
   onLevelChange,
   categories
 }: CourseFilterProps) {
+  const handleRefresh = () => {
+    onSearchChange('');
+    onCategoryChange('All');
+    onLevelChange('All');
+  }
+
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
       <div className="flex flex-col md:flex-row items-center gap-4">
@@ -40,7 +46,7 @@ export function CourseFilter({
           <select
             value={selectedCategory}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white"
+            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white hover:border-blue-600"
           >
             <option value="All">All Categories</option>
             {categories.map(c => (
@@ -50,13 +56,19 @@ export function CourseFilter({
           <select
             value={selectedLevel}
             onChange={(e) => onLevelChange(e.target.value)}
-            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white"
+            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white hover:border-blue-600"
           >
             <option value="All">All Levels</option>
             {levels.map(l => (
               <option key={l} value={l}>{l}</option>
             ))}
           </select>
+          <button
+            onClick={handleRefresh}
+            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white hover:border-blue-600"
+          >
+            Refresh
+          </button>
         </div>
       </div>
     </div>

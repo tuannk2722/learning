@@ -28,6 +28,7 @@ export const users = pgTable('users', {
   last_study_date: timestamp('last_study_date'),
   is_onboarded: boolean('is_onboarded').default(false),
   created_at: timestamp('created_at').defaultNow(),
+  status: varchar('status', { length: 50 }).default('active'),
 });
 
 // 15. BẢNG PASSWORD_RESET_TOKENS
