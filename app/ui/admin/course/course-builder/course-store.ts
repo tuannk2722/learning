@@ -4,6 +4,7 @@ import { defaultCourseData } from './course-types';
 
 interface CourseBuilderState {
   courseData: CourseBuilderResult;
+  originalData: CourseBuilderResult;
   expandedCurriculum: number[];
   isDirty: boolean;
   isSaving: boolean;
@@ -18,10 +19,12 @@ interface CourseBuilderState {
   toggleCurriculum: (index: number) => void;
   setExpandedCurriculum: (indexes: number[]) => void;
   updateCourseData: (updater: CourseBuilderResult | ((prev: CourseBuilderResult) => CourseBuilderResult)) => void;
+  revertAll: () => void;
 }
 
 export const useCourseBuilderStore = create<CourseBuilderState>((set) => ({
   courseData: defaultCourseData,
+  originalData: defaultCourseData,
   expandedCurriculum: [0],
   isDirty: false,
   isSaving: false,
@@ -32,6 +35,7 @@ export const useCourseBuilderStore = create<CourseBuilderState>((set) => ({
     const data = initialData || defaultCourseData;
     return {
       courseData: data,
+      originalData: data,
       courseId: initialData?.id ?? null,
       isDirty: false,
       isSaving: false,
@@ -57,9 +61,15 @@ export const useCourseBuilderStore = create<CourseBuilderState>((set) => ({
     const newCourseData = typeof updater === 'function'
       ? (updater as (prev: CourseBuilderResult) => CourseBuilderResult)(state.courseData)
       : updater;
+
     return {
       courseData: newCourseData,
-      isDirty: true
+      isDirty: true,
     };
   }),
+
+  revertAll: () => set((state) => ({
+    courseData: state.originalData,
+    isDirty: false,
+  })),
 }));
