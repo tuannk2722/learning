@@ -93,7 +93,6 @@ export type CourseBuilderResult = {
   id: number;
   name: string;
   description: string | null;
-  category_id: number | null;
   category_name?: string | null;
   level: string | null;
   icon: string | null;
@@ -118,8 +117,8 @@ export interface BlockTypeInfo {
 }
 
 export const BLOCK_TYPE_META: Record<BlockType, Omit<BlockTypeInfo, 'type'>> = {
-  text:  { label: 'Text',  color: 'text-blue-600',   bg: 'bg-blue-50'   },
-  video: { label: 'Video', color: 'text-red-600',    bg: 'bg-red-50'    },
-  image: { label: 'Image', color: 'text-green-600',  bg: 'bg-green-50'  },
-  code:  { label: 'Code',  color: 'text-purple-600', bg: 'bg-purple-50' },
+  text: { label: 'Text', color: 'text-blue-600', bg: 'bg-blue-50' },
+  video: { label: 'Video', color: 'text-red-600', bg: 'bg-red-50' },
+  image: { label: 'Image', color: 'text-green-600', bg: 'bg-green-50' },
+  code: { label: 'Code', color: 'text-purple-600', bg: 'bg-purple-50' },
 };

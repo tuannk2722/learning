@@ -3,7 +3,7 @@
 import { CourseDetail } from "@/app/lib/definitions/courses";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { motion } from "motion/react";
-import { getColorClasses } from "@/app/lib/utils/color-classes";
+import { getColorClasses } from "@/app/lib/utils/color-palette";
 import { enrollInCourse } from "@/app/lib/actions/course";
 import { useState } from "react";
 import { toast } from "sonner";

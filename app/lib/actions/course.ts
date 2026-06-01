@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from "../db";
-import { enrollments, sections, lessons, user_lesson_progress, courses } from "../db/schema";
-import { eq, and, asc, sql, isNotNull, inArray } from "drizzle-orm";
+import { enrollments, sections, lessons, user_lesson_progress, courses, categories } from "../db/schema";
+import { eq, and, asc, sql, isNotNull, inArray, ilike } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { evaluateAchievements } from "./achievements";
@@ -157,6 +157,38 @@ export async function saveCourseBuilder(
     let targetCourseId = courseData.id;
     let isNewCourse = true;
 
+    // --- Upsert Category ---
+    // Tìm category theo tên (case-insensitive), nếu chưa có thì tạo mới
+    let resolvedCategoryId: number | null = null;
+    const trimmedCategoryName = courseData.category_name?.trim();
+
+    if (trimmedCategoryName) {
+      const existingCategory = await db
+        .select({ id: categories.id })
+        .from(categories)
+        .where(ilike(categories.name, trimmedCategoryName))
+        .limit(1);
+
+      if (existingCategory.length > 0) {
+        // Category đã tồn tại → dùng lại ID
+        resolvedCategoryId = existingCategory[0].id;
+      } else {
+        // Tạo mới category
+        const baseSlug = trimmedCategoryName
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '');
+        const uniqueSlug = `${baseSlug}-${Date.now()}`;
+
+        const [newCategory] = await db
+          .insert(categories)
+          .values({ name: trimmedCategoryName, slug: uniqueSlug })
+          .returning({ id: categories.id });
+        resolvedCategoryId = newCategory.id;
+      }
+    }
+    // --- End Upsert Category ---
+
     await db.transaction(async (tx) => {
       // 1. Check if course exists in the database (id > 0 means it was loaded from DB)
       if (targetCourseId > 0) {
@@ -175,7 +207,7 @@ export async function saveCourseBuilder(
         const [insertedCourse] = await tx
           .insert(courses)
           .values({
-            category_id: courseData.category_id,
+            category_id: resolvedCategoryId,
             name: courseData.name,
             description: courseData.description,
             level: courseData.level,
@@ -187,7 +219,7 @@ export async function saveCourseBuilder(
         targetCourseId = insertedCourse.id;
       } else {
         const updateFields: any = {
-          category_id: courseData.category_id,
+          category_id: resolvedCategoryId,
           name: courseData.name,
           description: courseData.description,
           level: courseData.level,

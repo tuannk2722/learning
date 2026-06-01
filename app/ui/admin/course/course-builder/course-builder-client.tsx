@@ -9,7 +9,6 @@ import ProgressSteps from './progress-steps';
 import CourseInfoStep from './course-info-step';
 import CurriculumStep from './curriculum-step';
 import QuizStep from './quiz-step';
-import { Category } from '@/app/lib/definitions/courses';
 import { CourseBuilderResult } from '@/app/lib/definitions/lessons';
 import { useCourseBuilderStore } from './course-store';
 import { saveCourseBuilder } from '@/app/lib/actions/course';
@@ -17,12 +16,10 @@ import { toast } from 'sonner';
 
 export interface CourseBuilderClientProps {
   initialData?: CourseBuilderResult;
-  categories: Category[];
 }
 
 export default function CourseBuilderClient({
-  initialData,
-  categories
+  initialData
 }: CourseBuilderClientProps) {
   const router = useRouter();
 
@@ -99,7 +96,6 @@ export default function CourseBuilderClient({
           {step === 1 && (
             <CourseInfoStep
               key="step1"
-              categories={categories}
               onNext={() => setStep(2)}
             />
           )}

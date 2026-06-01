@@ -2,17 +2,15 @@
 import { useState } from 'react';
 import { CourseFilter } from './course-filter';
 import { CourseRow } from './course-row';
-import { Category, CourseListing } from '@/app/lib/definitions/courses';
+import { CourseListing } from '@/app/lib/definitions/courses';
 import { Pagination } from '../../pagination';
 
 interface CourseListProps {
   initialCourses: CourseListing[];
-  categories: Category[];
 }
 
-export default function CourseList({ initialCourses, categories }: CourseListProps) {
+export default function CourseList({ initialCourses }: CourseListProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -20,10 +18,8 @@ export default function CourseList({ initialCourses, categories }: CourseListPro
     const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.category_name.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory = selectedCategory === "All" || course.category_name === selectedCategory;
     const matchesLevel = selectedLevel === "All" || course.level === selectedLevel;
-
-    return matchesSearch && matchesCategory && matchesLevel;
+    return matchesSearch && matchesLevel;
   });
 
   const ITEM_PER_PAGE = 6;
@@ -36,11 +32,8 @@ export default function CourseList({ initialCourses, categories }: CourseListPro
       <CourseFilter
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
         selectedLevel={selectedLevel}
         onLevelChange={setSelectedLevel}
-        categories={categories}
       />
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">

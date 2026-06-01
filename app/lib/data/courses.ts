@@ -27,12 +27,19 @@ const enrollmentStats = db
   .as('es');
 
 
-export async function getCategory() {
+export async function getTopCategory() {
   try {
     const data = await db
-      .select()
+      .select({
+        id: schema.categories.id,
+        name: schema.categories.name,
+        total_courses: sql<number>`cast(count(${schema.courses.id}) as int)`.as('total_courses'),
+      })
       .from(schema.categories)
-      .orderBy(schema.categories.name);
+      .leftJoin(schema.courses, eq(schema.categories.id, schema.courses.category_id))
+      .groupBy(schema.categories.id)
+      .orderBy(desc(sql<number>`total_courses`))
+      .limit(10);
     return data as any as Category[];
   } catch (error) {
     console.error('Database Error:', error);
@@ -260,7 +267,6 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
         id: schema.courses.id,
         name: schema.courses.name,
         description: schema.courses.description,
-        category_id: schema.courses.category_id,
         category_name: schema.categories.name,
         level: schema.courses.level,
         icon: schema.courses.icon_name,

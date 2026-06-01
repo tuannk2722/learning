@@ -4,7 +4,7 @@ import { Check, Play } from 'lucide-react';
 import Link from 'next/link';
 import { DynamicIcon } from '../dynamic-icon';
 import { CourseListing } from '@/app/lib/definitions/courses';
-import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { getColorClasses } from '@/app/lib/utils/color-palette';
 import { updateLastAccessCourse } from '@/app/lib/actions/course';
 
 

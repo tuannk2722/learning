@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { DynamicIcon } from "../dynamic-icon";
 import { CourseDetail } from "@/app/lib/definitions/courses";
-import { getColorClasses } from "@/app/lib/utils/color-classes";
+import { getColorClasses } from "@/app/lib/utils/color-palette";
 
 import { CourseRating } from "./course-rating";
 

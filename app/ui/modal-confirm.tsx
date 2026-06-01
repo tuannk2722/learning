@@ -47,7 +47,7 @@ export function ConfirmModal({
 
   const themes = {
     danger: { btnOk: 'bg-red-600 hover:bg-red-700 focus:ring-red-500/20 disabled:bg-red-400' },
-    warning: { btnOk: 'bg-amber-500 hover:bg-amber-600 focus:ring-amber-500/20 disabled:bg-amber-400' },
+    warning: { btnOk: 'bg-amber-400 hover:bg-amber-500 focus:ring-amber-500/20 disabled:bg-amber-400' },
     info: { btnOk: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500/20 disabled:bg-indigo-400' },
   };
 

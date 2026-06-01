@@ -1,15 +1,11 @@
 'use client';
 import { Search } from 'lucide-react';
-import { Category } from '@/app/lib/definitions/courses';
 
 interface CourseFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
-  selectedCategory: string;
-  onCategoryChange: (value: string) => void;
   selectedLevel: string;
   onLevelChange: (value: string) => void;
-  categories: Category[];
 }
 
 const levels = ["Beginner", "Intermediate", "Advanced"];
@@ -17,15 +13,11 @@ const levels = ["Beginner", "Intermediate", "Advanced"];
 export function CourseFilter({
   searchQuery,
   onSearchChange,
-  selectedCategory,
-  onCategoryChange,
   selectedLevel,
   onLevelChange,
-  categories
 }: CourseFilterProps) {
   const handleRefresh = () => {
     onSearchChange('');
-    onCategoryChange('All');
     onLevelChange('All');
   }
 
@@ -43,16 +35,6 @@ export function CourseFilter({
           />
         </div>
         <div className="flex w-full md:w-auto gap-4">
-          <select
-            value={selectedCategory}
-            onChange={(e) => onCategoryChange(e.target.value)}
-            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white hover:border-blue-600"
-          >
-            <option value="All">All Categories</option>
-            {categories.map(c => (
-              <option key={c.id} value={c.name}>{c.name}</option>
-            ))}
-          </select>
           <select
             value={selectedLevel}
             onChange={(e) => onLevelChange(e.target.value)}

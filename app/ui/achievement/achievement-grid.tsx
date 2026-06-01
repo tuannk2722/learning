@@ -2,7 +2,7 @@
 import { Achievement } from '@/app/lib/definitions/definitions';
 import { motion } from 'motion/react';
 import { DynamicIcon } from '../dynamic-icon';
-import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { getColorClasses } from '@/app/lib/utils/color-palette';
 import { Zap } from 'lucide-react';
 
 type Props = {

@@ -59,8 +59,8 @@ export default function Header({ onSave }: HeaderProps) {
           onClick={() => setShowRevertConfirm(true)}
           disabled={!isDirty || isSaving}
           className={`p-2 rounded-lg flex items-center justify-center transition-colors ${isDirty && !isSaving
-              ? 'text-red-600 bg-red-50 hover:bg-red-100'
-              : 'text-gray-400 bg-gray-50 cursor-not-allowed opacity-70'
+            ? 'text-red-600 bg-red-50 hover:bg-red-100'
+            : 'text-gray-400 bg-gray-50 cursor-not-allowed opacity-70'
             }`}
           title="Revert all changes"
         >
@@ -102,7 +102,7 @@ export default function Header({ onSave }: HeaderProps) {
         description="Are you sure you want to revert all changes? This will restore the course to its last saved state and cannot be undone."
         okText="Revert All"
         cancelText="Cancel"
-        type="danger"
+        type="warning"
       />
     </div>
   );

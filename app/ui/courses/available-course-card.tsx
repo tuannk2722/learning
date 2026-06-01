@@ -5,7 +5,7 @@ import { Star, Users } from 'lucide-react';
 import { DynamicIcon } from '../dynamic-icon';
 import Link from 'next/link';
 import { CourseListing } from '@/app/lib/definitions/courses';
-import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { getColorClasses } from '@/app/lib/utils/color-palette';
 
 interface Props {
   course: CourseListing;

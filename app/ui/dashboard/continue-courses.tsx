@@ -4,7 +4,7 @@ import { motion } from "motion/react";
 import { BookOpen, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { CourseListing } from "@/app/lib/definitions/courses";
-import { getColorClasses } from "@/app/lib/utils/color-classes";
+import { getColorClasses } from "@/app/lib/utils/color-palette";
 
 export function ContinueCourses({ data }: { data: CourseListing[] }) {
 

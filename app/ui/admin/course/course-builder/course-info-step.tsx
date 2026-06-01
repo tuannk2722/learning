@@ -1,19 +1,17 @@
 "use client";
 
 import { motion } from 'motion/react';
-import { Category } from '@/app/lib/definitions/courses';
-import { levels, iconOptions, colorOptions } from './course-types';
+import { levels, iconOptions } from './course-types';
 import { DynamicIcon } from '../../../dynamic-icon';
 import { CoursePreview } from './preview-course';
 import { useCourseBuilderStore } from './course-store';
+import { COLOR_PALETTE } from '@/app/lib/utils/color-palette';
 
 interface CourseInfoStepProps {
-  categories: Category[];
   onNext: () => void;
 }
 
 export default function CourseInfoStep({
-  categories,
   onNext
 }: CourseInfoStepProps) {
   const { courseData, updateCourseData } = useCourseBuilderStore();
@@ -58,16 +56,14 @@ export default function CourseInfoStep({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="courseCategory" className="block text-sm font-medium mb-2">Category *</label>
-                <select
+                <input
                   id="courseCategory"
-                  value={courseData.category_id || ''}
-                  onChange={(e) => updateCourseData(prev => ({ ...prev, category_id: e.target.value ? Number(e.target.value) : null }))}
+                  type='text'
+                  placeholder='e.g., AI'
+                  value={courseData.category_name || ''}
+                  onChange={(e) => updateCourseData(prev => ({ ...prev, category_name: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
@@ -109,11 +105,11 @@ export default function CourseInfoStep({
                 Theme Color *
               </label>
               <div className="grid grid-cols-10 gap-2">
-                {colorOptions.map((option) => (
+                {COLOR_PALETTE.map((option) => (
                   <button
-                    key={option.bg}
-                    onClick={() => updateCourseData(prev => ({ ...prev, theme_color: option.bg, text_color: option.text }))}
-                    className={`p-3 rounded-xl border-2 transition-all ${courseData.theme_color === option.bg
+                    key={option.name}
+                    onClick={() => updateCourseData(prev => ({ ...prev, theme_color: option.name }))}
+                    className={`p-3 rounded-xl border-2 transition-all ${courseData.theme_color === option.name
                       ? "border-violet-500"
                       : "border-gray-200 hover:border-violet-300"
                       }`}
@@ -140,7 +136,8 @@ export default function CourseInfoStep({
       </div>
 
       {/* Preview course */}
-      <CoursePreview categories={categories} />
+      <CoursePreview />
+
     </motion.div>
   );
 }

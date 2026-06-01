@@ -2,7 +2,7 @@ import { BookOpen } from 'lucide-react';
 import { CourseTitle } from '@/app/ui/courses/title';
 import AllCoursesPage from '@/app/courses/page';
 import { auth } from '@/auth';
-import { getEnrolledCourses, getNotEnrolledCourses } from '@/app/lib/data/courses';
+import { getEnrolledCourses, getNotEnrolledCourses, getTopCategory } from '@/app/lib/data/courses';
 import { CourseListContainer } from '@/app/ui/courses/list-container';
 import CourseCardEnrolled from '@/app/ui/courses/enrolled-course-card';
 
@@ -13,6 +13,7 @@ export default async function Courses() {
 
   const enrolledCourses = await getEnrolledCourses(userId!);
   const notEnrolledCourses = await getNotEnrolledCourses(userId!);
+  const categories = await getTopCategory();
 
   return (
     enrolledCourses.length == 0 ? (
@@ -32,7 +33,7 @@ export default async function Courses() {
           </div>
 
           {/* Available Courses */}
-          <CourseListContainer initialCourses={notEnrolledCourses} />
+          <CourseListContainer initialCourses={notEnrolledCourses} categories={categories} />
 
         </div>
       </div>
