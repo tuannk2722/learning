@@ -17,159 +17,119 @@ export async function completeLesson(
   userId: string
 ): Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult; unlockedAchievements?: UnlockedAchievement[] }> {
   try {
-    // 0. Check if it was already completed to prevent duplicate XP farming
-    const existingProgress = await db.select()
-      .from(user_lesson_progress)
-      .where(
-        and(
-          eq(user_lesson_progress.user_id, userId),
-          eq(user_lesson_progress.lesson_id, Number(lessonId))
-        )
-      )
-      .limit(1);
-
-    const wasCompleted = existingProgress.length > 0 && existingProgress[0].status === 'completed';
-    const questUpdates: QuestUpdateInfo[] = [];
-    let streakResult: StreakResult | undefined;
-
-    // 1. Mark current lesson as completed
-    await db.insert(user_lesson_progress)
-      .values({
-        lesson_id: Number(lessonId),
-        user_id: userId,
-        status: "completed",
-        completed_at: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [user_lesson_progress.user_id, user_lesson_progress.lesson_id],
-        set: {
+    const [, lessonInfoResult, courseData] = await Promise.all([
+      // Mark current lesson as completed (upsert)
+      db.insert(user_lesson_progress)
+        .values({
+          lesson_id: Number(lessonId),
+          user_id: userId,
           status: "completed",
           completed_at: new Date(),
-        }
-      });
+        })
+        .onConflictDoUpdate({
+          target: [user_lesson_progress.user_id, user_lesson_progress.lesson_id],
+          set: { status: "completed", completed_at: new Date() },
+        }),
 
-    // 1.5. Reward XP if it's the first time
-    let xpEarned = 0;
-    if (!wasCompleted) {
-      const lessonInfo = await db.select({ xp: lessons.xp_reward, duration: lessons.duration_minutes })
+      // Lấy XP reward + duration của lesson
+      db.select({ xp: lessons.xp_reward, duration: lessons.duration_minutes })
         .from(lessons)
         .where(eq(lessons.id, Number(lessonId)))
-        .limit(1);
+        .limit(1),
 
-      if (lessonInfo.length > 0 && lessonInfo[0].xp) {
-        xpEarned = lessonInfo[0].xp;
-        await db.execute(sql`UPDATE users SET total_xp = COALESCE(total_xp, 0) + ${xpEarned} WHERE id = ${userId}`);
-      }
+      // Lấy courseId của lesson hiện tại
+      db.select({ courseId: sections.course_id })
+        .from(lessons)
+        .innerJoin(sections, eq(lessons.section_id, sections.id))
+        .where(eq(lessons.id, Number(lessonId)))
+        .limit(1),
+    ]);
 
-      // Cập nhật streak (chỉ tính 1 lần mỗi ngày)
-      streakResult = await updateStreak(userId);
+    const xpEarned = lessonInfoResult[0]?.xp ?? 0;
+    const duration = lessonInfoResult[0]?.duration ?? 0;
 
-      // Cập nhật tiến độ quest: hoàn thành bài học + kiếm XP + thời gian học
-      const res1 = await updateQuestProgress('COMPLETE_LESSONS', 1, userId);
-      questUpdates.push(...res1.questUpdates);
+    const [streakResult, , questXp, questStudy] = await Promise.all([
+      updateStreak(userId),
 
-      if (xpEarned > 0) {
-        const res2 = await updateQuestProgress('EARN_XP', xpEarned, userId);
-        questUpdates.push(...res2.questUpdates);
-      }
+      xpEarned > 0
+        ? db.execute(sql`UPDATE users SET total_xp = COALESCE(total_xp, 0) + ${xpEarned} WHERE id = ${userId}`)
+        : Promise.resolve(null),
 
-      const duration = lessonInfo[0]?.duration || 0;
-      if (duration > 0) {
-        const res3 = await updateQuestProgress('STUDY_TIME', duration, userId);
-        questUpdates.push(...res3.questUpdates);
-      }
-    }
+      xpEarned > 0
+        ? updateQuestProgress("EARN_XP", xpEarned, userId)
+        : Promise.resolve({ questUpdates: [] as QuestUpdateInfo[] }),
 
-    // 2. Find course info and all lessons
-    const currentLessonData = await db
-      .select({ courseId: sections.course_id })
-      .from(lessons)
-      .innerJoin(sections, eq(lessons.section_id, sections.id))
-      .where(eq(lessons.id, Number(lessonId)))
-      .limit(1);
+      duration > 0
+        ? updateQuestProgress("STUDY_TIME", duration, userId)
+        : Promise.resolve({ questUpdates: [] as QuestUpdateInfo[] }),
+    ]);
 
-    if (currentLessonData.length > 0 && currentLessonData[0].courseId) {
-      const courseId = currentLessonData[0].courseId;
+    // Quest COMPLETE_LESSONS chạy riêng (tránh conflict nếu updateQuestProgress không idempotent)
+    const res1 = await updateQuestProgress("COMPLETE_LESSONS", 1, userId);
+    const questUpdates = [...questXp.questUpdates, ...questStudy.questUpdates, ...res1.questUpdates];
 
+    // ── Xử lý course logic ──
+    if (courseData.length > 0 && courseData[0].courseId) {
+      const courseId = courseData[0].courseId;
+
+      // Lấy tất cả published lessons trong course (cần để xác định nextLesson + totalCount)
       const courseLessons = await db
         .select({ id: lessons.id })
         .from(lessons)
         .innerJoin(sections, eq(lessons.section_id, sections.id))
         .where(and(
           eq(sections.course_id, courseId),
-          eq(lessons.status, 'published') // chỉ xét published lessons trong unlock chain
+          eq(lessons.status, "published"),
         ))
         .orderBy(asc(sections.order_index), asc(lessons.order_index));
 
-      const currentIndex = courseLessons.findIndex(l => l.id === Number(lessonId));
+      const currentIndex = courseLessons.findIndex((l) => l.id === Number(lessonId));
+      const nextLesson =
+        currentIndex !== -1 && currentIndex < courseLessons.length - 1
+          ? courseLessons[currentIndex + 1]
+          : null;
 
-      // 3. Unlock next lesson
-      if (currentIndex !== -1 && currentIndex < courseLessons.length - 1) {
-        const nextLesson = courseLessons[currentIndex + 1];
-
-        const existingNext = await db.select()
+      // ── unlock next lesson + đếm completedCount ──
+      const [completedCountResult] = await Promise.all([
+        db.select({ cnt: sql<number>`cast(count(*) as int)` })
           .from(user_lesson_progress)
+          .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
+          .innerJoin(sections, eq(lessons.section_id, sections.id))
           .where(
             and(
               eq(user_lesson_progress.user_id, userId),
-              eq(user_lesson_progress.lesson_id, nextLesson.id)
+              eq(sections.course_id, courseId),
+              eq(lessons.status, "published"),
+              eq(user_lesson_progress.status, "completed"),
             )
-          )
-          .limit(1);
+          ),
 
-        if (!existingNext.length) {
-          await db.insert(user_lesson_progress).values({
-            user_id: userId,
-            lesson_id: nextLesson.id,
-            status: "unlocked"
-          });
-        } else if (existingNext[0].status === "locked" || existingNext[0].status === "LOCKED") {
-          await db.update(user_lesson_progress)
-            .set({ status: "unlocked" })
-            .where(
-              and(
-                eq(user_lesson_progress.user_id, userId),
-                eq(user_lesson_progress.lesson_id, nextLesson.id)
-              )
-            );
-        }
-      }
+        // Unlock next lesson: chỉ insert nếu chưa có record (onConflictDoNothing)
+        // Nếu đã có record (dù locked/unlocked/completed) thì giữ nguyên
+        nextLesson
+          ? db.insert(user_lesson_progress)
+            .values({ user_id: userId, lesson_id: nextLesson.id, status: "unlocked" })
+            .onConflictDoNothing()
+          : Promise.resolve(null),
+      ]);
 
-      // 4. Update enrollment last_accessed_at và status (dùng dynamic progress thay vì lưu percent)
-      // Tính nhanh xem đã hoàn thành tất cả published lesson chưa để cập nhật status enrollment
-      const completedCount = await db
-        .select({ cnt: sql`cast(count(*) as int)` })
-        .from(user_lesson_progress)
-        .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
-        .innerJoin(sections, eq(lessons.section_id, sections.id))
-        .where(
-          and(
-            eq(user_lesson_progress.user_id, userId),
-            eq(sections.course_id, courseId),
-            eq(lessons.status, 'published'),
-            eq(user_lesson_progress.status, 'completed')
-          )
-        );
+      const totalCount = courseLessons.length;
+      const completedCount = completedCountResult[0]?.cnt ?? 0;
+      const isFullyCompleted = totalCount > 0 && completedCount >= totalCount;
 
-      const totalCount = courseLessons.length; // đã lọc published rồi
-      const isFullyCompleted = totalCount > 0 && (completedCount[0]?.cnt as number || 0) >= totalCount;
-
+      // Cập nhật enrollment status ──
       await db.update(enrollments)
         .set({
-          status: isFullyCompleted ? 'COMPLETED' : 'ACTIVE',
-          last_accessed_at: new Date()
+          status: isFullyCompleted ? "COMPLETED" : "ACTIVE",
+          last_accessed_at: new Date(),
         })
-        .where(
-          and(
-            eq(enrollments.user_id, userId),
-            eq(enrollments.course_id, courseId)
-          )
-        );
+        .where(and(
+          eq(enrollments.user_id, userId),
+          eq(enrollments.course_id, courseId),
+        ));
     }
 
     revalidatePath("/dashboard/courses", "layout");
-
-    // Evaluate achievements at the very end
     const { unlocked } = await evaluateAchievements(userId);
 
     return { success: true, xpEarned, questUpdates, streakResult, unlockedAchievements: unlocked };

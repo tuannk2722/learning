@@ -64,18 +64,29 @@ export async function submitQuiz(
         if (!isNaN(correctIdx) && correctIdx >= 0 && correctIdx < options.length) {
           correctAnswerDisplay = options[correctIdx];
         }
+      } else if (q.question_type === "fill-blank") {
+        // Hiển thị danh sách các đáp án chấp nhận được
+        const acceptedAnswers = q.correct_answer
+          .split(",")
+          .map((a) => a.trim())
+          .filter(Boolean);
+        correctAnswerDisplay = acceptedAnswers.join(" / ");
       }
 
       // So sánh đáp án
       let isCorrect = false;
       if (userRawAnswer !== undefined && userRawAnswer !== null) {
         const userStr = String(userRawAnswer).trim().toLowerCase();
-        const correctStr = String(q.correct_answer).trim().toLowerCase();
 
         if (q.question_type === "fill-blank") {
-          // Fill-blank: so sánh linh hoạt hơn (chứa chuỗi)
-          isCorrect = userStr.includes(correctStr) || correctStr.includes(userStr);
+          // Fill-blank: khớp chính xác với một trong các đáp án được chấp nhận (ngăn cách bởi dấu phẩy)
+          const acceptedAnswers = q.correct_answer
+            .split(",")
+            .map((a) => a.trim().toLowerCase())
+            .filter(Boolean);
+          isCorrect = acceptedAnswers.includes(userStr);
         } else {
+          const correctStr = String(q.correct_answer).trim().toLowerCase();
           isCorrect = userStr === correctStr;
         }
       }
@@ -148,7 +159,6 @@ export async function submitQuiz(
 
     const { unlocked } = await evaluateAchievements(userId || "");
 
-    // Revalidate paths to update the streak and progress badge in RootLayout / SideNav
     revalidatePath("/dashboard/courses", "layout");
 
     return {

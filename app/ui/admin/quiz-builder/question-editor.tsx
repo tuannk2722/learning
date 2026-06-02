@@ -92,15 +92,17 @@ export default function QuestionEditor({
       {/* Fill in the Blank */}
       {question.type === 'fill-blank' && (
         <div>
-          <label className="block text-sm font-medium mb-2">Correct Answer</label>
+          <label className="block text-sm font-medium mb-2">Correct Answer(s)</label>
           <input
             type="text"
             value={question.correctAnswer as string}
             onChange={(e) => onUpdate({ correctAnswer: e.target.value })}
-            placeholder="Type the correct answer"
+            placeholder="e.g. React, ReactJS, react.js"
             className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-          <p className="text-xs text-muted-foreground mt-1">Case-insensitive matching</p>
+          <p className="text-xs text-indigo-500 mt-1 font-medium">
+            💡 You can enter multiple accepted answers separated by commas (e.g. <span className="font-mono bg-indigo-50 px-1 rounded">React, ReactJS, react.js</span>). Matching is case-insensitive.
+          </p>
         </div>
       )}
 
