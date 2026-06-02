@@ -15,6 +15,7 @@ interface CurriculumSectionItemProps {
   onAddLesson: (index: number) => void;
   onDeleteLesson: (sectionIndex: number, lessonId: string | number) => void;
   onReorderLessons: (sectionIndex: number, newLessons: CourseBuilderLesson[]) => void;
+  onLessonStatusChange?: (lessonId: number, newStatus: string) => void;
 }
 
 export function CurriculumSectionItem({
@@ -24,7 +25,8 @@ export function CurriculumSectionItem({
   onDeleteRequest,
   onAddLesson,
   onDeleteLesson,
-  onReorderLessons
+  onReorderLessons,
+  onLessonStatusChange
 }: CurriculumSectionItemProps) {
   const { expandedCurriculum, toggleCurriculum } = useCourseBuilderStore();
   const isExpanded = expandedCurriculum.includes(currIndex);
@@ -85,6 +87,7 @@ export function CurriculumSectionItem({
                   lesson={lesson}
                   sectionIndex={currIndex}
                   onDeleteLesson={onDeleteLesson}
+                  onStatusChange={onLessonStatusChange}
                 />
               </Reorder.Item>
             ))}

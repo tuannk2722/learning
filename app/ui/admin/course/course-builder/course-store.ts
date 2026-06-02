@@ -31,16 +31,17 @@ export const useCourseBuilderStore = create<CourseBuilderState>((set) => ({
   step: 1,
   courseId: null,
 
-  initCourse: (initialData) => set(() => {
+  initCourse: (initialData) => set((state) => {
     const data = initialData || defaultCourseData;
+    const isDifferentCourse = initialData?.id !== state.courseId;
     return {
       courseData: data,
       originalData: data,
       courseId: initialData?.id ?? null,
       isDirty: false,
       isSaving: false,
-      step: 1,
-      expandedCurriculum: [0],
+      step: isDifferentCourse ? 1 : state.step,
+      expandedCurriculum: isDifferentCourse ? [0] : state.expandedCurriculum,
     };
   }),
 

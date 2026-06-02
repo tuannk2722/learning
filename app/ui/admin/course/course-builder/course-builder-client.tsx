@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
@@ -36,8 +36,13 @@ export default function CourseBuilderClient({
     setIsDirty,
   } = useCourseBuilderStore();
 
+  const lastSyncedRef = useRef<string | null>(null);
   useEffect(() => {
-    initCourse(initialData);
+    const fingerprint = JSON.stringify({ id: initialData?.id, sections: initialData?.sections });
+    if (fingerprint !== lastSyncedRef.current) {
+      lastSyncedRef.current = fingerprint;
+      initCourse(initialData);
+    }
   }, [initialData, initCourse]);
 
   useEffect(() => {

@@ -10,6 +10,7 @@ import { QuestUpdateInfo } from "../definitions/quests";
 import { updateStreak } from "./streak";
 import { StreakResult, UnlockedAchievement } from "../definitions/definitions";
 import { evaluateAchievements } from "./achievements";
+import { auth } from "@/auth";
 
 export async function completeLesson(
   lessonId: string,
@@ -94,7 +95,10 @@ export async function completeLesson(
         .select({ id: lessons.id })
         .from(lessons)
         .innerJoin(sections, eq(lessons.section_id, sections.id))
-        .where(eq(sections.course_id, courseId))
+        .where(and(
+          eq(sections.course_id, courseId),
+          eq(lessons.status, 'published') // chỉ xét published lessons trong unlock chain
+        ))
         .orderBy(asc(sections.order_index), asc(lessons.order_index));
 
       const currentIndex = courseLessons.findIndex(l => l.id === Number(lessonId));
@@ -131,9 +135,10 @@ export async function completeLesson(
         }
       }
 
-      // 4. Update Course Progress
-      const completedLessons = await db
-        .select({ id: lessons.id })
+      // 4. Update enrollment last_accessed_at và status (dùng dynamic progress thay vì lưu percent)
+      // Tính nhanh xem đã hoàn thành tất cả published lesson chưa để cập nhật status enrollment
+      const completedCount = await db
+        .select({ cnt: sql`cast(count(*) as int)` })
         .from(user_lesson_progress)
         .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
         .innerJoin(sections, eq(lessons.section_id, sections.id))
@@ -141,17 +146,17 @@ export async function completeLesson(
           and(
             eq(user_lesson_progress.user_id, userId),
             eq(sections.course_id, courseId),
+            eq(lessons.status, 'published'),
             eq(user_lesson_progress.status, 'completed')
           )
         );
 
-      const totalLessonsCount = courseLessons.length;
-      const progressPercent = totalLessonsCount > 0 ? Math.round((completedLessons.length / totalLessonsCount) * 100) : 0;
+      const totalCount = courseLessons.length; // đã lọc published rồi
+      const isFullyCompleted = totalCount > 0 && (completedCount[0]?.cnt as number || 0) >= totalCount;
 
       await db.update(enrollments)
         .set({
-          progress_percent: progressPercent,
-          status: progressPercent === 100 ? 'COMPLETED' : 'ACTIVE',
+          status: isFullyCompleted ? 'COMPLETED' : 'ACTIVE',
           last_accessed_at: new Date()
         })
         .where(
@@ -200,6 +205,48 @@ export async function saveLessonBlocks(
     return { success: true };
   } catch (error) {
     console.error("Error saving lesson blocks:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+
+export async function publishLesson(lessonId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+    await db
+      .update(lessons)
+      .set({ status: 'published', updated_at: new Date() })
+      .where(eq(lessons.id, lessonId));
+
+    // Revalidate để người học thấy lesson mới ngay
+    revalidatePath('/dashboard/courses', 'layout');
+    revalidatePath('/admin/courses', 'layout');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error publishing lesson:', error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function unpublishLesson(lessonId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+    await db
+      .update(lessons)
+      .set({ status: 'draft', updated_at: new Date() })
+      .where(eq(lessons.id, lessonId));
+
+    revalidatePath('/dashboard/courses', 'layout');
+    revalidatePath('/admin/courses', 'layout');
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error unpublishing lesson:', error);
     return { success: false, error: (error as Error).message };
   }
 }

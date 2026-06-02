@@ -34,16 +34,14 @@ export function CurriculumSection({
 
             <div className="divide-y divide-gray-200">
               {section.lessons.map((lesson, lessonIndex) => {
-                // 1. Tạo đường dẫn động
                 const lessonHref = `/dashboard/courses/${courseId}/lesson/${lesson.id}`;
                 const isActive = activeLessonId ? lesson.id.toString() === activeLessonId : lesson.isCurrent;
 
                 return (
                   <Link
                     key={lesson.id}
-                    href={lesson.locked ? "#" : lessonHref} // Nếu bị khóa thì không cho chuyển trang
-                    // href={lessonIndex}
-                    className={lesson.locked ? "pointer-events-none" : "block"} // Chặn click nếu bị khóa
+                    href={lesson.locked ? "#" : lessonHref}
+                    className={lesson.locked ? "pointer-events-none" : "block"}
                   >
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}

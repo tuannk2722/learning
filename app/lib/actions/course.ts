@@ -355,6 +355,19 @@ export async function saveCourseBuilder(
 
     const refreshedCourse = await getCourseForBuilder(targetCourseId.toString());
 
+    // Khi publish course: set toàn bộ lessons sang 'published'
+    if (publish) {
+      await db
+        .update(lessons)
+        .set({ status: 'published' })
+        .where(
+          inArray(
+            lessons.section_id,
+            db.select({ id: sections.id }).from(sections).where(eq(sections.course_id, targetCourseId))
+          )
+        );
+    }
+
     revalidatePath(`/admin/courses/${targetCourseId}`);
     revalidatePath(`/admin/courses`);
     revalidatePath(`/dashboard/courses`);

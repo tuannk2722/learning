@@ -82,6 +82,7 @@ export const lessons = pgTable('lessons', {
   xp_reward: integer('xp_reward').default(0),
   blocks: jsonb('blocks'),
   order_index: integer('order_index').notNull(),
+  status: varchar('status', { length: 50 }).default('draft'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });

@@ -34,6 +34,11 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
     return <NotFound courseId={courseId} />
   }
 
+  // Chặn user thường truy cập lesson chưa published
+  if (lesson.status !== 'published' && userRole !== 'admin') {
+    return <NotFound courseId={courseId} />;
+  }
+
   const curriculum = await getCourseCurriculum(Number(courseId), userId);
   const initialNoteContent = await getLessonNote(Number(lessonId), userId);
   const initialRating = await getUserCourseRating(Number(courseId), userId);

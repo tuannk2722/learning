@@ -1,7 +1,7 @@
 import QuizContainer from "@/app/ui/quiz/quiz-container";
 import { getQuizByLessonId } from "@/app/lib/data/quiz";
 import { submitQuiz } from "@/app/lib/actions/quiz";
-import { getNextLessonId } from "@/app/lib/data/lessons";
+import { getNextLessonId, getLessonById } from "@/app/lib/data/lessons";
 import { NotFound } from "@/app/ui/result/not-found";
 import { auth } from "@/auth";
 import { getCourseStatus } from "@/app/lib/data/courses";
@@ -16,6 +16,13 @@ export default async function QuizPage(props: { params: Promise<{ courseId: stri
   // Chặn user thường truy cập quiz của course chưa published
   const courseStatus = await getCourseStatus(Number(courseId));
   if (courseStatus !== 'published' && userRole !== 'admin') {
+    const nextLessonId = await getNextLessonId(Number(courseId), Number(lessonId));
+    return <NotFound courseId={courseId} nextLessonId={nextLessonId} />;
+  }
+
+  // Chặn user thường truy cập quiz của lesson chưa published (quiz kế thừa status của lesson)
+  const lesson = await getLessonById(Number(lessonId));
+  if (lesson?.status !== 'published' && userRole !== 'admin') {
     const nextLessonId = await getNextLessonId(Number(courseId), Number(lessonId));
     return <NotFound courseId={courseId} nextLessonId={nextLessonId} />;
   }

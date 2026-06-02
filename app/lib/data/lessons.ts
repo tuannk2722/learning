@@ -1,18 +1,21 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, sql, getTableColumns, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { CourseCurriculum, DetailLesson } from "../definitions/lessons";
 
-export async function getCourseCurriculum(courseId: number, userId?: string): Promise<CourseCurriculum> {
+export async function getCourseCurriculum(
+  courseId: number,
+  userId?: string
+): Promise<CourseCurriculum> {
   try {
-    // 1. Lấy tất cả các section của course
+    // 1. Lấy tất cả các section theo thứ tự
     const allSections = await db
       .select()
       .from(schema.sections)
       .where(eq(schema.sections.course_id, courseId))
       .orderBy(schema.sections.order_index);
 
-    // 2. Lấy tất cả bài học thuộc course này thông qua join với sections
+    // 2. Lấy bài học
     const allLessons = await db
       .select({
         id: schema.lessons.id,
@@ -21,39 +24,67 @@ export async function getCourseCurriculum(courseId: number, userId?: string): Pr
         duration: schema.lessons.duration_minutes,
         xp: schema.lessons.xp_reward,
         order_index: schema.lessons.order_index,
+        status: schema.lessons.status,
       })
       .from(schema.lessons)
       .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
-      .where(eq(schema.sections.course_id, courseId))
-      .orderBy(schema.lessons.order_index);
+      .where(and(
+        eq(schema.sections.course_id, courseId),
+        eq(schema.lessons.status, 'published')
+      ))
+      .orderBy(schema.sections.order_index, schema.lessons.order_index);
 
-    // 3. Lấy tiến độ của user nếu có userId
-    const userProgressMap = new Map<number, string>();
-    if (userId) {
+    // 3. Lấy tiến độ của user — chỉ cần biết lesson nào đã 'completed'
+    const completedSet = new Set<number>(); // ID các lesson đã hoàn thành
+    let hasAnyProgressForCourse = false;    // true = user đã enrolled (có bất kỳ record nào)
+
+    if (userId && allLessons.length > 0) {
+      const lessonIdsInCourse = allLessons.map(l => l.id);
       const progressData = await db
-        .select()
+        .select({
+          lesson_id: schema.user_lesson_progress.lesson_id,
+          status: schema.user_lesson_progress.status,
+        })
         .from(schema.user_lesson_progress)
-        .where(eq(schema.user_lesson_progress.user_id, userId));
+        .where(and(
+          eq(schema.user_lesson_progress.user_id, userId),
+          inArray(schema.user_lesson_progress.lesson_id, lessonIdsInCourse) // chỉ query lesson của course này
+        ));
 
       progressData.forEach(p => {
-        userProgressMap.set(p.lesson_id, p.status || 'locked');
+        hasAnyProgressForCourse = true; // có ít nhất 1 record = đã enrolled
+        if (p.status === 'completed') completedSet.add(p.lesson_id);
       });
     }
 
-    // 4. Nhóm bài học vào các section theo định dạng Curriculum
+    // 4. Build global index map để biết bài liền kề trước của từng lesson là bài nào
+    const lessonGlobalIndexMap = new Map<number, number>();
+    allLessons.forEach((l, i) => lessonGlobalIndexMap.set(l.id, i));
+
+    const isAccessible = (lessonId: number): boolean => {
+      const i = lessonGlobalIndexMap.get(lessonId) ?? -1;
+      if (i === -1) return false;
+      if (completedSet.has(lessonId)) return true;                             // đã hoàn thành
+      if (i === 0 && hasAnyProgressForCourse) return true;                     // bài đầu, enrolled
+      if (i > 0 && completedSet.has(allLessons[i - 1].id)) return true;       // bài trước đã xong
+      return false;
+    };
+
+    // 5. Nhóm bài học vào section
     const curriculum: CourseCurriculum = allSections.map((section) => {
       const sectionLessons = allLessons
         .filter((lesson) => lesson.section_id === section.id)
         .map((lesson) => {
-          const status = userProgressMap.get(lesson.id);
+          const completed = completedSet.has(lesson.id);
+          const accessible = isAccessible(lesson.id);
           return {
             id: lesson.id,
             title: lesson.title,
             duration: lesson.duration || 0,
             xp: lesson.xp || 0,
-            completed: status === 'completed',
-            locked: status === 'locked' || !status,
-            isCurrent: status === 'unlocked' || status === 'in_progress',
+            completed,
+            locked: !accessible,
+            isCurrent: accessible && !completed, // play button cho bài chưa xong nhưng accessible
           };
         });
 
@@ -81,6 +112,7 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
         course_id: schema.sections.course_id,
         courseTitle: schema.courses.name,
         blocks: schema.lessons.blocks,
+        status: schema.lessons.status,
       })
       .from(schema.lessons)
       .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
@@ -96,12 +128,15 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
       throw new Error('Lesson is not associated with a course.');
     }
 
-    // 2. Lấy danh sách ID bài học trong khóa học này để tính số thứ tự (Lesson Number)
+    // 2. Lấy danh sách ID bài học trong khóa học để tính số thứ tự
     const lessonsInCourse = await db
       .select({ id: schema.lessons.id })
       .from(schema.lessons)
       .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
-      .where(eq(schema.sections.course_id, lesson.course_id))
+      .where(and(
+        eq(schema.sections.course_id, lesson.course_id!),
+        eq(schema.lessons.status, 'published')
+      ))
       .orderBy(schema.sections.order_index, schema.lessons.order_index);
 
     const lessonNumber = lessonsInCourse.findIndex(l => l.id === lessonId) + 1;
@@ -124,7 +159,6 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
       isCompleted = progressData.length > 0 && progressData[0].status === 'completed';
     }
 
-    // Trả về object đã map sẵn sàng cho UI và khớp với interface DetailLesson
     return {
       id: lesson.id,
       title: lesson.title,
@@ -136,6 +170,7 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
       lessonNumber,
       totalLessons,
       blocks: lesson.blocks as any,
+      status: lesson.status || 'draft',
     };
   } catch (error) {
     console.error('Database Error:', error);
@@ -145,11 +180,15 @@ export async function getLessonDetail(lessonId: number, userId?: string): Promis
 
 export async function getNextLessonId(courseId: number, currentLessonId: number): Promise<number | null> {
   try {
+    // Chỉ xét published lessons khi navigate — tránh redirect tới lesson draft
     const courseLessons = await db
       .select({ id: schema.lessons.id })
       .from(schema.lessons)
       .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
-      .where(eq(schema.sections.course_id, courseId))
+      .where(and(
+        eq(schema.sections.course_id, courseId),
+        eq(schema.lessons.status, 'published')
+      ))
       .orderBy(schema.sections.order_index, schema.lessons.order_index);
 
     const currentIndex = courseLessons.findIndex(l => l.id === currentLessonId);

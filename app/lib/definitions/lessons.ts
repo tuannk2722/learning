@@ -71,6 +71,7 @@ export interface DetailLesson {
   totalLessons: number;
   xp_reward: number;
   blocks: LessonBlock[] | null;
+  status: string; // 'draft' | 'published'
 }
 
 
@@ -81,6 +82,7 @@ export type CourseBuilderLesson = {
   // type: string;
   duration: number;
   xp: number;
+  status?: string; // 'draft' | 'published' — chỉ có sau khi lesson đã được lưu vào DB
 };
 
 export type CourseBuilderSection = {

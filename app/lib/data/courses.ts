@@ -14,6 +14,7 @@ const lessonStats = db
   })
   .from(schema.sections)
   .leftJoin(schema.lessons, eq(schema.sections.id, schema.lessons.section_id))
+  .where(eq(schema.lessons.status, 'published'))
   .groupBy(schema.sections.course_id)
   .as('ls');
 
@@ -86,7 +87,31 @@ export async function getEnrolledCourses(userId: string) {
       .select({
         ...getTableColumns(schema.courses),
         category_name: schema.categories.name,
-        progress_percent: schema.enrollments.progress_percent,
+        progress_percent: sql<number>`
+          CASE
+            WHEN (
+              SELECT COUNT(*) FROM lessons l
+              JOIN sections s ON l.section_id = s.id
+              WHERE s.course_id = courses.id AND l.status = 'published'
+            ) = 0 THEN 0
+            ELSE ROUND(
+              CAST((
+                SELECT COUNT(*) FROM user_lesson_progress ulp
+                JOIN lessons l ON ulp.lesson_id = l.id
+                JOIN sections s ON l.section_id = s.id
+                WHERE s.course_id = courses.id
+                  AND l.status = 'published'
+                  AND ulp.user_id = ${userId}
+                  AND ulp.status = 'completed'
+              ) AS REAL) * 100.0 /
+              (
+                SELECT COUNT(*) FROM lessons l
+                JOIN sections s ON l.section_id = s.id
+                WHERE s.course_id = courses.id AND l.status = 'published'
+              )
+            )
+          END
+        `,
         current_lesson: sql<string>`(
           SELECT l.title
           FROM lessons l
@@ -150,10 +175,8 @@ export async function getNotEnrolledCourses(userId: string) {
   }
 }
 
-export async function getCourseById(id: string, userId?: string): Promise<CourseDetail | null> {
+export async function getCourseById(courseId: number, userId?: string): Promise<CourseDetail | null> {
   try {
-    const courseId = Number(id);
-
     const courseData = await db
       .select({
         ...getTableColumns(schema.courses),
@@ -182,7 +205,7 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
 
     if (userId) {
       const enrollment = await db
-        .select()
+        .select({ id: schema.enrollments.user_id })
         .from(schema.enrollments)
         .where(
           and(
@@ -194,8 +217,8 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
 
       if (enrollment.length > 0) {
         course.is_enrolled = true;
-        course.progress_percent = enrollment[0].progress_percent || 0;
 
+        // Tính động: completed published lessons / total published lessons
         const progress = await db
           .select({
             completed_count: sql<number>`cast(count(${schema.user_lesson_progress.lesson_id}) as int)`,
@@ -209,12 +232,28 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
             and(
               eq(schema.user_lesson_progress.user_id, userId),
               eq(schema.sections.course_id, courseId),
+              eq(schema.lessons.status, 'published'),
               eq(schema.user_lesson_progress.status, 'completed')
             )
           );
 
+        const totalPublished = await db
+          .select({ cnt: sql<number>`cast(count(${schema.lessons.id}) as int)` })
+          .from(schema.lessons)
+          .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
+          .where(
+            and(
+              eq(schema.sections.course_id, courseId),
+              eq(schema.lessons.status, 'published')
+            )
+          );
+
+        const completedCount = progress[0]?.completed_count || 0;
+        const totalCount = totalPublished[0]?.cnt || 0;
+        course.progress_percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
         if (progress.length > 0) {
-          course.completed_lessons = progress[0].completed_count || 0;
+          course.completed_lessons = completedCount;
           course.xp_earned = progress[0].xp_sum || 0;
           course.learned_minutes = progress[0].duration_sum || 0;
         }
@@ -291,6 +330,7 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
     let lessonRows: {
       id: number; section_id: number | null; title: string;
       duration_minutes: number | null; xp_reward: number | null;
+      status: string | null;
     }[] = [];
 
     const sectionIds = sectionRows.map(s => s.id);
@@ -303,6 +343,7 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
           title: schema.lessons.title,
           duration_minutes: schema.lessons.duration_minutes,
           xp_reward: schema.lessons.xp_reward,
+          status: schema.lessons.status,
         })
         .from(schema.lessons)
         .where(inArray(schema.lessons.section_id, sectionIds))
@@ -320,6 +361,7 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
           title: l.title,
           duration: l.duration_minutes || 0,
           xp: l.xp_reward || 0,
+          status: l.status || 'draft',
         })),
     }));
 

@@ -108,6 +108,19 @@ export default function CurriculumStep({
     }));
   };
 
+  // Optimistic update: cập nhật status trong store sau khi publish/unpublish
+  const handleLessonStatusChange = (lessonId: number, newStatus: string) => {
+    updateCourseData(prev => ({
+      ...prev,
+      sections: prev.sections.map(section => ({
+        ...section,
+        lessons: section.lessons.map(lesson =>
+          lesson.id === lessonId ? { ...lesson, status: newStatus } : lesson
+        )
+      }))
+    }));
+  };
+
   const totalLessons = courseData.sections.reduce(
     (sum, section) => sum + section.lessons.length,
     0
@@ -153,6 +166,7 @@ export default function CurriculumStep({
                     onAddLesson={addLesson}
                     onDeleteLesson={deleteLesson}
                     onReorderLessons={reorderLessons}
+                    onLessonStatusChange={handleLessonStatusChange}
                   />
                 </Reorder.Item>
               ))}

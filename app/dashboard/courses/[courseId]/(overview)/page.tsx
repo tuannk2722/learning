@@ -16,13 +16,12 @@ export default async function CourseDetailPage(props: { params: Promise<{ course
 
   const params = await props.params;
   const courseId = params.courseId.toString();
-  const course = await getCourseById(courseId, userId);
+  const course = await getCourseById(Number(courseId), userId);
 
   if (!course) {
     return <NotFound />
   }
 
-  // Chặn user thường truy cập course chưa published
   if (course.status !== 'published' && userRole !== 'admin') {
     return <NotFound />
   }
