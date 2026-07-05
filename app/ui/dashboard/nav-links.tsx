@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, BarChart3, BookOpen, Crown, Flame, User, LayoutDashboard, Users, Award, Target } from 'lucide-react';
+import { Home, BarChart3, BookOpen, Crown, Flame, User, LayoutDashboard, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';

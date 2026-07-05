@@ -1,6 +1,6 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, sql, desc, notInArray, getTableColumns, and, inArray } from "drizzle-orm";
+import { eq, sql, desc, notInArray, getTableColumns, and, inArray, gt } from "drizzle-orm";
 import { CourseListing, CourseDetail, Category } from "../definitions/courses";
 import { CourseBuilderResult, CourseBuilderSection } from "../definitions/lessons";
 
@@ -39,6 +39,10 @@ export async function getTopCategory() {
       .from(schema.categories)
       .leftJoin(schema.courses, eq(schema.categories.id, schema.courses.category_id))
       .groupBy(schema.categories.id)
+      .having(gt(
+        sql<number>`cast(count(case when ${schema.courses.status} = 'published' then 1 end) as int)`,
+        0
+      ))
       .orderBy(desc(sql<number>`total_courses`))
       .limit(10);
     return data as any as Category[];
@@ -47,6 +51,7 @@ export async function getTopCategory() {
     throw new Error('Failed to fetch all categories [DRIZZLE_FIX].');
   }
 }
+
 
 export async function fetchAllCourses(options?: { status?: 'published' | 'draft' }) {
   try {
@@ -79,7 +84,6 @@ export async function fetchAllCourses(options?: { status?: 'published' | 'draft'
     throw new Error('Failed to fetch courses.');
   }
 }
-
 
 export async function getEnrolledCourses(userId: string) {
   try {

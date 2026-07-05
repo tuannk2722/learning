@@ -21,7 +21,7 @@ export const CourseFilter = ({
         <div className="flex items-center gap-4 mb-6">
           <div className="flex items-center gap-2 text-gray-700">
             <Filter className="w-5 h-5" />
-            <span className="font-medium">Lọc</span>
+            <span className="font-medium">Filter</span>
           </div>
           {(selectedCategory !== "All" || selectedLevel !== "All") && (
             <button
@@ -32,7 +32,7 @@ export const CourseFilter = ({
               className="text-sm text-violet-600 hover:text-violet-700 flex items-center gap-1"
             >
               <X className="w-4 h-4" />
-              Xóa bộ lọc
+              Clear filters
             </button>
           )}
         </div>
@@ -40,7 +40,7 @@ export const CourseFilter = ({
         <div className="grid md:grid-cols-2 gap-6">
           {/* Category Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Danh mục</label>
+            <label className="block text-sm font-medium text-gray-700 mb-3">Categories</label>
             <div className="flex flex-wrap gap-2">
               {categories.map((category) => (
                 <button
@@ -59,7 +59,7 @@ export const CourseFilter = ({
 
           {/* Level Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Cấp độ</label>
+            <label className="block text-sm font-medium text-gray-700 mb-3">Levels</label>
             <div className="flex flex-wrap gap-2">
               {levels.map((level) => (
                 <button

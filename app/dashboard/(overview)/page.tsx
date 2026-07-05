@@ -11,13 +11,13 @@ import {
   AchievementsCardSkeleton,
   LeaderboardPreviewSkeleton
 } from "@/app/ui/skeleton/dashboard";
-import { getEnrolledCourses } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
 import { getUserById, getLeaderboardData, getRankByUserId } from "@/app/lib/data/users";
 import { getRecentAchievements } from "@/app/lib/data/achievements";
 import { getOrAssignDailyQuests } from "@/app/lib/data/quests";
 import { getEffectiveStreak } from "@/app/lib/actions/streak";
 import { StatsOverviewSkeleton } from "@/app/ui/skeleton/skeletons";
+import { getEnrolledCourses } from "@/app/lib/data/courses";
 
 export default async function DashboardHome() {
   const session = await auth();
@@ -30,6 +30,8 @@ export default async function DashboardHome() {
   const recentAchievements = await getRecentAchievements(user_id!);
   const dailyQuests = await getOrAssignDailyQuests(user_id!);
   let currentStreak = 0;
+
+  const recentCourse = continueCourses.slice(0, 3);
 
   if (userInfo) {
     currentStreak = await getEffectiveStreak(userInfo.current_streak, userInfo.last_study_date);
@@ -57,7 +59,7 @@ export default async function DashboardHome() {
 
               {/* Continuing Courses */}
               <Suspense fallback={<ContinueCoursesSkeleton />}>
-                <ContinueCourses data={continueCourses} />
+                <ContinueCourses data={recentCourse} />
               </Suspense>
             </div>
 

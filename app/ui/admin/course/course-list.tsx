@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CourseFilter } from './course-filter';
 import { CourseRow } from './course-row';
 import { CourseListing } from '@/app/lib/definitions/courses';
@@ -24,7 +24,15 @@ export default function CourseList({ initialCourses }: CourseListProps) {
 
   const ITEM_PER_PAGE = 6;
   const totalPages = Math.ceil(filteredCourses.length / ITEM_PER_PAGE);
-  const startPage = (currentPage - 1) * ITEM_PER_PAGE;
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const safePage = Math.min(currentPage, Math.max(totalPages, 1));
+  const startPage = (safePage - 1) * ITEM_PER_PAGE;
   const currentCourses = filteredCourses.slice(startPage, startPage + ITEM_PER_PAGE)
 
   return (
@@ -64,7 +72,7 @@ export default function CourseList({ initialCourses }: CourseListProps) {
 
       <div className="px-6 py-4 border-t border-gray-100 flex justify-center bg-slate-50/30">
         <Pagination
-          currentPage={currentPage}
+          currentPage={safePage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
         />

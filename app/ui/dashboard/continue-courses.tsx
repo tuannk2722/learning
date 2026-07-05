@@ -47,9 +47,6 @@ export function ContinueCourses({ data }: { data: CourseListing[] }) {
                     </h3>
                     <p className="text-sm text-gray-600">{course.current_lesson || "Completed"}</p>
                   </div>
-                  {/* <div className="text-sm font-medium text-gray-700">
-                  {course.completedLessons}/{course.totalLessons}
-                </div> */}
                 </div>
                 <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden">
                   <div

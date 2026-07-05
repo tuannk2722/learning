@@ -2,7 +2,7 @@
 export function calculateLevel(totalXp: number) {
   let level = 1;
   let xpRemaining = totalXp;
-  let xpNeededForNextLevel = 1000; // Requirement to reach Level 2
+  let xpNeededForNextLevel = 500; // Requirement to reach Level 2
 
   while (xpRemaining >= xpNeededForNextLevel) {
     xpRemaining -= xpNeededForNextLevel;

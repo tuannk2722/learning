@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from 'motion/react';
+import { Lightbulb } from 'lucide-react';
 import { levels, iconOptions } from './course-types';
 import { DynamicIcon } from '../../../dynamic-icon';
 import { CoursePreview } from './preview-course';
@@ -26,7 +27,18 @@ export default function CourseInfoStep({
       {/* Info course */}
       <div className="lg:col-span-2">
         <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-          <h2 className="text-2xl font-bold mb-6">Course Information</h2>
+          <h2 className="text-2xl font-bold mb-4">Course Information</h2>
+
+          {/* Quick workflow guide note */}
+          <div className="mb-6 p-4 bg-amber-50/80 border border-amber-100 rounded-xl text-amber-800 text-xs flex gap-3 items-start shadow-2xs">
+            <Lightbulb className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold block text-amber-900">Course setup workflow:</span>
+              <p className="text-amber-700 leading-relaxed">
+                Configure details at Step 1 ➜ Click <strong className="text-amber-900">"Save Changes"</strong> to save draft ➜ Edit Curriculum (Step 2) ➜ Add Quizzes and click <strong className="text-emerald-700">"Publish Course"</strong> at Step 3 to launch.
+              </p>
+            </div>
+          </div>
 
           <div className="space-y-6">
             <div>
