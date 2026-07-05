@@ -1,5 +1,4 @@
 import { LessonContent } from "@/app/ui/lesson/lesson-content";
-import { LessonDetailHeader } from "@/app/ui/lesson/lesson-header";
 import { LessonNote } from "@/app/ui/lesson/lesson-note";
 import { getCourseCurriculum, getLessonDetail, getLessonNote } from "@/app/lib/data/lessons";
 import { getUserCourseRating, getCourseStatus } from "@/app/lib/data/courses";
@@ -8,9 +7,12 @@ import { notFound } from "next/navigation";
 import { CurriculumSection } from "@/app/ui/course-detail/course-curriculum";
 import { completeLesson } from "@/app/lib/actions/lesson";
 import { Suspense } from "react";
-import { LessonContentSkeleton, LessonDetailHeaderSkeleton, LessonNoteSkeleton } from "@/app/ui/skeleton/lesson";
+import { LessonContentSkeleton, LessonNoteSkeleton } from "@/app/ui/skeleton/lesson";
 import { CurriculumSkeleton } from "@/app/ui/skeleton/course-detail";
 import { NotFound } from "@/app/ui/lesson/not-found";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
 
 export default async function LessonDetailPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
   const session = await auth();
@@ -52,9 +54,11 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       <div className="pt-24">
         {/* Lesson Header */}
-        <Suspense fallback={<LessonDetailHeaderSkeleton />}>
-          <LessonDetailHeader lesson={lesson} initialRating={initialRating} />
-        </Suspense>
+        <div className="max-w-7xl mx-auto px-6 pt-4 flex items-center gap-3">
+          <Link href={`/dashboard/courses/${lesson.course_id}`} className="text-violet-600 hover:text-violet-700 flex items-center gap-1 mb-4 text-sm font-medium">
+            ← Return to {lesson.courseTitle}
+          </Link>
+        </div>
 
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">

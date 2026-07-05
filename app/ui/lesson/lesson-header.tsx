@@ -1,56 +1,43 @@
 'use client';
 import { DetailLesson } from "@/app/lib/definitions/lessons";
-import { ChevronLeft, Clock } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { CourseRating } from "../course-detail/course-rating";
+import { motion } from "motion/react";
 
 export function LessonDetailHeader({ lesson, initialRating }: { lesson: DetailLesson, initialRating?: number | null }) {
-
   return (
-    <div className="bg-white border-b border-gray-200 top-[73px] z-40">
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <Link
-          href={`/dashboard/courses/${lesson.course_id}`}
-          className="inline-flex items-center gap-2 text-violet-600 hover:text-violet-700 mb-4 font-medium"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          Return to: {lesson.courseTitle}
-        </Link>
-
-        <div className="flex items-center justify-between">
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="max-w-7xl mx-auto px-6"
+    >
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4 ">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+          <Link
+            href={`/dashboard/courses/${lesson.course_id}`}
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full text-violet-600 bg-violet-50 hover:bg-violet-100 border border-violet-100/50 transition-all hover:scale-105 shrink-0"
+            title={`Return to ${lesson.courseTitle}`}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-sm font-medium">
-                Lessons {lesson.lessonNumber}/{lesson.totalLessons}
-              </span>
-              <span className="flex items-center gap-1 text-sm text-gray-600">
-                <Clock className="w-4 h-4" />
-                {lesson.duration_minutes} minutes
-              </span>
+            <div className="text-xs font-semibold text-violet-600/80 mb-0.5 uppercase tracking-wider">
+              {lesson.courseTitle}
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">{lesson.title}</h1>
-          </div>
-
-          {/* Rating */}
-          <div className="flex-shrink-0">
-            <CourseRating courseId={lesson.course_id} initialRating={initialRating} />
+            {/* <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
+              {lesson.title}
+            </h1> */}
           </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-            <span>Course progress</span>
-            <span>{Math.round((lesson.lessonNumber / lesson.totalLessons) * 100)}%</span>
-          </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-violet-600 to-purple-600 transition-all"
-              style={{ width: `${(lesson.lessonNumber / lesson.totalLessons) * 100}%` }}
-            />
-          </div>
-        </div>
+        {/* Rating */}
+        {/* <div className="flex-shrink-0">
+          <CourseRating courseId={lesson.course_id} initialRating={initialRating} />
+        </div> */}
       </div>
-    </div>
-  )
+    </motion.div>
+  );
 }
+
