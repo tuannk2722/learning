@@ -9,6 +9,7 @@ import LessonPreviewSidebar from './lesson-quick-preview';
 import LessonPreviewModal from './lesson-preview';
 import { saveLessonBlocks } from '@/app/lib/actions/lesson';
 import { LessonBlock, LessonBuilderData } from '@/app/lib/definitions/lessons';
+import { ScrollToTop } from '../../scroll-to-top';
 
 interface LessonBuilderClientProps {
   courseId: string;
@@ -127,6 +128,7 @@ export default function LessonBuilderClient({ courseId, lessonId, initialLesson,
         lessonData={lessonData}
         blocks={blocks}
       />
+      <ScrollToTop />
     </div>
   );
 }

@@ -1,45 +1,6 @@
 import { shimmer } from "./skeletons";
 import { CurriculumSkeleton } from "./course-detail";
 
-export function LessonDetailHeaderSkeleton() {
-  return (
-    <div className="bg-white border-b border-gray-200 z-40">
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        {/* Return to Course link */}
-        <div className="inline-flex items-center gap-2 mb-4 font-medium">
-          <div className={`${shimmer} w-4 h-4 bg-gray-200 rounded shrink-0 relative overflow-hidden`} />
-          <div className={`${shimmer} h-5 w-40 bg-gray-200 rounded relative overflow-hidden`} />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="space-y-3 flex-1">
-            <div className="flex items-center gap-3">
-              {/* Badge */}
-              <div className={`${shimmer} px-3 py-1 w-28 h-7 bg-gray-200 rounded-full relative overflow-hidden`} />
-              {/* Clock and Duration */}
-              <div className={`${shimmer} w-24 h-5 bg-gray-200 rounded relative overflow-hidden`} />
-            </div>
-            {/* Title */}
-            <div className={`${shimmer} h-9 w-[60%] bg-gray-200 rounded-lg relative overflow-hidden`} />
-          </div>
-
-          {/* Rating */}
-          <div className={`${shimmer} w-28 h-6 bg-gray-200 rounded relative overflow-hidden shrink-0 ml-4`} />
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className={`${shimmer} h-4 w-28 bg-gray-200 rounded relative overflow-hidden`} />
-            <div className={`${shimmer} h-4 w-10 bg-gray-200 rounded relative overflow-hidden`} />
-          </div>
-          <div className={`${shimmer} h-2 bg-gray-200 rounded-full relative overflow-hidden w-full`} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function LessonContentSkeleton() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -92,9 +53,6 @@ export function LessonDetailSkeleton() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       <div className="pt-24">
-        {/* Lesson Header Skeleton */}
-        <LessonDetailHeaderSkeleton />
-
         <section className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-3 gap-8 items-start">

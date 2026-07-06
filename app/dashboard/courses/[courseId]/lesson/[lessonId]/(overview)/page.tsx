@@ -1,7 +1,7 @@
 import { LessonContent } from "@/app/ui/lesson/lesson-content";
 import { LessonNote } from "@/app/ui/lesson/lesson-note";
 import { getCourseCurriculum, getLessonDetail, getLessonNote } from "@/app/lib/data/lessons";
-import { getUserCourseRating, getCourseStatus } from "@/app/lib/data/courses";
+import { getCourseStatus } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import { CurriculumSection } from "@/app/ui/course-detail/course-curriculum";
@@ -11,7 +11,7 @@ import { LessonContentSkeleton, LessonNoteSkeleton } from "@/app/ui/skeleton/les
 import { CurriculumSkeleton } from "@/app/ui/skeleton/course-detail";
 import { NotFound } from "@/app/ui/lesson/not-found";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ScrollToTop } from "@/app/ui/scroll-to-top";
 
 
 export default async function LessonDetailPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {
@@ -43,7 +43,6 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
 
   const curriculum = await getCourseCurriculum(Number(courseId), userId);
   const initialNoteContent = await getLessonNote(Number(lessonId), userId);
-  const initialRating = await getUserCourseRating(Number(courseId), userId);
 
   const handleCompleteLesson = async () => {
     "use server";
@@ -85,6 +84,9 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
         <Suspense fallback={<LessonNoteSkeleton />}>
           <LessonNote lessonId={lessonId} initialContent={initialNoteContent} />
         </Suspense>
+
+        {/* Scroll to Top button */}
+        <ScrollToTop />
       </div>
     </div>
   );

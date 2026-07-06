@@ -59,7 +59,7 @@ export function CurriculumSection({
                           ) : isActive ? (
                             <Play className="w-5 h-5 text-violet-600" />
                           ) : (
-                            <span className="text-sm font-bold text-gray-600">{lesson.id}</span>
+                            <span className="text-sm font-bold text-gray-600">{lessonIndex + 1}</span>
                           )}
                         </div>
                         <div>
