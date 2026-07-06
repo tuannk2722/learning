@@ -11,6 +11,7 @@ import { updateStreak } from "./streak";
 import { StreakResult } from "../definitions/definitions";
 import { evaluateAchievements } from "./achievements";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "./activity-log";
 
 export async function submitQuiz(
   lessonId: string,
@@ -158,6 +159,18 @@ export async function submitQuiz(
     }
 
     const { unlocked } = await evaluateAchievements(userId || "");
+
+    // Log quiz submission
+    if (userId) {
+      void logActivity({
+        userId,
+        action: 'COMPLETE_QUIZ',
+        entityType: 'quiz',
+        entityId: quiz.id,
+        entityName: quiz.title,
+        metadata: { score, total, passed, xpEarned, percentage },
+      });
+    }
 
     revalidatePath("/dashboard/courses", "layout");
 

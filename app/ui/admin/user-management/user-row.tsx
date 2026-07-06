@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'motion/react';
-import { Eye, Ban, Unlock } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { User } from '@/app/lib/definitions/user';
 import { calculateLevel } from '@/app/lib/utils/xp';
 import { formatLastActive } from '@/app/lib/utils/active-status';
@@ -10,7 +10,7 @@ interface UserRowProps {
   index: number;
 }
 
-const isBanned = (user: User) => (user.status || 'active').toLowerCase() === 'banned';
+// const isBanned = (user: User) => (user.status || 'active').toLowerCase() === 'banned';
 
 export function UserRow({ user, index }: UserRowProps) {
   return (
@@ -55,14 +55,14 @@ export function UserRow({ user, index }: UserRowProps) {
         {formatLastActive(user.last_study_date)}
       </td>
 
-      <td className="px-6 py-4 whitespace-nowrap">
+      {/* <td className="px-6 py-4 whitespace-nowrap">
         <span className={`px-3 py-1 rounded-full text-xs font-bold ${isBanned(user)
           ? 'bg-red-100 text-red-700'
           : 'bg-green-100 text-green-700'
           }`}>
           {(user.status || 'active').toUpperCase()}
         </span>
-      </td>
+      </td> */}
 
       {/* Actions */}
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -73,10 +73,10 @@ export function UserRow({ user, index }: UserRowProps) {
             className="p-2 hover:bg-blue-50 rounded-lg transition-colors group"
             title="View Profile"
           >
-            <Eye className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
+            <Eye className="w-6 h-6 text-blue-600 group-hover:text-blue-700" />
           </motion.button>
 
-          {isBanned(user) ? (
+          {/* {isBanned(user) ? (
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -94,7 +94,7 @@ export function UserRow({ user, index }: UserRowProps) {
             >
               <Ban className="w-4 h-4 text-red-600 group-hover:text-red-700" />
             </motion.button>
-          )}
+          )} */}
         </div>
       </td>
     </motion.tr>

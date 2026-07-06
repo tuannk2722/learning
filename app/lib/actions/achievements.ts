@@ -13,6 +13,7 @@ import {
 import { eq, notInArray, and, sql } from "drizzle-orm";
 import { calculateLevel } from "../utils/xp";
 import { UnlockedAchievement } from "../definitions/definitions";
+import { logActivity } from "./activity-log";
 
 export async function evaluateAchievements(userId: string): Promise<{ unlocked: UnlockedAchievement[] }> {
   try {
@@ -150,6 +151,17 @@ export async function evaluateAchievements(userId: string): Promise<{ unlocked: 
           theme_color: ach.theme_color,
           reward_xp: ach.reward_xp,
         });
+
+        // Log achievement unlock
+        void logActivity({
+          userId,
+          action: 'UNLOCK_ACHIEVEMENT',
+          entityType: 'achievement',
+          entityId: ach.id,
+          entityName: ach.title,
+          metadata: { reward_xp: ach.reward_xp, rarity: ach.rarity },
+        });
+
         hasNewUnlocks = true;
       }
     }

@@ -11,6 +11,7 @@ import { updateStreak } from "./streak";
 import { StreakResult, UnlockedAchievement } from "../definitions/definitions";
 import { evaluateAchievements } from "./achievements";
 import { auth } from "@/auth";
+import { logActivity } from "./activity-log";
 
 export async function completeLesson(
   lessonId: string,
@@ -132,6 +133,17 @@ export async function completeLesson(
     revalidatePath("/dashboard/courses", "layout");
     const { unlocked } = await evaluateAchievements(userId);
 
+    // Log lesson completion
+    const lessonInfo = await db.select({ title: lessons.title }).from(lessons).where(eq(lessons.id, Number(lessonId))).limit(1);
+    void logActivity({
+      userId,
+      action: 'COMPLETE_LESSON',
+      entityType: 'lesson',
+      entityId: Number(lessonId),
+      entityName: lessonInfo[0]?.title ?? undefined,
+      metadata: { xpEarned },
+    });
+
     return { success: true, xpEarned, questUpdates, streakResult, unlockedAchievements: unlocked };
   } catch (error) {
     console.error("Error completing lesson:", error);
@@ -180,6 +192,15 @@ export async function publishLesson(lessonId: number): Promise<{ success: boolea
       .set({ status: 'published', updated_at: new Date() })
       .where(eq(lessons.id, lessonId));
 
+    const lessonInfo = await db.select({ title: lessons.title }).from(lessons).where(eq(lessons.id, lessonId)).limit(1);
+    void logActivity({
+      userId: session.user.id,
+      action: 'PUBLISH_LESSON',
+      entityType: 'lesson',
+      entityId: lessonId,
+      entityName: lessonInfo[0]?.title ?? undefined,
+    });
+
     // Revalidate để người học thấy lesson mới ngay
     revalidatePath('/dashboard/courses', 'layout');
     revalidatePath('/admin/courses', 'layout');
@@ -200,6 +221,15 @@ export async function unpublishLesson(lessonId: number): Promise<{ success: bool
       .update(lessons)
       .set({ status: 'draft', updated_at: new Date() })
       .where(eq(lessons.id, lessonId));
+
+    const lessonInfo2 = await db.select({ title: lessons.title }).from(lessons).where(eq(lessons.id, lessonId)).limit(1);
+    void logActivity({
+      userId: session.user.id,
+      action: 'UNPUBLISH_LESSON',
+      entityType: 'lesson',
+      entityId: lessonId,
+      entityName: lessonInfo2[0]?.title ?? undefined,
+    });
 
     revalidatePath('/dashboard/courses', 'layout');
     revalidatePath('/admin/courses', 'layout');

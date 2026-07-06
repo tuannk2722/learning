@@ -5,6 +5,7 @@ import { daily_quest_definitions, user_daily_quests, users } from "../db/schema"
 import { eq, and, sql } from "drizzle-orm";
 import { QuestUpdateInfo, QuestType } from "../definitions/quests";
 import { updateStreak } from "./streak";
+import { logActivity } from "./activity-log";
 
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
@@ -62,6 +63,15 @@ export async function updateQuestProgress(
 
       // Hoàn thành quest cũng tính là có học hôm nay
       await updateStreak(userId);
+
+      // Log quest completion
+      void logActivity({
+        userId,
+        action: 'COMPLETE_QUEST',
+        entityType: 'quest',
+        entityName: quest.title,
+        metadata: { reward_xp: quest.reward_xp, quest_type: questType },
+      });
     }
 
     questUpdates.push({

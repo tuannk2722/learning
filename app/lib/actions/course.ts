@@ -9,6 +9,7 @@ import { evaluateAchievements } from "./achievements";
 import { UnlockedAchievement } from "../definitions/definitions";
 import { CourseBuilderResult } from "../definitions/lessons";
 import { getCourseForBuilder } from "../data/courses";
+import { logActivity } from "./activity-log";
 
 export async function enrollInCourse(courseId: number): Promise<{
   success: boolean;
@@ -77,6 +78,16 @@ export async function enrollInCourse(courseId: number): Promise<{
     revalidatePath(`/dashboard/courses`);
 
     const { unlocked } = await evaluateAchievements(userId);
+
+    // Get course name for log
+    const courseInfo = await db.select({ name: courses.name }).from(courses).where(eq(courses.id, courseId)).limit(1);
+    void logActivity({
+      userId,
+      action: 'ENROLL_COURSE',
+      entityType: 'course',
+      entityId: courseId,
+      entityName: courseInfo[0]?.name ?? undefined,
+    });
 
     return { success: true, message: 'Successfully enrolled', unlockedAchievements: unlocked };
 
@@ -376,6 +387,16 @@ export async function saveCourseBuilder(
       return { success: false, error: 'Saved but failed to load refreshed course data.' };
     }
 
+    // Log create or update
+    void logActivity({
+      userId: session.user.id,
+      action: isNewCourse ? 'CREATE_COURSE' : 'UPDATE_COURSE',
+      entityType: 'course',
+      entityId: targetCourseId,
+      entityName: courseData.name,
+      metadata: { published: publish },
+    });
+
     return {
       success: true,
       course: refreshedCourse,
@@ -397,6 +418,13 @@ export async function DeleteCourse(courseId: number) {
     }
 
     await db.delete(courses).where(eq(courses.id, courseId));
+
+    void logActivity({
+      userId: session.user.id,
+      action: 'DELETE_COURSE',
+      entityType: 'course',
+      entityId: courseId,
+    });
 
     revalidatePath(`/admin/courses`);
     revalidatePath(`/dashboard/courses`);
