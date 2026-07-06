@@ -17,7 +17,7 @@ export default function ActivityLogTimeline({ logs }: ActivityLogTimelineProps) 
       <div className="p-5 border-b border-gray-100 bg-slate-50/50">
         <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
           <FileText className="w-5 h-5 text-indigo-500" />
-          Dòng thời gian hoạt động
+          Operational timeline
         </h2>
       </div>
 
