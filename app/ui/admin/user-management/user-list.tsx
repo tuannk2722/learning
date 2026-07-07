@@ -1,47 +1,36 @@
 'use client';
+
 import { User } from '@/app/lib/definitions/user';
 import { Pagination } from '../../pagination';
-import { useState } from 'react';
-import { UserFilter } from './user-filter';
+import { useState, useTransition } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { UserRow } from './user-row';
 import UserModal from './user-modal';
 
 interface UserListProps {
   users: User[];
+  totalPages: number;
+  currentPage: number;
 }
 
-export default function UserList({ users }: UserListProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [currentPage, setCurrentPage] = useState(1);
+export default function UserList({ users, totalPages, currentPage }: UserListProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
+
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const ITEM_PER_PAGE = 6;
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === 'All' ||
-      (user.status || 'active').toLowerCase() === statusFilter.toLowerCase();
-
-    return matchesSearch && matchesStatus;
-  });
-
-  const totalPages = Math.ceil(filteredUsers.length / ITEM_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEM_PER_PAGE;
-  const currentUsers = filteredUsers.slice(startIndex, startIndex + ITEM_PER_PAGE);
+  const handlePageChange = (page: number) => {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('page', page.toString());
+      router.push(`${pathname}?${params.toString()}`);
+    });
+  };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      <UserFilter
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        statusFilter={statusFilter}
-        onStatusChange={setStatusFilter}
-      />
-
+    <div className={`bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-opacity ${isPending ? 'opacity-60' : ''}`}>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-50">
@@ -54,7 +43,7 @@ export default function UserList({ users }: UserListProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {currentUsers.map((user, index) => (
+            {users.map((user, index) => (
               <UserRow
                 key={user.id}
                 user={user}
@@ -62,6 +51,13 @@ export default function UserList({ users }: UserListProps) {
                 onViewProfile={() => setSelectedUserId(user.id)}
               />
             ))}
+            {users.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                  No users found matching the selected filters.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -71,7 +67,7 @@ export default function UserList({ users }: UserListProps) {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={handlePageChange}
           />
         </div>
       )}
@@ -85,3 +81,4 @@ export default function UserList({ users }: UserListProps) {
     </div>
   );
 }
+

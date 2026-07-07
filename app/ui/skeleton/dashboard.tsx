@@ -124,7 +124,7 @@ export function AchievementsCardSkeleton() {
 
 export default function DashboardSkeleton() {
   return (
-    <div className="pt-24 pb-12 px-6 w-full">
+    <div className="pt-5 pb-12 px-6 w-full">
       <div className="max-w-7xl mx-auto">
         <HeaderDashboardSkeleton />
         <StatsOverviewSkeleton />

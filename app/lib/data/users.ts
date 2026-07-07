@@ -9,7 +9,7 @@ import {
   quiz_attempts,
   activity_logs
 } from "../db/schema";
-import { eq, desc, sql, and, notInArray } from "drizzle-orm";
+import { eq, desc, sql, and, notInArray, isNull, isNotNull, count } from "drizzle-orm";
 import type { User, UserInfoLogin } from "../definitions/user";
 import type { LeaderboardEntry } from "../definitions/definitions";
 import { calculateLevel } from "../utils/xp";
@@ -28,6 +28,61 @@ export async function getAllUsers(): Promise<User[]> {
   } catch (error) {
     console.error('Failed to fetch all users:', error);
     throw new Error('Failed to fetch all users.');
+  }
+}
+
+export async function getFilteredUsers(filter: {
+  searchQuery?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+} = {}): Promise<{ users: User[]; total: number; totalPages: number }> {
+  try {
+    const { searchQuery, status, page = 1, pageSize = 10 } = filter;
+    const offset = (page - 1) * pageSize;
+
+    const conditions = [];
+
+    if (status === 'active') {
+      conditions.push(isNotNull(users.last_study_date));
+    } else if (status === 'inactive') {
+      conditions.push(isNull(users.last_study_date));
+    }
+
+    if (searchQuery && searchQuery.trim() !== '') {
+      const searchPattern = `%${searchQuery.trim()}%`;
+      conditions.push(
+        sql`(unaccent(${users.name}) ILIKE unaccent(${searchPattern}) OR unaccent(${users.email}) ILIKE unaccent(${searchPattern}))`
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [usersResult, countResult] = await Promise.all([
+      db
+        .select()
+        .from(users)
+        .where(whereClause ?? sql`1=1`)
+        .orderBy(desc(users.last_study_date))
+        .limit(pageSize)
+        .offset(offset),
+      db
+        .select({ total: count() })
+        .from(users)
+        .where(whereClause ?? sql`1=1`),
+    ]);
+
+    const total = Number(countResult[0]?.total ?? 0);
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      users: usersResult as User[],
+      total,
+      totalPages,
+    };
+  } catch (error) {
+    console.error('Failed to fetch filtered users:', error);
+    throw new Error('Failed to fetch filtered users.');
   }
 }
 
