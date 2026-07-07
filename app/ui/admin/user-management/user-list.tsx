@@ -4,6 +4,7 @@ import { Pagination } from '../../pagination';
 import { useState } from 'react';
 import { UserFilter } from './user-filter';
 import { UserRow } from './user-row';
+import UserModal from './user-modal';
 
 interface UserListProps {
   users: User[];
@@ -13,6 +14,7 @@ export default function UserList({ users }: UserListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const ITEM_PER_PAGE = 6;
 
   const filteredUsers = users.filter(user => {
@@ -48,13 +50,17 @@ export default function UserList({ users }: UserListProps) {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level &amp; XP</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Longest Streak</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Active</th>
-              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {currentUsers.map((user, index) => (
-              <UserRow key={user.id} user={user} index={index} />
+              <UserRow
+                key={user.id}
+                user={user}
+                index={index}
+                onViewProfile={() => setSelectedUserId(user.id)}
+              />
             ))}
           </tbody>
         </table>
@@ -68,6 +74,13 @@ export default function UserList({ users }: UserListProps) {
             onPageChange={setCurrentPage}
           />
         </div>
+      )}
+
+      {selectedUserId && (
+        <UserModal
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
       )}
     </div>
   );

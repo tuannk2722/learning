@@ -8,11 +8,10 @@ import { formatLastActive } from '@/app/lib/utils/active-status';
 interface UserRowProps {
   user: User;
   index: number;
+  onViewProfile: () => void;
 }
 
-// const isBanned = (user: User) => (user.status || 'active').toLowerCase() === 'banned';
-
-export function UserRow({ user, index }: UserRowProps) {
+export function UserRow({ user, index, onViewProfile }: UserRowProps) {
   return (
     <motion.tr
       initial={{ opacity: 0, x: -20 }}
@@ -55,46 +54,19 @@ export function UserRow({ user, index }: UserRowProps) {
         {formatLastActive(user.last_study_date)}
       </td>
 
-      {/* <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`px-3 py-1 rounded-full text-xs font-bold ${isBanned(user)
-          ? 'bg-red-100 text-red-700'
-          : 'bg-green-100 text-green-700'
-          }`}>
-          {(user.status || 'active').toUpperCase()}
-        </span>
-      </td> */}
-
       {/* Actions */}
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
         <div className="flex items-center gap-2">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
+            onClick={onViewProfile}
             className="p-2 hover:bg-blue-50 rounded-lg transition-colors group"
             title="View Profile"
           >
             <Eye className="w-6 h-6 text-blue-600 group-hover:text-blue-700" />
           </motion.button>
 
-          {/* {isBanned(user) ? (
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="p-2 hover:bg-green-50 rounded-lg transition-colors group"
-              title="Unban User"
-            >
-              <Unlock className="w-4 h-4 text-green-600 group-hover:text-green-700" />
-            </motion.button>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="p-2 hover:bg-red-50 rounded-lg transition-colors group"
-              title="Ban User"
-            >
-              <Ban className="w-4 h-4 text-red-600 group-hover:text-red-700" />
-            </motion.button>
-          )} */}
         </div>
       </td>
     </motion.tr>

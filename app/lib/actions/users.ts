@@ -8,6 +8,8 @@ import { unstable_update } from "@/auth";
 import { evaluateAchievements } from "./achievements";
 import { logActivity } from "./activity-log";
 
+import { getUserDetailsForModal } from "../data/users";
+
 export async function updateOnboarding(userId: string, data: {
   name: string;
   bio: string | null;
@@ -79,6 +81,15 @@ export async function updateUserProfile(userId: string, data: {
   } catch (error) {
     console.error('Failed to update user profile:', error);
     return { success: false, error: 'Failed to update profile.' };
+  }
+}
+
+export async function getUserDetailsAction(userId: string) {
+  try {
+    return await getUserDetailsForModal(userId);
+  } catch (error) {
+    console.error("Action getUserDetailsAction failed:", error);
+    return null;
   }
 }
 
