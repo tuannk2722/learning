@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { CheckCircle2, XCircle } from "lucide-react";
-import { Question } from "@/app/lib/definitions/definitions";
+import { Question } from "@/app/lib/definitions/quizzes";
 
 interface Props {
   question: Question;

@@ -2,6 +2,8 @@
 import { Achievement } from '@/app/lib/definitions/definitions';
 import { motion } from 'motion/react';
 import { DynamicIcon } from '../dynamic-icon';
+import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { Zap } from 'lucide-react';
 
 type Props = {
   achievements: Achievement[],
@@ -27,6 +29,7 @@ export function AchievementGrid({ achievements }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {achievements.map((achievement, index) => {
+        const { gradientLight, text } = getColorClasses(achievement.theme_color);
         return (
           <motion.div
             key={achievement.id}
@@ -39,23 +42,23 @@ export function AchievementGrid({ achievements }: Props) {
               : 'border-gray-100 opacity-50'
               } transition-all cursor-pointer overflow-hidden`}
           >
+            {/* Background Gradient for Unlocked */}
             {achievement.unlocked && (
-              <div
-                className="absolute inset-0 opacity-30 bg-gradient-to-br"
-                style={{ backgroundImage: `linear-gradient(to bottom right, ${achievement.bgColor.replace('from-', '').replace('to-', '')})` }}
-              />
+              <div className={`absolute inset-0 bg-gradient-to-br ${gradientLight} opacity-30`} />
             )}
 
             <div className="relative z-10">
-              <div
-                className={`w-16 h-16 rounded-xl flex items-center justify-center mb-4 ${achievement.unlocked ? '' : 'bg-gray-100'
-                  }`}
-                style={achievement.unlocked ? { background: achievement.bgColor.includes('from-') ? undefined : achievement.bgColor } : {}}
-              >
+              <div className={`w-16 h-16 rounded-xl ${achievement.unlocked
+                ? `bg-gradient-to-br ${gradientLight}`
+                : 'bg-gray-100'
+                } flex items-center justify-center mb-4`}>
                 <DynamicIcon
                   name={achievement.icon}
-                  className={`w-8 h-8 ${achievement.unlocked ? achievement.color : 'text-gray-400'}`}
+                  className={`w-8 h-8 ${achievement.unlocked ? text : 'text-gray-400'}`}
                 />
+                <div className="absolute -top-2 -right-2 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
+                  {achievement.reward_xp} XP
+                </div>
               </div>
 
               <h3 className="font-medium mb-1">{achievement.title}</h3>

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Crown, Sparkles, Trophy, Zap } from "lucide-react";
+import { ArrowRight, Crown, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useEffect } from "react";
@@ -12,13 +12,13 @@ const stats = [
   { value: '4.9/5', label: 'User Rating' },
 ];
 
-export function HeroSection() {
+export function HeroSection({ topUser }: { topUser?: any }) {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pt-20 pb-24">
+    <div className="max-w-7xl mx-auto px-6 pt-5 pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -75,24 +75,29 @@ export function HeroSection() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                    A
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold overflow-hidden">
+                    {topUser.avatar.length > 2 ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={topUser.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      topUser.avatar || 'U'
+                    )}
                   </div>
                   <div>
-                    <div className="font-medium">Alex Chen</div>
-                    <div className="text-sm text-muted-foreground">Level 12 • 2,340 XP</div>
+                    <div className="font-medium">{topUser.name}</div>
+                    <div className="text-sm text-muted-foreground">Level {topUser.level} • {topUser.total_xp.toLocaleString('en-US')} XP</div>
                   </div>
                 </div>
                 <Crown className="w-8 h-8 text-yellow-500" />
               </div>
 
               <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white">
-                <div className="text-sm mb-2 opacity-80">Daily Progress</div>
-                <div className="text-3xl font-bold mb-4">78%</div>
+                <div className="text-sm mb-2 opacity-80">Level Progress</div>
+                <div className="text-3xl font-bold mb-4">{Math.round(topUser.level_progress)}%</div>
                 <div className="h-2 bg-white/20 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: '78%' }}
+                    animate={{ width: `${topUser.level_progress}%` }}
                     transition={{ duration: 1.5, delay: 0.8 }}
                     className="h-full bg-white rounded-full"
                   />
@@ -101,16 +106,16 @@ export function HeroSection() {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-orange-50 rounded-xl p-4 text-center">
-                  <div className="text-2xl mb-1">23</div>
-                  <div className="text-xs text-muted-foreground">Day Streak</div>
+                  <div className="text-2xl mb-1">{topUser.longest_streak}</div>
+                  <div className="text-xs text-muted-foreground">Max Streak</div>
                 </div>
                 <div className="bg-blue-50 rounded-xl p-4 text-center">
-                  <div className="text-2xl mb-1">127h</div>
+                  <div className="text-2xl mb-1">{topUser.total_study_time}h</div>
                   <div className="text-xs text-muted-foreground">Study Time</div>
                 </div>
                 <div className="bg-green-50 rounded-xl p-4 text-center">
-                  <div className="text-2xl mb-1">45</div>
-                  <div className="text-xs text-muted-foreground">Completed</div>
+                  <div className="text-2xl mb-1">{topUser.lesson_completed}</div>
+                  <div className="text-xs text-muted-foreground">Lessons</div>
                 </div>
               </div>
             </div>

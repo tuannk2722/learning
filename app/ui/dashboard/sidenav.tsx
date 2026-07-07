@@ -6,8 +6,18 @@ import { User, Menu, X } from 'lucide-react';
 import Logo from '@/app/ui/logo';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { usePathname } from 'next/navigation';
+import AnimatedStreakBadge from '../streak-badge';
 
-export default function SideNav() {
+interface SideNavProps {
+  avatarUrl?: string | null;
+  userName?: string | null;
+  currentStreak?: number;
+  isAdmin?: boolean;
+}
+
+export default function SideNav({ avatarUrl, userName, currentStreak = 0, isAdmin = false }: SideNavProps) {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
@@ -26,6 +36,8 @@ export default function SideNav() {
     };
   }, [isOpen]);
 
+  if (pathname === '/onboarding') return null;
+
   return (
     <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-violet-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -37,26 +49,37 @@ export default function SideNav() {
 
         {/* Desktop Links (Hidden on Mobile) */}
         <div className="hidden md:flex flex-1 items-center justify-center gap-8">
-          <NavLinks setIsOpen={setIsOpen} type={'desktop'} />
+          <NavLinks setIsOpen={setIsOpen} type={'desktop'} isAdmin={isAdmin} />
         </div>
 
         {/* Desktop Profile (Hidden on Mobile) */}
         <div className="hidden md:flex items-center gap-4">
+          <AnimatedStreakBadge streak={currentStreak} />
           <Link
             href="/dashboard/profile"
-            className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center text-white font-bold hover:shadow-lg hover:ring-2 hover:ring-violet-200 transition-all hover:scale-105"
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center text-white font-bold hover:shadow-lg hover:ring-2 hover:ring-violet-200 transition-all hover:scale-105 overflow-hidden"
           >
-            <User className="w-5 h-5" />
+            {avatarUrl ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+            ) : userName ? (
+              <span>{userName.charAt(0).toUpperCase()}</span>
+            ) : (
+              <User className="w-5 h-5" />
+            )}
           </Link>
         </div>
 
-        {/* Mobile Toggle Button */}
-        <button
-          className="md:hidden p-2 -mr-2 text-violet-600 hover:text-violet-800 transition-colors focus:outline-none"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile Header (Badge + Toggle Button) */}
+        <div className="flex md:hidden items-center gap-3">
+          <AnimatedStreakBadge streak={currentStreak} />
+          <button
+            className="p-2 -mr-2 text-violet-600 hover:text-violet-800 transition-colors focus:outline-none"
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -71,7 +94,7 @@ export default function SideNav() {
             <div className="px-6 py-6 flex flex-col gap-6">
 
               {/* Menu Links */}
-              <NavLinks setIsOpen={setIsOpen} type={'mobile'} />
+              <NavLinks setIsOpen={setIsOpen} type={'mobile'} isAdmin={isAdmin} />
 
             </div>
           </motion.div>

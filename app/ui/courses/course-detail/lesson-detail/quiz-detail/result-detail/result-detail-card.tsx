@@ -1,8 +1,9 @@
 "use client";
 import { motion } from "motion/react";
 import { CheckCircle2, XCircle, Lightbulb } from "lucide-react";
+import { QuestionResult } from "@/app/lib/definitions/quiz-results";
 
-export default function ResultDetailCard({ result, index }: { result: any; index: number }) {
+export default function ResultDetailCard({ result, index }: { result: QuestionResult; index: number }) {
   const isCorrect = result.isCorrect;
 
   return (

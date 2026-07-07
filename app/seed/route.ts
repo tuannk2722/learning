@@ -1,281 +1,544 @@
 import bcrypt from 'bcrypt';
-import postgres from 'postgres';
+import { db } from '@/app/lib/db';
+import * as schema from '@/app/lib/db/schema';
+import { sql } from 'drizzle-orm';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
-
-async function seedDatabase(t: any) {
-  await t`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-
-  await t`DROP TABLE IF EXISTS invoices, customers, revenue CASCADE`;
-  await t`DROP TABLE IF EXISTS user_achievements, achievements, questions, quizzes, user_lesson_progress, enrollments, lessons, sections, courses, categories, users CASCADE`;
-
-  // 1. BẢNG USERS 
-  await t`
-    CREATE TABLE IF NOT EXISTS users (
-      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY, 
-      name VARCHAR(255) NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      bio TEXT,
-      location VARCHAR(255),
-      avatar_url TEXT,
-      total_xp INT DEFAULT 0,
-      current_streak INT DEFAULT 0,
-      longest_streak INT DEFAULT 0,
-      last_study_date TIMESTAMP,
-      is_onboarded BOOLEAN DEFAULT false,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
-  // 2. BẢNG CATEGORIES
-  await t`
-    CREATE TABLE IF NOT EXISTS categories (
-      id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
-      slug TEXT NOT NULL UNIQUE
-    );
-  `;
-
-  // 3. BẢNG COURSES
-  await t`
-    CREATE TABLE IF NOT EXISTS courses (
-      id SERIAL PRIMARY KEY,
-      category_id INT REFERENCES categories(id) ON DELETE SET NULL,
-      name TEXT NOT NULL,
-      description TEXT,
-      level VARCHAR(50),
-      icon_name VARCHAR(50),
-      theme_color VARCHAR(50),
-      estimated_hours INT,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-  `;
-
-  // 4. BẢNG SECTIONS
-  await t`
-    CREATE TABLE IF NOT EXISTS sections (
-      id SERIAL PRIMARY KEY,
-      course_id INT REFERENCES courses(id) ON DELETE CASCADE,
-      title TEXT NOT NULL,
-      order_index INT NOT NULL
-    );
-  `;
-
-  // 5. BẢNG LESSONS
-  await t`
-    CREATE TABLE IF NOT EXISTS lessons (
-      id SERIAL PRIMARY KEY,
-      section_id INT REFERENCES sections(id) ON DELETE CASCADE,
-      title TEXT NOT NULL,
-      duration_minutes INT,
-      xp_reward INT DEFAULT 0,
-      lesson_type VARCHAR(50) DEFAULT 'video',
-      content_html TEXT,
-      video_url TEXT,
-      order_index INT NOT NULL
-    );
-  `;
-
-  // 6. BẢNG ENROLLMENTS (Tiến độ chung Khóa học)
-  await t`
-    CREATE TABLE IF NOT EXISTS enrollments (
-      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      course_id INT REFERENCES courses(id) ON DELETE CASCADE,
-      progress_percent INT DEFAULT 0,
-      status VARCHAR(50) DEFAULT 'ACTIVE',
-      enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      last_accessed_at TIMESTAMP,
-      PRIMARY KEY (user_id, course_id)
-    );
-  `;
-
-  // 7. BẢNG USER_LESSON_PROGRESS (Tiến độ từng Bài học)
-  await t`
-    CREATE TABLE IF NOT EXISTS user_lesson_progress (
-      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      lesson_id INT REFERENCES lessons(id) ON DELETE CASCADE,
-      status VARCHAR(50) DEFAULT 'LOCKED',
-      completed_at TIMESTAMP,
-      PRIMARY KEY (user_id, lesson_id)
-    );
-  `;
-
-  // 8. BẢNG QUIZZES
-  await t`
-    CREATE TABLE IF NOT EXISTS quizzes (
-      id SERIAL PRIMARY KEY,
-      lesson_id INT REFERENCES lessons(id) ON DELETE CASCADE,
-      title TEXT NOT NULL,
-      passing_score INT DEFAULT 50,
-      xp_reward INT DEFAULT 0
-    );
-  `;
-
-  // 9. BẢNG QUESTIONS (Lưu dạng JSON câu trả lời)
-  await t`
-    CREATE TABLE IF NOT EXISTS questions (
-      id SERIAL PRIMARY KEY,
-      quiz_id INT REFERENCES quizzes(id) ON DELETE CASCADE,
-      question_type VARCHAR(50) NOT NULL,
-      question_text TEXT NOT NULL,
-      explanation TEXT,
-      metadata JSONB,
-      correct_answer TEXT NOT NULL,
-      order_index INT NOT NULL
-    );
-  `;
-
-  // 10. BẢNG ACHIEVEMENTS
-  await t`
-    CREATE TABLE IF NOT EXISTS achievements (
-      id SERIAL PRIMARY KEY,
-      title TEXT NOT NULL,
-      description TEXT,
-      icon_name VARCHAR(50),
-      rarity VARCHAR(50) DEFAULT 'COMMON',
-      theme_color VARCHAR(50),
-      unlock_condition JSONB
-    );
-  `;
-
-  // 11. BẢNG USER_ACHIEVEMENTS
-  await t`
-    CREATE TABLE IF NOT EXISTS user_achievements (
-      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      achievement_id INT REFERENCES achievements(id) ON DELETE CASCADE,
-      unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (user_id, achievement_id)
-    );
-  `;
-
-  console.log('Tạo Schema thành công!');
-
-  // --- SEED DATA MẪU ---
-
-  const hashedPassword = await bcrypt.hash('123456', 10);
-
-  // 1. Nạp Users
-  await t`
-    INSERT INTO users (id, name, email, password_hash, is_onboarded, total_xp)
-    VALUES 
-      ('410544b2-4001-4271-9855-fec4b6a6442a', 'Admin User', 'admin@learnquest.com', ${hashedPassword}, true, 500),
-      ('5c4b1827-0cc6-4eb1-b956-628d022b3e41', 'Student A', 'studenta@learnquest.com', ${hashedPassword}, false, 150),
-      ('8a892b1d-0cc6-4eb1-b956-628d022b3e42', 'Student B', 'studentb@learnquest.com', ${hashedPassword}, true, 800)
-    ON CONFLICT (email) DO NOTHING;
-  `;
-  console.log('Đã nạp mẫu Users');
-
-  // 2. Nạp Categories
-  await t`
-    INSERT INTO categories (id, name, slug)
-    VALUES 
-      (1, 'Mathematics', 'mathematics'),
-      (2, 'Physics', 'physics'),
-      (3, 'Computer Science', 'computer-science'),
-      (4, 'History', 'history')
-    ON CONFLICT (id) DO NOTHING;
-  `;
-  console.log('Đã nạp mẫu Categories');
-
-  // 3. Nạp Courses
-  await t`
-    INSERT INTO courses (id, category_id, name, description, level, icon_name, theme_color, estimated_hours)
-    VALUES 
-      (1, 1, 'Advanced Calculus', 'Master derivatives, integrals, and differential equations', 'Advanced', 'calculator', 'bg-blue-100', 8),
-      (2, 2, 'Quantum Physics', 'Explore quantum mechanics and particle behavior', 'Advanced', 'atom', 'bg-purple-100', 6),
-      (3, 3, 'Intro to React', 'Learn modern web development', 'Beginner', 'code', 'bg-cyan-100', 10)
-    ON CONFLICT (id) DO NOTHING;
-  `;
-  console.log('Đã nạp mẫu Courses');
-
-  // 4. Nạp Sections
-  await t`
-    INSERT INTO sections (id, course_id, title, order_index)
-    VALUES 
-      (1, 1, 'Derivatives Basics', 1),
-      (2, 1, 'Integration Mastery', 2),
-      (3, 3, 'Component Architecture', 1)
-    ON CONFLICT (id) DO NOTHING;
-  `;
-
-  // 5. Nạp Lessons (Có phân loại Video & Docs)
-  await t`
-    INSERT INTO lessons (id, section_id, title, duration_minutes, xp_reward, lesson_type, content_html, video_url, order_index)
-    VALUES 
-      (1, 1, 'What is a Derivative?', 15, 50, 'video', 'Introduction to derivatives concepts.', 'https://youtube.com/watch?v=1', 1),
-      (2, 1, 'Power Rule', 10, 30, 'video', 'Learn the power rule shortcut.', 'https://youtube.com/watch?v=2', 2),
-      (3, 3, 'Understanding JSX', 20, 100, 'doc', '<h1>JSX Basics</h1><p>JSX is syntax extension...</p>', NULL, 1)
-    ON CONFLICT (id) DO NOTHING;
-  `;
-
-  // 6. Nạp Quizzes & Questions
-  await t`
-    INSERT INTO quizzes (id, lesson_id, title, passing_score, xp_reward)
-    VALUES 
-      (1, 1, 'Derivative Fundamentals Quiz', 80, 150),
-      (2, 3, 'React JSX Knowledge Check', 100, 200)
-    ON CONFLICT (id) DO NOTHING;
-  `;
-
-  await t`
-    INSERT INTO questions (id, quiz_id, question_type, question_text, explanation, metadata, correct_answer, order_index)
-    VALUES 
-      (1, 1, 'multiple-choice', 'What is the derivative of x^2?', 'Power rule: bring down the 2 and subtract 1 from exponent.', '{"options": ["x", "2x", "x^3", "2"]}', '1', 1),
-      (2, 1, 'true-false', 'The derivative of a constant is always 0.', 'Constants do not change, so their rate of change is 0.', NULL, 'true', 2),
-      (3, 2, 'multiple-choice', 'Which HTML attribute becomes className in JSX?', 'class becomes className to avoid conflicts with JS keyword.', '{"options": ["class", "id", "href"]}', '0', 1)
-    ON CONFLICT (id) DO NOTHING;
-  `;
-
-  // 7. Nạp Achievements
-  await t`
-    INSERT INTO achievements (id, title, description, icon_name, rarity, theme_color, unlock_condition)
-    VALUES 
-      (1, 'First Blood', 'Complete your very first lesson.', 'zap', 'COMMON', 'bg-yellow-100', '{"type": "lesson_count", "value": 1}'),
-      (2, 'Math Wizard', 'Complete 5 Math lessons.', 'calculator', 'RARE', 'bg-blue-100', '{"type": "category_lesson_count", "category": "Mathematics", "value": 5}'),
-      (3, 'React Master', 'Pass the React Quiz perfectly.', 'award', 'EPIC', 'bg-purple-100', '{"type": "quiz_score", "quiz_id": 2, "value": 100}')
-    ON CONFLICT (id) DO NOTHING;
-  `;
-
-  // 8. Nạp Dữ liệu Mối quan hệ User (Tiến độ & Đăng ký)
-  await t`
-    INSERT INTO enrollments (user_id, course_id, progress_percent, status)
-    VALUES 
-      ('410544b2-4001-4271-9855-fec4b6a6442a', 1, 50, 'ACTIVE'),
-      ('410544b2-4001-4271-9855-fec4b6a6442a', 3, 10, 'ACTIVE'),
-      ('5c4b1827-0cc6-4eb1-b956-628d022b3e41', 1, 100, 'COMPLETED')
-    ON CONFLICT (user_id, course_id) DO NOTHING;
-  `;
-
-  await t`
-    INSERT INTO user_lesson_progress (user_id, lesson_id, status)
-    VALUES 
-      ('410544b2-4001-4271-9855-fec4b6a6442a', 1, 'COMPLETED'),
-      ('410544b2-4001-4271-9855-fec4b6a6442a', 2, 'UNLOCKED'),
-      ('5c4b1827-0cc6-4eb1-b956-628d022b3e41', 1, 'COMPLETED')
-    ON CONFLICT (user_id, lesson_id) DO NOTHING;
-  `;
-
-  await t`
-    INSERT INTO user_achievements (user_id, achievement_id)
-    VALUES 
-      ('410544b2-4001-4271-9855-fec4b6a6442a', 1),
-      ('5c4b1827-0cc6-4eb1-b956-628d022b3e41', 1)
-    ON CONFLICT (user_id, achievement_id) DO NOTHING;
-  `;
-
-  console.log('Đã nạp toàn bộ dữ liệu quan hệ mẫu (Quizzes, Enrollments, Progress)');
+async function clearData() {
+  console.log('Clearing existing data...');
+  await db.delete(schema.user_achievements);
+  await db.delete(schema.user_lesson_progress);
+  await db.delete(schema.enrollments);
+  await db.delete(schema.questions);
+  await db.delete(schema.quizzes);
+  await db.delete(schema.lessons);
+  await db.delete(schema.sections);
+  await db.delete(schema.courses);
+  await db.delete(schema.categories);
+  await db.delete(schema.achievements);
+  await db.delete(schema.users);
 }
 
-export async function GET() {
-  try {
-    await sql.begin(async (t) => {
-      await seedDatabase(t);
-    });
+async function seedUsers() {
+  const hashedPassword = await bcrypt.hash('123456', 10);
+  console.log('Seeding users...');
+  await db.insert(schema.users).values([
+    {
+      id: '410544b2-4001-4271-9855-fec4b6a6442a',
+      name: 'Admin User',
+      email: 'admin@learnquest.com',
+      password_hash: hashedPassword,
+      is_onboarded: true,
+      total_xp: 500,
+    },
+    {
+      id: '5c4b1827-0cc6-4eb1-b956-628d022b3e41',
+      name: 'Student A',
+      email: 'studenta@learnquest.com',
+      password_hash: hashedPassword,
+      is_onboarded: false,
+      total_xp: 150,
+    },
+    {
+      id: '8a892b1d-0cc6-4eb1-b956-628d022b3e42',
+      name: 'Student B',
+      email: 'studentb@learnquest.com',
+      password_hash: hashedPassword,
+      is_onboarded: true,
+      total_xp: 800,
+    },
+  ]);
+}
 
-    return Response.json({ message: 'Khởi tạo Cơ sở dữ liệu LearnQuest thành công!' });
+async function seedCategoriesAndCourses() {
+  console.log('Seeding categories...');
+  await db.insert(schema.categories).values([
+    { id: 1, name: 'Web Development', slug: 'web-dev' },
+    { id: 2, name: 'Data Science', slug: 'data-science' },
+    { id: 3, name: 'Mobile App', slug: 'mobile-app' },
+    { id: 4, name: 'Cyber Security', slug: 'cyber-security' },
+  ]);
+
+  console.log('Seeding courses...');
+  await db.insert(schema.courses).values([
+    { id: 1, category_id: 1, name: 'React for Beginners', description: 'Master the basics of React.js from scratch. Learn components, props, state, and hooks through hands-on projects.', level: 'Beginner', icon_name: 'atom', theme_color: 'blue', estimated_hours: 10, rating: '4.8', reviews_count: 120 },
+    { id: 2, category_id: 1, name: 'Advanced Next.js', description: 'Take your Next.js skills to the next level. Master Server Components, App Router, and complex data fetching patterns.', level: 'Advanced', icon_name: 'zap', theme_color: 'black', estimated_hours: 15, rating: '4.9', reviews_count: 85 },
+    { id: 3, category_id: 2, name: 'Python for Data Science', description: 'Learn Python programming specifically for data analysis. Master libraries like NumPy, Pandas, and Matplotlib.', level: 'Intermediate', icon_name: 'database', theme_color: 'yellow', estimated_hours: 20, rating: '4.7', reviews_count: 200 },
+  ]);
+
+  console.log('Seeding sections...');
+  await db.insert(schema.sections).values([
+    // Course 1 Sections
+    { id: 1, course_id: 1, title: 'Introduction to React', order_index: 1 },
+    { id: 2, course_id: 1, title: 'State & Props', order_index: 2 },
+    { id: 3, course_id: 1, title: 'Handling Events', order_index: 3 },
+    // Course 2 Sections
+    { id: 4, course_id: 2, title: 'Server Components Deep Dive', order_index: 1 },
+    { id: 5, course_id: 2, title: 'Advanced Routing', order_index: 2 },
+    // Course 3 Sections
+    { id: 6, course_id: 3, title: 'Python Fundamentals', order_index: 1 },
+    { id: 7, course_id: 3, title: 'Data Analysis with Pandas', order_index: 2 },
+  ]);
+
+  console.log('Seeding lessons...');
+  await db.insert(schema.lessons).values([
+    // Course 1, Section 1
+    { 
+      id: 1, 
+      section_id: 1, 
+      title: 'What is React?', 
+      duration_minutes: 10, 
+      xp_reward: 50, 
+      order_index: 1,
+      lesson_type: 'video',
+      content: `
+# Welcome to React
+React is a declarative, efficient, and flexible JavaScript library for building user interfaces. It lets you compose complex UIs from small and isolated pieces of code called “components”.
+
+### Why React?
+* **Declarative**: React makes it painless to create interactive UIs.
+* **Component-Based**: Build encapsulated components that manage their own state.
+* **Learn Once, Write Anywhere**: You can develop new features in React without rewriting existing code.
+      `,
+      video_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+    },
+    { 
+      id: 2, 
+      section_id: 1, 
+      title: 'JSX and Elements', 
+      duration_minutes: 12, 
+      xp_reward: 60, 
+      order_index: 2,
+      lesson_type: 'doc',
+      content: `
+# Introduction to JSX
+JSX is a syntax extension to JavaScript. It looks like HTML but has the full power of JavaScript.
+
+### Example
+\`\`\`jsx
+const name = 'Josh Perez';
+const element = <h1>Hello, {name}</h1>;
+\`\`\`
+
+JSX prevents Injection Attacks by default, making your application more secure.
+      `
+    },
+    { 
+      id: 3, 
+      section_id: 1, 
+      title: 'Functional Components', 
+      duration_minutes: 15, 
+      xp_reward: 75, 
+      order_index: 3, 
+      lesson_type: 'doc',
+      content: `
+# Functional Components
+Components are the building blocks of React. The simplest way to define a component is to write a JavaScript function.
+
+\`\`\`javascript
+function Welcome(props) {
+  return <h1>Hello, {props.name}</h1>;
+}
+\`\`\`
+      ` 
+    },
+    
+    // Course 1, Section 2
+    { id: 4, section_id: 2, title: 'The useState Hook', duration_minutes: 20, xp_reward: 100, order_index: 1, lesson_type: 'doc', content: '# useState Hook\nState is like a "memory" for your component.' },
+    { id: 5, section_id: 2, title: 'Passing Data with Props', duration_minutes: 18, xp_reward: 90, order_index: 2, lesson_type: 'doc', content: '# Props in React\nProps are read-only and allow you to pass data down.' },
+    
+    // Course 1, Section 3
+    { id: 6, section_id: 3, title: 'OnClick & Input Events', duration_minutes: 15, xp_reward: 75, order_index: 1, lesson_type: 'doc', content: '# Handling Events\nReact events are named using camelCase.' },
+    
+    // Course 2, Section 4
+    { id: 7, section_id: 4, title: 'Server vs Client Components', duration_minutes: 25, xp_reward: 150, order_index: 1, lesson_type: 'video', content: '# Next.js Components\nLearn the difference between Server and Client rendering.' },
+    { id: 8, section_id: 4, title: 'Streaming with Suspense', duration_minutes: 22, xp_reward: 130, order_index: 2, lesson_type: 'doc', content: '# Streaming\nImprove perceived performance with Suspense.' },
+    
+    // Course 2, Section 5
+    { id: 9, section_id: 5, title: 'Dynamic Routes & Catch-all', duration_minutes: 20, xp_reward: 120, order_index: 1, lesson_type: 'doc', content: '# Dynamic Routing\nHandle variable segments in your URLs.' },
+
+    // Course 3, Section 6
+    { id: 10, section_id: 6, title: 'Variables & Data Types', duration_minutes: 12, xp_reward: 50, order_index: 1, lesson_type: 'doc', content: '# Python Variables\nDynamic typing in Python.' },
+    { id: 11, section_id: 6, title: 'Lists, Tuples, and Dictionaries', duration_minutes: 18, xp_reward: 80, order_index: 2, lesson_type: 'doc', content: '# Collections\nStore multiple items in a single variable.' },
+    { id: 12, section_id: 6, title: 'Loops and Conditionals', duration_minutes: 15, xp_reward: 70, order_index: 3, lesson_type: 'doc', content: '# Logic Flow\nif, else, for, while.' },
+    
+    // Course 3, Section 7
+    { id: 13, section_id: 7, title: 'DataFrames Basics', duration_minutes: 25, xp_reward: 150, order_index: 1, lesson_type: 'doc', content: '# Pandas DataFrames\nThe core data structure for analysis.' },
+    { id: 14, section_id: 7, title: 'Filtering and Sorting Data', duration_minutes: 22, xp_reward: 130, order_index: 2, lesson_type: 'doc', content: '# Data Manipulation\nSlice and dice your data.' },
+  ]);
+
+  await seedQuizzesAndQuestions();
+}
+
+async function seedQuizzesAndQuestions() {
+  console.log('Seeding quizzes...');
+  await db.insert(schema.quizzes).values([
+    { id: 1, lesson_id: 1, title: 'React Basics Quiz', passing_score: 80, xp_reward: 100 },
+    { id: 2, lesson_id: 4, title: 'State & Hook Quiz', passing_score: 80, xp_reward: 150 },
+    { id: 3, lesson_id: 13, title: 'Pandas Basics Quiz', passing_score: 85, xp_reward: 200 },
+  ]).onConflictDoNothing();
+
+  console.log('Seeding questions...');
+  await db.insert(schema.questions).values([
+    {
+      id: 1,
+      quiz_id: 1,
+      question_type: 'multiple-choice',
+      question_text: 'What is React?',
+      explanation: 'React is a JavaScript library for building user interfaces.',
+      metadata: { options: ['A Library', 'A Framework', 'A Language'] },
+      correct_answer: '0',
+      order_index: 1,
+    },
+    {
+      id: 2,
+      quiz_id: 2,
+      question_type: 'multiple-choice',
+      question_text: 'Which hook is used for state management?',
+      explanation: 'useState is the primary hook for managing state in functional components.',
+      metadata: { options: ['useEffect', 'useState', 'useContext'] },
+      correct_answer: '1',
+      order_index: 1,
+    },
+    {
+      id: 3,
+      quiz_id: 3,
+      question_type: 'multiple-choice',
+      question_text: 'What is a DataFrame in Pandas?',
+      explanation: 'A DataFrame is a 2-dimensional labeled data structure with columns of potentially different types.',
+      metadata: { options: ['A 1D array', 'A 2D table', 'A Database'] },
+      correct_answer: '1',
+      order_index: 1,
+    },
+    {
+      id: 4,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "What is the primary purpose of the topic discussed in this lesson?",
+      metadata: { options: ["Option A: To simplify code", "Option B: To improve performance", "Option C: To enhance security", "Option D: All of the above"] },
+      correct_answer: "3", 
+      explanation: "The topic covers various aspects including simplification, performance, and security.",
+      order_index: 2,
+    },
+    {
+      id: 5,
+      quiz_id: 3,
+      question_type: "true-false",
+      question_text: "Is it true that the concepts in this lesson are considered best practices in modern development?",
+      metadata: {},
+      correct_answer: "true",
+      explanation: "Yes, these concepts are fundamental and widely adopted.",
+      order_index: 3,
+    },
+    {
+      id: 6,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "Which of the following is a common mistake when implementing this feature?",
+      metadata: { options: ["Not testing enough", "Ignoring edge cases", "Premature optimization", "All of the above"] },
+      correct_answer: "3",
+      explanation: "Developers often encounter these challenges when first learning this topic.",
+      order_index: 4,
+    },
+    {
+      id: 7,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "What is the complexity of the standard approach mentioned in the lesson?",
+      metadata: { options: ["O(1)", "O(n)", "O(log n)", "It depends on implementation"] },
+      correct_answer: "3",
+      explanation: "Implementation details can vary based on specific requirements.",
+      order_index: 5,
+    },
+    {
+      id: 8,
+      quiz_id: 3,
+      question_type: "true-false",
+      question_text: "Can this feature be used in mobile development?",
+      metadata: {},
+      correct_answer: "true",
+      explanation: "Yes, it is cross-platform and works well on mobile devices.",
+      order_index: 6,
+    },
+    {
+      id: 9,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "Which keyword is most associated with this topic?",
+      metadata: { options: ["function", "const", "class", "async"] },
+      correct_answer: "1",
+      explanation: "Immutability is often a key part of the discussion.",
+      order_index: 7,
+    },
+    {
+      id: 10,
+      quiz_id: 3,
+      question_type: "fill-blank",
+      question_text: "The technique described in the lesson is often called '____ programming'.",
+      metadata: {},
+      correct_answer: "functional",
+      explanation: "Functional programming is a common paradigm related to many modern web concepts.",
+      order_index: 8,
+    },
+    {
+      id: 11,
+      quiz_id: 3,
+      question_type: "multiple-choice",
+      question_text: "What is the main benefit of using this approach?",
+      metadata: { options: ["Less code", "More readable", "Easier to maintain", "All of the above"] },
+      correct_answer: "3",
+      explanation: "Combining these benefits makes it a superior choice.",
+      order_index: 9,
+    },
+    {
+      id: 12,
+      quiz_id: 3,
+      question_type: "true-false",
+      question_text: "Is this feature supported in all modern browsers?",
+      metadata: {},
+      correct_answer: "true",
+      explanation: "Modern browsers have excellent support for these standards.",
+      order_index: 10,
+    },
+    {
+      id: 13,
+      quiz_id: 3,
+      question_type: "code",
+      question_text: "What will be the output of this simplified example?",
+      metadata: { code: "const x = 10;\nconsole.log(x + 5);", options: ["10", "15", "5", "error"] },
+      correct_answer: "1",
+      explanation: "Basic addition results in 15.",
+      order_index: 11,
+    },
+    {
+      id: 14,
+      quiz_id: 3,
+      question_type: "code",
+      question_text: "What will be the output of this simplified example (Part 2)?",
+      metadata: { code: "const x = 10;\nconsole.log(x * 5);", options: ["10", "15", "50", "error"] },
+      correct_answer: "2",
+      explanation: "Basic multiplication results in 50.",
+      order_index: 12,
+    }
+  ]);
+}
+
+async function seedAchievements() {
+  console.log('Seeding achievements...');
+  await db.insert(schema.achievements).values([
+    {
+      id: 1,
+      title: 'First Blood',
+      description: 'Complete your very first lesson.',
+      icon_name: 'zap',
+      rarity: 'COMMON',
+      theme_color: 'bg-yellow-100',
+      unlock_condition: { type: 'lesson_count', value: 1 },
+    },
+    {
+      id: 2,
+      title: 'Explorer Started',
+      description: 'Complete the onboarding process.',
+      icon_name: 'user',
+      rarity: 'COMMON',
+      theme_color: 'bg-blue-100',
+      unlock_condition: { type: 'onboarding', value: true },
+    },
+    {
+      id: 3,
+      title: 'Course Finisher',
+      description: 'Complete your first entire course.',
+      icon_name: 'book-open',
+      rarity: 'RARE',
+      theme_color: 'bg-emerald-100',
+      unlock_condition: { type: 'course_count', value: 1 },
+    },
+    {
+      id: 4,
+      title: 'Rising Star',
+      description: 'Reach Level 5.',
+      icon_name: 'trending-up',
+      rarity: 'COMMON',
+      theme_color: 'bg-indigo-100',
+      unlock_condition: { type: 'level', value: 5 },
+    },
+    {
+      id: 5,
+      title: 'Expert Learner',
+      description: 'Reach Level 10.',
+      icon_name: 'award',
+      rarity: 'RARE',
+      theme_color: 'bg-violet-100',
+      unlock_condition: { type: 'level', value: 10 },
+    },
+    {
+      id: 6,
+      title: 'Power User',
+      description: 'Reach Level 15.',
+      icon_name: 'shield',
+      rarity: 'EPIC',
+      theme_color: 'bg-purple-100',
+      unlock_condition: { type: 'level', value: 15 },
+    },
+    {
+      id: 7,
+      title: 'Grandmaster',
+      description: 'Reach Level 20.',
+      icon_name: 'crown',
+      rarity: 'LEGENDARY',
+      theme_color: 'bg-orange-100',
+      unlock_condition: { type: 'level', value: 20 },
+    },
+    {
+      id: 8,
+      title: 'Perfect Score',
+      description: 'Score 100% on your first quiz.',
+      icon_name: 'check-circle',
+      rarity: 'RARE',
+      theme_color: 'bg-green-100',
+      unlock_condition: { type: 'quiz_score', value: 100 },
+    },
+    {
+      id: 9,
+      title: 'The Number One',
+      description: 'Reach Top 1 on the leaderboard.',
+      icon_name: 'trophy',
+      rarity: 'LEGENDARY',
+      theme_color: 'bg-yellow-200',
+      unlock_condition: { type: 'rank', value: 1 },
+    },
+    {
+      id: 10,
+      title: 'Top Ten Elite',
+      description: 'Reach Top 10 on the leaderboard.',
+      icon_name: 'medal',
+      rarity: 'EPIC',
+      theme_color: 'bg-amber-100',
+      unlock_condition: { type: 'rank', value: 10 },
+    },
+    {
+      id: 11,
+      title: 'The Vanguards',
+      description: 'Reach Top 20 on the leaderboard.',
+      icon_name: 'target',
+      rarity: 'RARE',
+      theme_color: 'bg-blue-50',
+      unlock_condition: { type: 'rank', value: 20 },
+    },
+    {
+      id: 12,
+      title: 'Unstoppable',
+      description: 'Maintain a 7-day study streak.',
+      icon_name: 'flame',
+      rarity: 'EPIC',
+      theme_color: 'bg-orange-200',
+      unlock_condition: { type: 'streak', value: 7 },
+    },
+    {
+      id: 13,
+      icon_name: 'book-open',
+      title: 'Knowledge Seeker',
+      description: 'Study for 100 total hours',
+      rarity: 'legendary',
+      theme_color: 'bg-emerald-100',
+      unlock_condition: { type: 'hours', value: 100 },
+    },
+    {
+      id: 14,
+      icon_name: 'award',
+      title: 'Ultimate Scholar',
+      description: 'Unlock all other achievements',
+      rarity: 'mythic',
+      theme_color: 'bg-violet-100',
+      unlock_condition: { type: 'all', value: true },
+    }
+  ]);
+}
+
+async function seedRelations() {
+  console.log('Seeding relations...');
+  await db.insert(schema.enrollments).values([
+    { user_id: '410544b2-4001-4271-9855-fec4b6a6442a', course_id: 1, progress_percent: 50, status: 'ACTIVE' },
+    { user_id: '410544b2-4001-4271-9855-fec4b6a6442a', course_id: 3, progress_percent: 0, status: 'ACTIVE' },
+    { user_id: '5c4b1827-0cc6-4eb1-b956-628d022b3e41', course_id: 1, progress_percent: 100, status: 'COMPLETED' },
+  ]);
+
+  await db.insert(schema.user_lesson_progress).values([
+    { user_id: '410544b2-4001-4271-9855-fec4b6a6442a', lesson_id: 1, status: 'COMPLETED' },
+    { user_id: '410544b2-4001-4271-9855-fec4b6a6442a', lesson_id: 2, status: 'UNLOCKED' },
+    { user_id: '5c4b1827-0cc6-4eb1-b956-628d022b3e41', lesson_id: 1, status: 'COMPLETED' },
+    { user_id: '5c4b1827-0cc6-4eb1-b956-628d022b3e41', lesson_id: 2, status: 'COMPLETED' },
+  ]);
+
+  await db.insert(schema.user_achievements).values([
+    { user_id: '410544b2-4001-4271-9855-fec4b6a6442a', achievement_id: 1 },
+    { user_id: '5c4b1827-0cc6-4eb1-b956-628d022b3e41', achievement_id: 1 },
+  ]);
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const target = searchParams.get('target');
+
+  try {
+    if (target === 'content') {
+      console.log('Clearing and seeding CONTENT only (preserving users)...');
+      await db.delete(schema.user_achievements);
+      await db.delete(schema.user_lesson_progress);
+      await db.delete(schema.enrollments);
+      await db.delete(schema.questions);
+      await db.delete(schema.quizzes);
+      await db.delete(schema.lessons);
+      await db.delete(schema.sections);
+      await db.delete(schema.courses);
+      await db.delete(schema.categories);
+      await db.delete(schema.achievements);
+
+      await seedCategoriesAndCourses();
+      await seedAchievements();
+      await seedRelations();
+
+      return Response.json({ message: 'Content (Courses, Lessons, Achievements) updated successfully! Users preserved.' });
+    }
+
+    if (target === 'questions') {
+      console.log('Clearing and seeding QUESTIONS only...');
+      await db.delete(schema.questions);
+      // We don't delete quizzes if we don't want to break existing lesson relations, 
+      // but since seedQuizzesAndQuestions uses onConflictDoNothing for quizzes, it's safe to just clear questions.
+      await seedQuizzesAndQuestions();
+      return Response.json({ message: 'Seeded Questions only! Users and Courses preserved.' });
+    }
+
+    if (target === 'achievements') {
+      await db.delete(schema.user_achievements);
+      await db.delete(schema.achievements);
+      await seedAchievements();
+      return Response.json({ message: 'Seeded Achievements only!' });
+    }
+
+    if (target === 'users') {
+      await db.delete(schema.users);
+      await seedUsers();
+      return Response.json({ message: 'Seeded Users only!' });
+    }
+
+    // Default behavior (Dangerous: clears everything)
+    if (searchParams.get('force') === 'true') {
+      await clearData();
+      await seedUsers();
+      await seedCategoriesAndCourses();
+      await seedAchievements();
+      await seedRelations();
+      return Response.json({ message: 'Full database re-seeded successfully!' });
+    }
+
+    return Response.json({
+      error: 'Please specify a target (e.g., ?target=achievements) or use ?force=true for full seed.'
+    }, { status: 400 });
+
   } catch (error) {
-    console.error('Lỗi khi Seed database:', error);
+    console.error('Seed Error:', error);
     return Response.json({ error: (error as Error).message }, { status: 500 });
   }
 }
+

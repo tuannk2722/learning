@@ -1,5 +1,5 @@
+import { Course } from "@/app/lib/definitions/courses";
 import { CourseCardAvailable } from "./available-course-card";
-import { Course } from "@/app/lib/definitions/definitions";
 
 
 export const CourseGrid = ({ courses }: { courses: Course[] }) => {

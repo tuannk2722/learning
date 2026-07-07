@@ -3,7 +3,7 @@ import { Eye, EyeOff, Lock, Mail, Sparkles, Trophy, User, CheckCircle2, AlertCir
 import { motion } from "motion/react";
 import Link from "next/link";
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
-import { register } from "@/app/lib/action";
+import { register, signInWithGoogle } from "@/app/lib/actions/auth";
 import { useActionState, useState } from "react";
 import { ButtonFacebook, ButtonGoogle } from "../button";
 
@@ -18,15 +18,7 @@ export function SignUpForm() {
     confirmPassword: ""
   });
 
-  // Hàm handleSubmit cũ đã được gỡ bỏ vì sử dụng formAction của Server.
-  // Password validation logic
-  const pass = formData.password;
-  const hasMinLength = pass.length >= 8;
-  const hasUppercase = /[A-Z]/.test(pass);
-  const hasNumberOrSymbol = /[0-9!@#\$%\^\&*\)\(+=._-]/.test(pass);
-  const isPasswordStrong = hasMinLength && hasUppercase && hasNumberOrSymbol;
-
-  const passwordsMatch = pass.length > 0 && pass === formData.confirmPassword;
+  const passwordsMatch = formData.password === formData.confirmPassword;
 
   return (
     <motion.div
@@ -41,7 +33,7 @@ export function SignUpForm() {
             <Trophy className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-            GamifiedLearning
+            Gamified Learning
           </span>
         </Link>
       </div>
@@ -114,22 +106,6 @@ export function SignUpForm() {
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          {/* Password Requirements Text */}
-          <div className="mt-3 text-xs space-y-1 text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-100">
-            <p className="font-medium text-gray-700 mb-1">Password must contain:</p>
-            <div className={`flex items-center gap-2 ${hasMinLength ? 'text-emerald-600' : ''}`}>
-              {hasMinLength ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />}
-              <span>At least 8 characters</span>
-            </div>
-            <div className={`flex items-center gap-2 ${hasUppercase ? 'text-emerald-600' : ''}`}>
-              {hasUppercase ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />}
-              <span>At least 1 uppercase letter</span>
-            </div>
-            <div className={`flex items-center gap-2 ${hasNumberOrSymbol ? 'text-emerald-600' : ''}`}>
-              {hasNumberOrSymbol ? <CheckCircle2 className="w-3.5 h-3.5" /> : <span className="w-3.5 h-3.5 rounded-full border border-current opacity-50" />}
-              <span>At least 1 number or special symbol</span>
-            </div>
-          </div>
         </div>
 
         <div>
@@ -170,30 +146,16 @@ export function SignUpForm() {
           </div>
         </div>
 
-        <div className="flex items-start gap-2">
-          <input type="checkbox" className="w-4 h-4 mt-1 rounded border-gray-300 text-violet-600 focus:ring-violet-500" required />
-          <label className="text-sm text-gray-600">
-            Agree to the{" "}
-            <Link href="#" className="text-violet-600 hover:text-violet-700 font-medium">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="#" className="text-violet-600 hover:text-violet-700 font-medium">
-              Privacy Policy
-            </Link>
-          </label>
-        </div>
-
         <button
           type="submit"
-          disabled={isPending || !passwordsMatch || !isPasswordStrong}
+          disabled={isPending || !passwordsMatch}
           aria-disabled={isPending}
           className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
         >
           <Sparkles className="w-5 h-5" />
           Create an account
         </button>
-        
+
         <div className="flex h-8 items-end space-x-1" aria-live="polite" aria-atomic="true">
           {errorMessage && (
             <>
@@ -215,7 +177,9 @@ export function SignUpForm() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-4">
-          <ButtonGoogle />
+          <form action={signInWithGoogle} className="w-full">
+            <ButtonGoogle className="w-full" type="submit" />
+          </form>
           <ButtonFacebook />
         </div>
       </div>

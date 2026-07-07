@@ -5,27 +5,30 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { Trophy, Star, Target, TrendingUp, CheckCircle2, XCircle, Zap, ChevronRight, RotateCcw, Award } from "lucide-react";
 import confetti from 'canvas-confetti';
+import { QuestionResult } from "@/app/lib/definitions/quiz-results";
 import ResultDetailCard from "./result-detail-card";
 
 interface Props {
   courseId: string;
   lessonId: string;
+  nextLessonId: number | null;
   score: number;
   total: number;
-  results: any[];
+  xpEarned: number;
+  passed: boolean;
+  passingScore: number;
+  results: QuestionResult[];
 }
 
-export default function QuizResultsContainer({ courseId, lessonId, score, total, results }: Props) {
+export default function QuizResultsContainer({ courseId, lessonId, nextLessonId, score, total, xpEarned, passed, results }: Props) {
   const [showConfetti, setShowConfetti] = useState(false);
 
   const percentage = Math.round((score / total) * 100);
-  const passed = percentage >= 70;
-  const xpEarned = passed ? 500 : Math.round(500 * (percentage / 100));
 
   useEffect(() => {
     if (passed && !showConfetti) {
       setShowConfetti(true);
-      const duration = 3000;
+      const duration = 1500;
       const end = Date.now() + duration;
 
       const frame = () => {
@@ -83,7 +86,7 @@ export default function QuizResultsContainer({ courseId, lessonId, score, total,
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <StatBox label="Correct" value={score} icon={CheckCircle2} color="text-emerald-600" bg="bg-emerald-50" />
         <StatBox label="Incorrect" value={total - score} icon={XCircle} color="text-red-600" bg="bg-red-50" />
-        <StatBox label="Status" value={percentage >= 70 ? "Passed" : "Failed"} icon={Award} color="text-violet-600" bg="bg-violet-50" />
+        <StatBox label="Status" value={passed ? "Passed" : "Failed"} icon={Award} color="text-violet-600" bg="bg-violet-50" />
       </div>
 
       {/* Detailed Analysis */}
@@ -96,16 +99,28 @@ export default function QuizResultsContainer({ courseId, lessonId, score, total,
 
       {/* Navigation */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-        {!passed && (
-          <Link href={`/dashboard/courses/${courseId}/lesson/${lessonId}/quiz`}
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl border-2 border-violet-200 text-violet-700 font-bold hover:bg-violet-50 transition-all flex items-center justify-center gap-2">
-            <RotateCcw className="w-5 h-5" /> Try again
+        {!passed ? (
+          <>
+            <Link href={`/dashboard/courses/${courseId}/lesson/${lessonId}/quiz`}
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl border-2 border-violet-200 text-violet-700 font-bold hover:bg-violet-50 transition-all flex items-center justify-center gap-2">
+              <RotateCcw className="w-5 h-5" /> Try again
+            </Link>
+            <Link href={`/dashboard/courses/${courseId}`}
+              className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-700 shadow-lg shadow-violet-200 transition-all flex items-center justify-center gap-2">
+              Back to course <ChevronRight className="w-5 h-5" />
+            </Link>
+          </>
+        ) : nextLessonId ? (
+          <Link href={`/dashboard/courses/${courseId}/lesson/${nextLessonId}`}
+            className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-700 shadow-lg shadow-violet-200 transition-all flex items-center justify-center gap-2">
+            Next lesson <ChevronRight className="w-5 h-5" />
+          </Link>
+        ) : (
+          <Link href={`/dashboard/courses/${courseId}`}
+            className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2">
+            <Trophy className="w-5 h-5" /> Complete course
           </Link>
         )}
-        <Link href={`/dashboard/courses/${courseId}`}
-          className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-violet-600 text-white font-bold hover:bg-violet-700 shadow-lg shadow-violet-200 transition-all flex items-center justify-center gap-2">
-          {passed ? "Next lesson" : "Back to course"} <ChevronRight className="w-5 h-5" />
-        </Link>
       </div>
     </div>
   );

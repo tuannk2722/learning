@@ -3,19 +3,22 @@
 import { BookOpen, Clock, Users, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
-import { Course } from "@/app/lib/definitions/definitions";
 import { DynamicIcon } from "../../dynamic-icon";
+import { CourseDetail } from "@/app/lib/definitions/courses";
+import { getColorClasses } from "@/app/lib/utils/color-classes";
 
+import { CourseRating } from "./course-rating";
 
 export function CourseInfo({
   course,
-  totalLessons,
-  totalDuration
+  initialRating
 }: {
-  course: Course,
-  totalLessons: number,
-  totalDuration: number
+  course: CourseDetail,
+  initialRating?: number | null
 }) {
+  const colorClasses = getColorClasses(course.theme_color);
+  const totalLessons = course.total_lessons;
+  const totalDuration = course.total_duration;
 
   return (
     <div className="lg:col-span-2">
@@ -29,14 +32,20 @@ export function CourseInfo({
         </Link>
 
         <div className="flex items-center gap-4 mb-4">
-          <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${course.color} flex items-center justify-center shadow-xl`}>
-            <DynamicIcon name={course.icon} className="w-10 h-10 text-white" />
+          <div className={`w-20 h-20 rounded-2xl ${colorClasses.bg} flex items-center justify-center shadow-xl`}>
+            <DynamicIcon name={course.icon_name} className={`w-10 h-10 ${colorClasses.text}`} />
           </div>
           <div>
-            <span className={`px-3 py-1 rounded-full text-xs bg-gradient-to-r ${course.bgColor} font-medium inline-block mb-2`}>
+            <span className={`px-3 py-1 rounded-full text-xs ${colorClasses.bg} ${colorClasses.text} font-medium inline-block mb-2`}>
               {course.level}
             </span>
-            <h1 className="text-5xl font-bold mb-2">{course.name}</h1>
+            <h1 className="text-5xl font-bold mb-4">{course.name}</h1>
+            
+            {course.is_enrolled && (
+              <div className="flex items-center gap-2 mb-2">
+                <CourseRating courseId={course.id} initialRating={initialRating} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -53,11 +62,11 @@ export function CourseInfo({
           </div>
           <div className="flex items-center gap-2 text-gray-700">
             <Users className="w-5 h-5 text-violet-600" />
-            <span>{course.students} students</span>
+            <span>{course.enrolled_count} students</span>
           </div>
           <div className="flex items-center gap-2 text-gray-700">
             <Zap className="w-5 h-5 text-yellow-500" />
-            <span>{course.xp.toLocaleString('en-US')} XP</span>
+            <span>{course.total_xp.toLocaleString('en-US')} XP</span>
           </div>
         </div>
       </motion.div>

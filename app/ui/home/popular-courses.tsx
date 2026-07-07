@@ -4,9 +4,10 @@ import { ChevronRight } from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
 import { CourseCardAvailable } from "../courses/available-course-card"
-import { popularCourses } from "@/app/lib/courses"
+import { CourseListing } from "@/app/lib/definitions/courses";
 
-export function PopularCourses() {
+export function PopularCourses({ data }: { data: CourseListing[] }) {
+
   return (
     < section id="courses" className="py-20 px-6 bg-gradient-to-b from-white to-violet-50" >
       <div className="max-w-7xl mx-auto">
@@ -22,7 +23,7 @@ export function PopularCourses() {
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {popularCourses.map((course, index) => (
+          {data.map((course, index) => (
             <CourseCardAvailable key={course.id} course={course} index={index} />
           ))}
         </div>
