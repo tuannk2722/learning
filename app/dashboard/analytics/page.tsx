@@ -6,6 +6,9 @@ import { QuizHistorySection } from '@/app/ui/analytics/quiz-history-section';
 import { getOverviewStats, getWeeklyActivity, getWeeklyXP } from '@/app/lib/data/analytics';
 import { auth } from '@/auth';
 import { getQuizHistory } from '@/app/lib/data/quiz';
+import { Suspense } from 'react';
+import { StatsOverviewSkeleton } from '@/app/ui/skeleton/skeletons';
+import { ChartSkeleton, QuizAttemptSkeleton } from '@/app/ui/skeleton/analytic';
 
 export default async function Analytics() {
   const session = await auth();
@@ -22,19 +25,27 @@ export default async function Analytics() {
         <AnalyticsTitle />
 
         {/* Stats Grid */}
-        <AnalyticsStatsGrid stats={stats} />
+        <Suspense fallback={<StatsOverviewSkeleton />}>
+          <AnalyticsStatsGrid stats={stats} />
+        </Suspense>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Weekly Activity */}
-          <AnalyticsWeeklyActivity weeklyActivity={weeklyActivity} />
+          <Suspense fallback={<ChartSkeleton />}>
+            <AnalyticsWeeklyActivity weeklyActivity={weeklyActivity} />
+          </Suspense>
 
           {/* Subject Breakdown */}
-          <AnalyticsWeeklyXP weeklyXP={weeklyXP} />
+          <Suspense fallback={<ChartSkeleton />}>
+            <AnalyticsWeeklyXP weeklyXP={weeklyXP} />
+          </Suspense>
         </div>
 
         {/* Quiz History */}
         <div className="mt-8">
-          <QuizHistorySection attempts={quizHistory} />
+          <Suspense fallback={<QuizAttemptSkeleton />}>
+            <QuizHistorySection attempts={quizHistory} />
+          </Suspense>
         </div>
       </div>
     </div>

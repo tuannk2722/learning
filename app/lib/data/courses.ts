@@ -1,7 +1,8 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, sql, desc, notInArray, getTableColumns, and } from "drizzle-orm";
-import { CourseListing, CourseDetail } from "../definitions/courses";
+import { eq, sql, desc, notInArray, getTableColumns, and, inArray, gt } from "drizzle-orm";
+import { CourseListing, CourseDetail, Category } from "../definitions/courses";
+import { CourseBuilderResult, CourseBuilderSection } from "../definitions/lessons";
 
 // 1. Định nghĩa các Subqueries để đếm (Dùng chung cho toàn bộ file)
 const lessonStats = db
@@ -13,6 +14,7 @@ const lessonStats = db
   })
   .from(schema.sections)
   .leftJoin(schema.lessons, eq(schema.sections.id, schema.lessons.section_id))
+  .where(eq(schema.lessons.status, 'published'))
   .groupBy(schema.sections.course_id)
   .as('ls');
 
@@ -25,56 +27,63 @@ const enrollmentStats = db
   .groupBy(schema.enrollments.course_id)
   .as('es');
 
-export async function fetchAllCourses() {
+
+export async function getTopCategory() {
+  try {
+    const data = await db
+      .select({
+        id: schema.categories.id,
+        name: schema.categories.name,
+        total_courses: sql<number>`cast(count(${schema.courses.id}) as int)`.as('total_courses'),
+      })
+      .from(schema.categories)
+      .leftJoin(schema.courses, eq(schema.categories.id, schema.courses.category_id))
+      .groupBy(schema.categories.id)
+      .having(gt(
+        sql<number>`cast(count(case when ${schema.courses.status} = 'published' then 1 end) as int)`,
+        0
+      ))
+      .orderBy(desc(sql<number>`total_courses`))
+      .limit(10);
+    return data as any as Category[];
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch all categories [DRIZZLE_FIX].');
+  }
+}
+
+
+export async function fetchAllCourses(options?: { status?: 'published' | 'draft' }) {
   try {
     const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
     const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
 
-    const data = await db
+    const query = db
       .select({
         ...getTableColumns(schema.courses),
         category_name: schema.categories.name,
         total_lessons: totalLessons,
+        total_duration: sql<number>`coalesce(${lessonStats.total_duration}, 0)`,
         enrolled_count: enrolledCount,
       })
       .from(schema.courses)
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
-      .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
-      .orderBy(desc(enrolledCount));
+      .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId));
 
+    if (options?.status) {
+      query.where(eq(schema.courses.status, options.status));
+    }
+
+    query.orderBy(desc(enrolledCount));
+
+    const data = await query;
     return data as any as CourseListing[];
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch all courses [DRIZZLE_FIX].');
+    throw new Error('Failed to fetch courses.');
   }
 }
-
-// export async function fetchPopularCourses() {
-//   try {
-//     const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
-//     const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
-
-//     const data = await db
-//       .select({
-//         ...getTableColumns(schema.courses),
-//         category_name: schema.categories.name,
-//         total_lessons: totalLessons,
-//         enrolled_count: enrolledCount,
-//       })
-//       .from(schema.courses)
-//       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
-//       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
-//       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
-//       .orderBy(desc(enrolledCount))
-//       .limit(3);
-
-//     return data as any as CourseListing[];
-//   } catch (error) {
-//     console.error('Database Error:', error);
-//     throw new Error('Failed to fetch popular courses [DRIZZLE_FIX].');
-//   }
-// }
 
 export async function getEnrolledCourses(userId: string) {
   try {
@@ -82,7 +91,31 @@ export async function getEnrolledCourses(userId: string) {
       .select({
         ...getTableColumns(schema.courses),
         category_name: schema.categories.name,
-        progress_percent: schema.enrollments.progress_percent,
+        progress_percent: sql<number>`
+          CASE
+            WHEN (
+              SELECT COUNT(*) FROM lessons l
+              JOIN sections s ON l.section_id = s.id
+              WHERE s.course_id = courses.id AND l.status = 'published'
+            ) = 0 THEN 0
+            ELSE ROUND(
+              CAST((
+                SELECT COUNT(*) FROM user_lesson_progress ulp
+                JOIN lessons l ON ulp.lesson_id = l.id
+                JOIN sections s ON l.section_id = s.id
+                WHERE s.course_id = courses.id
+                  AND l.status = 'published'
+                  AND ulp.user_id = ${userId}
+                  AND ulp.status = 'completed'
+              ) AS REAL) * 100.0 /
+              (
+                SELECT COUNT(*) FROM lessons l
+                JOIN sections s ON l.section_id = s.id
+                WHERE s.course_id = courses.id AND l.status = 'published'
+              )
+            )
+          END
+        `,
         current_lesson: sql<string>`(
           SELECT l.title
           FROM lessons l
@@ -99,7 +132,10 @@ export async function getEnrolledCourses(userId: string) {
       .from(schema.courses)
       .innerJoin(schema.enrollments, eq(schema.courses.id, schema.enrollments.course_id))
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
-      .where(eq(schema.enrollments.user_id, userId))
+      .where(and(
+        eq(schema.enrollments.user_id, userId),
+        eq(schema.courses.status, 'published')
+      ))
       .orderBy(desc(schema.enrollments.last_accessed_at));
 
     return data as any as CourseListing[];
@@ -130,7 +166,10 @@ export async function getNotEnrolledCourses(userId: string) {
       .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
-      .where(notInArray(schema.courses.id, userEnrollments))
+      .where(and(
+        notInArray(schema.courses.id, userEnrollments),
+        eq(schema.courses.status, 'published')
+      ))
       .orderBy(desc(enrolledCount));
 
     return data as any as CourseListing[];
@@ -140,11 +179,8 @@ export async function getNotEnrolledCourses(userId: string) {
   }
 }
 
-export async function getCourseById(id: string, userId?: string): Promise<CourseDetail | null> {
+export async function getCourseById(courseId: number, userId?: string): Promise<CourseDetail | null> {
   try {
-    const courseId = Number(id);
-
-    // 1. Lấy thông tin cơ bản + số liệu tổng của khóa học
     const courseData = await db
       .select({
         ...getTableColumns(schema.courses),
@@ -166,16 +202,14 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
 
     const course = courseData[0] as any as CourseDetail;
 
-    // Thiết lập giá trị mặc định cho các trường tiến độ
     course.is_enrolled = false;
     course.completed_lessons = 0;
     course.xp_earned = 0;
     course.learned_minutes = 0;
 
     if (userId) {
-      // 2. Kiểm tra trạng thái đăng ký
       const enrollment = await db
-        .select()
+        .select({ id: schema.enrollments.user_id })
         .from(schema.enrollments)
         .where(
           and(
@@ -187,9 +221,8 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
 
       if (enrollment.length > 0) {
         course.is_enrolled = true;
-        course.progress_percent = enrollment[0].progress_percent || 0;
 
-        // 3. Lấy tiến độ học tập thực tế
+        // Tính động: completed published lessons / total published lessons
         const progress = await db
           .select({
             completed_count: sql<number>`cast(count(${schema.user_lesson_progress.lesson_id}) as int)`,
@@ -203,12 +236,28 @@ export async function getCourseById(id: string, userId?: string): Promise<Course
             and(
               eq(schema.user_lesson_progress.user_id, userId),
               eq(schema.sections.course_id, courseId),
+              eq(schema.lessons.status, 'published'),
               eq(schema.user_lesson_progress.status, 'completed')
             )
           );
 
+        const totalPublished = await db
+          .select({ cnt: sql<number>`cast(count(${schema.lessons.id}) as int)` })
+          .from(schema.lessons)
+          .innerJoin(schema.sections, eq(schema.lessons.section_id, schema.sections.id))
+          .where(
+            and(
+              eq(schema.sections.course_id, courseId),
+              eq(schema.lessons.status, 'published')
+            )
+          );
+
+        const completedCount = progress[0]?.completed_count || 0;
+        const totalCount = totalPublished[0]?.cnt || 0;
+        course.progress_percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
         if (progress.length > 0) {
-          course.completed_lessons = progress[0].completed_count || 0;
+          course.completed_lessons = completedCount;
           course.xp_earned = progress[0].xp_sum || 0;
           course.learned_minutes = progress[0].duration_sum || 0;
         }
@@ -234,10 +283,95 @@ export async function getUserCourseRating(courseId: number, userId: string): Pro
         )
       )
       .limit(1);
-    
+
     return enrollment.length > 0 ? enrollment[0].rating : null;
   } catch (error) {
     console.error('Database Error:', error);
     return null;
   }
-}
+}
+
+export async function getCourseStatus(courseId: number): Promise<string | null> {
+  const result = await db
+    .select({ status: schema.courses.status })
+    .from(schema.courses)
+    .where(eq(schema.courses.id, courseId))
+    .limit(1);
+  return result.length > 0 ? result[0].status : null;
+}
+
+export async function getCourseForBuilder(id: string): Promise<CourseBuilderResult | null> {
+  try {
+    const courseId = Number(id);
+
+    // 1. Lấy thông tin cơ bản của course + category
+    const courseRows = await db
+      .select({
+        id: schema.courses.id,
+        name: schema.courses.name,
+        description: schema.courses.description,
+        category_name: schema.categories.name,
+        level: schema.courses.level,
+        icon: schema.courses.icon_name,
+        theme_color: schema.courses.theme_color,
+        status: schema.courses.status,
+      })
+      .from(schema.courses)
+      .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
+      .where(eq(schema.courses.id, courseId))
+      .limit(1);
+
+    if (courseRows.length === 0) return null;
+
+    // 2. Lấy danh sách sections theo thứ tự
+    const sectionRows = await db
+      .select()
+      .from(schema.sections)
+      .where(eq(schema.sections.course_id, courseId))
+      .orderBy(schema.sections.order_index);
+
+    // 3. Lấy tất cả lessons thuộc các sections trên
+    let lessonRows: {
+      id: number; section_id: number | null; title: string;
+      duration_minutes: number | null; xp_reward: number | null;
+      status: string | null;
+    }[] = [];
+
+    const sectionIds = sectionRows.map(s => s.id);
+
+    if (sectionIds.length > 0) {
+      lessonRows = await db
+        .select({
+          id: schema.lessons.id,
+          section_id: schema.lessons.section_id,
+          title: schema.lessons.title,
+          duration_minutes: schema.lessons.duration_minutes,
+          xp_reward: schema.lessons.xp_reward,
+          status: schema.lessons.status,
+        })
+        .from(schema.lessons)
+        .where(inArray(schema.lessons.section_id, sectionIds))
+        .orderBy(schema.lessons.section_id, schema.lessons.order_index);
+    }
+
+    // 4. Ghép lessons vào từng section
+    const sections: CourseBuilderSection[] = sectionRows.map(section => ({
+      id: section.id,
+      title: section.title,
+      lessons: lessonRows
+        .filter(l => l.section_id === section.id)
+        .map(l => ({
+          id: l.id,
+          title: l.title,
+          duration: l.duration_minutes || 0,
+          xp: l.xp_reward || 0,
+          status: l.status || 'draft',
+        })),
+    }));
+
+    return { ...courseRows[0], sections };
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch course for builder.');
+  }
+}

@@ -3,7 +3,7 @@
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import { DynamicIcon } from "../dynamic-icon";
-import { getColorClasses } from "@/app/lib/utils/color-classes";
+import { getColorClasses } from "@/app/lib/utils/color-palette";
 import { UnlockedAchievement } from "@/app/lib/definitions/definitions";
 
 export function showAchievementToasts(achievements: UnlockedAchievement[]) {

@@ -64,7 +64,7 @@ export function ProfileHeader({ userInfo }: { userInfo: User }) {
               </div>
               <div className="flex items-center justify-center md:justify-start gap-2 text-gray-600">
                 <Calendar className="w-4 h-4 text-violet-500" />
-                Join from {new Date(userInfo.joinDate).toLocaleDateString('en-US', { month: '2-digit', year: 'numeric' })}
+                Join from {new Date(userInfo.created_at).toLocaleDateString('en-US', { month: '2-digit', year: 'numeric' })}
               </div>
               {userInfo.location && (
                 <div className="flex items-center justify-center md:justify-start gap-2 text-gray-600">
@@ -77,11 +77,11 @@ export function ProfileHeader({ userInfo }: { userInfo: User }) {
         </div>
       </motion.div>
 
-      <EditProfileModal 
+      <EditProfileModal
         isOpen={isEditing}
         onClose={() => setIsEditing(false)}
         userInfo={userInfo}
       />
     </>
   )
-}
+}

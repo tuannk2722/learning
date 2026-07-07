@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react';
 import { DynamicIcon } from '../dynamic-icon';
-import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { getColorClasses } from '@/app/lib/utils/color-palette';
 import { AnalyticsStats } from '@/app/lib/definitions/definitions';
 
 export function AnalyticsStatsGrid({ stats }: { stats: AnalyticsStats[] }) {

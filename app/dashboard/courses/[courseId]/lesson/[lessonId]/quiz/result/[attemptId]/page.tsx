@@ -1,12 +1,23 @@
-import QuizResultsContainer from "@/app/ui/courses/course-detail/lesson-detail/quiz-detail/result-detail/result-container";
+import QuizResultsContainer from "@/app/ui/result/result-container";
 import { getNextLessonId } from "@/app/lib/data/lessons";
 import { notFound } from "next/navigation";
 import { getAttemptById } from "@/app/lib/data/quiz";
+import { auth } from "@/auth";
+import { getCourseStatus } from "@/app/lib/data/courses";
 
 type Params = Promise<{ courseId: string; lessonId: string; attemptId: string }>;
 
 export default async function QuizResultsPage(props: { params: Params }) {
   const params = await props.params;
+
+  const session = await auth();
+  const userRole = (session?.user as any)?.role;
+
+  // Chặn user thường truy cập kết quả quiz của course chưa published
+  const courseStatus = await getCourseStatus(Number(params.courseId));
+  if (courseStatus !== 'published' && userRole !== 'admin') {
+    return notFound();
+  }
 
   const attempt = await getAttemptById(Number(params.attemptId));
 

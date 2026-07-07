@@ -3,18 +3,18 @@
 import { motion, Reorder, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, GripVertical, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
-import { Question, QuestionType, QUESTION_TYPES } from './types';
 import QuestionEditor from './question-editor';
+import { Question, QuestionType, QUESTION_TYPES } from '@/app/lib/definitions/quizzes';
 
 interface QuestionListProps {
   questions: Question[];
   onReorder: (questions: Question[]) => void;
   onAddQuestion: (type: QuestionType) => void;
-  onUpdateQuestion: (id: string, updates: Partial<Question>) => void;
-  onUpdateOption: (questionId: string, optionIndex: number, value: string) => void;
-  onDeleteQuestion: (id: string) => void;
-  editingQuestionId: string | null;
-  setEditingQuestionId: (id: string | null) => void;
+  onUpdateQuestion: (id: number, updates: Partial<Question>) => void;
+  onUpdateOption: (questionId: number, optionIndex: number, value: string) => void;
+  onDeleteQuestion: (id: number) => void;
+  editingQuestionId: number | null;
+  setEditingQuestionId: (id: number | null) => void;
 }
 
 export default function QuestionList({
@@ -42,9 +42,8 @@ export default function QuestionList({
             <Reorder.Item key={question.id} value={question}>
               <motion.div
                 whileHover={{ boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                className={`border-2 rounded-lg transition-all ${
-                  editingQuestionId === question.id ? 'border-indigo-500' : 'border-gray-200'
-                }`}
+                className={`border-2 rounded-lg transition-all ${editingQuestionId === question.id ? 'border-indigo-500' : 'border-gray-200'
+                  }`}
               >
                 <div className="flex items-center gap-3 p-3 border-b border-gray-200 bg-slate-50">
                   <GripVertical className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing" />
@@ -59,7 +58,7 @@ export default function QuestionList({
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-yellow-600 text-sm font-medium">
-                    +{question.xp} XP
+                    +{question.xpReward} XP
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.1 }}

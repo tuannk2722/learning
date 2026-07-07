@@ -3,13 +3,15 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
 import { eq, asc, sql } from "drizzle-orm";
-import { QuizSubmitResult, QuestionResult } from "../definitions/quiz-results";
+import { QuizSubmitResult, QuestionResult, Question, QuestionType } from "../definitions/quizzes";
 import { auth } from "@/auth";
 import { updateQuestProgress } from "./quests";
 import { QuestUpdateInfo } from "../definitions/quests";
 import { updateStreak } from "./streak";
 import { StreakResult } from "../definitions/definitions";
 import { evaluateAchievements } from "./achievements";
+import { revalidatePath } from "next/cache";
+import { logActivity } from "./activity-log";
 
 export async function submitQuiz(
   lessonId: string,
@@ -63,18 +65,29 @@ export async function submitQuiz(
         if (!isNaN(correctIdx) && correctIdx >= 0 && correctIdx < options.length) {
           correctAnswerDisplay = options[correctIdx];
         }
+      } else if (q.question_type === "fill-blank") {
+        // Hiển thị danh sách các đáp án chấp nhận được
+        const acceptedAnswers = q.correct_answer
+          .split(",")
+          .map((a) => a.trim())
+          .filter(Boolean);
+        correctAnswerDisplay = acceptedAnswers.join(" / ");
       }
 
       // So sánh đáp án
       let isCorrect = false;
       if (userRawAnswer !== undefined && userRawAnswer !== null) {
         const userStr = String(userRawAnswer).trim().toLowerCase();
-        const correctStr = String(q.correct_answer).trim().toLowerCase();
 
         if (q.question_type === "fill-blank") {
-          // Fill-blank: so sánh linh hoạt hơn (chứa chuỗi)
-          isCorrect = userStr.includes(correctStr) || correctStr.includes(userStr);
+          // Fill-blank: khớp chính xác với một trong các đáp án được chấp nhận (ngăn cách bởi dấu phẩy)
+          const acceptedAnswers = q.correct_answer
+            .split(",")
+            .map((a) => a.trim().toLowerCase())
+            .filter(Boolean);
+          isCorrect = acceptedAnswers.includes(userStr);
         } else {
+          const correctStr = String(q.correct_answer).trim().toLowerCase();
           isCorrect = userStr === correctStr;
         }
       }
@@ -88,6 +101,7 @@ export async function submitQuiz(
         correctAnswer: correctAnswerDisplay,
         isCorrect,
         explanation: q.explanation || "",
+        xpReward: q.xp_reward || 0,
       };
     });
 
@@ -96,25 +110,30 @@ export async function submitQuiz(
     const passingScore = quiz.passing_score || 50;
     const passed = percentage >= passingScore;
 
-    // 4. Tính XP thưởng: đạt → full XP, không đạt → tỉ lệ theo phần trăm
-    const fullXp = quiz.xp_reward || 0;
-    const xpEarned = passed ? fullXp : Math.round(fullXp * (percentage / 100));
+    // 4. Tính XP thưởng: cộng dồn XP từ các câu hỏi trả lời đúng
+    let xpEarned = 0;
+    questionsData.forEach((q, index) => {
+      if (results[index].isCorrect) {
+        xpEarned += q.xp_reward || 0;
+      }
+    });
 
     // 5. Cộng XP cho user nếu đăng nhập
     const questUpdates: QuestUpdateInfo[] = [];
     let streakResult: StreakResult | undefined;
 
-    if (userId && xpEarned > 0) {
-      await db.execute(
-        sql`UPDATE users SET total_xp = COALESCE(total_xp, 0) + ${xpEarned} WHERE id = ${userId}`
-      );
-
-      // Cập nhật streak (quiz nộp bài = có học)
+    if (userId) {
       streakResult = await updateStreak(userId);
 
-      // Cập nhật tiến độ quest: kiếm XP
-      const res1 = await updateQuestProgress('EARN_XP', xpEarned, userId);
-      questUpdates.push(...res1.questUpdates);
+      if (xpEarned > 0) {
+        await db.execute(
+          sql`UPDATE users SET total_xp = COALESCE(total_xp, 0) + ${xpEarned} WHERE id = ${userId}`
+        );
+
+        // Cập nhật tiến độ quest: kiếm XP
+        const res1 = await updateQuestProgress('EARN_XP', xpEarned, userId);
+        questUpdates.push(...res1.questUpdates);
+      }
     }
 
     // Cập nhật tiến độ quest: vượt qua quiz
@@ -141,6 +160,20 @@ export async function submitQuiz(
 
     const { unlocked } = await evaluateAchievements(userId || "");
 
+    // Log quiz submission
+    if (userId) {
+      void logActivity({
+        userId,
+        action: 'COMPLETE_QUIZ',
+        entityType: 'quiz',
+        entityId: quiz.id,
+        entityName: quiz.title,
+        metadata: { score, total, passed, xpEarned, percentage },
+      });
+    }
+
+    revalidatePath("/dashboard/courses", "layout");
+
     return {
       success: true,
       attemptId,
@@ -157,5 +190,134 @@ export async function submitQuiz(
   } catch (error) {
     console.error("Error submitting quiz:", error);
     return { success: false, score: 0, total: 0, passed: false, xpEarned: 0, passingScore: 0, results: [] };
+  }
+}
+
+export async function saveQuizBuilder(
+  lessonId: number,
+  data: {
+    quizId?: number;
+    title: string;
+    passingScore: number;
+    questions: Question[];
+  }
+): Promise<{ success: boolean; error?: string; quizId?: number; questions?: Question[] }> {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    let finalQuizId: number | undefined;
+
+    await db.transaction(async (tx) => {
+      let quizId = data.quizId;
+
+      // ── Bước 1: Upsert quiz ──
+      if (quizId) {
+        // Quiz đã tồn tại → UPDATE
+        await tx.update(schema.quizzes).set({
+          title: data.title,
+          passing_score: data.passingScore,
+          updated_at: new Date(),
+        }).where(eq(schema.quizzes.id, quizId));
+      } else {
+        // Quiz chưa tồn tại → INSERT
+        const inserted = await tx.insert(schema.quizzes).values({
+          lesson_id: lessonId,
+          title: data.title,
+          passing_score: data.passingScore,
+        }).returning({ id: schema.quizzes.id });
+        quizId = inserted[0].id;
+      }
+
+      finalQuizId = quizId;
+
+      // ── Bước 2: Xử lý questions ──
+      // Lấy danh sách question IDs hiện có trong DB
+      const existingQuestions = await tx.select({ id: schema.questions.id })
+        .from(schema.questions)
+        .where(eq(schema.questions.quiz_id, quizId));
+      const existingIds = new Set(existingQuestions.map(q => q.id));
+
+      // Phân loại: câu hỏi mới (id < 0) vs câu hỏi cũ (id > 0)
+      const incomingPositiveIds = new Set(
+        data.questions.filter(q => q.id > 0).map(q => q.id)
+      );
+
+      // Xóa những câu hỏi không còn trong danh sách
+      const idsToDelete = [...existingIds].filter(id => !incomingPositiveIds.has(id));
+      for (const id of idsToDelete) {
+        await tx.delete(schema.questions).where(eq(schema.questions.id, id));
+      }
+
+      // Upsert từng câu hỏi
+      for (let i = 0; i < data.questions.length; i++) {
+        const q = data.questions[i];
+        const metadata: Record<string, any> = {};
+        if (q.options) metadata.options = q.options;
+        if (q.code) metadata.code = q.code;
+
+        if (q.id > 0 && existingIds.has(q.id)) {
+          // UPDATE câu hỏi cũ
+          await tx.update(schema.questions).set({
+            question_type: q.type,
+            question_text: q.question,
+            correct_answer: String(q.correctAnswer ?? ''),
+            explanation: q.explanation || '',
+            xp_reward: q.xpReward || 0,
+            metadata,
+            order_index: i,
+            updated_at: new Date(),
+          }).where(eq(schema.questions.id, q.id));
+        } else {
+          // INSERT câu hỏi mới
+          await tx.insert(schema.questions).values({
+            quiz_id: quizId,
+            question_type: q.type,
+            question_text: q.question,
+            correct_answer: String(q.correctAnswer ?? ''),
+            explanation: q.explanation || '',
+            xp_reward: q.xpReward || 0,
+            metadata,
+            order_index: i,
+          });
+        }
+      }
+    });
+
+    // ── Bước 3: Fetch lại questions từ DB để trả về client (với ID thật) ──
+    const savedQuestions = await db.select()
+      .from(schema.questions)
+      .where(eq(schema.questions.quiz_id, finalQuizId!))
+      .orderBy(asc(schema.questions.order_index));
+
+    const questions: Question[] = savedQuestions.map((q) => {
+      const meta = (q.metadata || {}) as Record<string, any>;
+      let correctAnswer: string | number = q.correct_answer;
+      if (q.question_type === 'multiple-choice' || q.question_type === 'code') {
+        const parsed = Number(q.correct_answer);
+        if (!isNaN(parsed)) correctAnswer = parsed;
+      }
+      return {
+        id: q.id,
+        type: q.question_type as QuestionType,
+        question: q.question_text,
+        options: meta.options || undefined,
+        code: meta.code || undefined,
+        xpReward: q.xp_reward || 0,
+        correctAnswer,
+        explanation: q.explanation || '',
+        order_index: q.order_index,
+      };
+    });
+
+    revalidatePath(`/admin/courses`, "layout");
+    revalidatePath(`/dashboard/courses`, "layout");
+
+    return { success: true, quizId: finalQuizId, questions };
+  } catch (error) {
+    console.error("Error saving quiz:", error);
+    return { success: false, error: (error as Error).message };
   }
 }

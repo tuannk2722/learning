@@ -1,12 +1,12 @@
-import { Course } from "@/app/lib/definitions/courses";
+import { CourseListing } from "@/app/lib/definitions/courses";
 import { CourseCardAvailable } from "./available-course-card";
 
 
-export const CourseGrid = ({ courses }: { courses: Course[] }) => {
+export const CourseGrid = ({ courses }: { courses: CourseListing[] }) => {
   if (courses.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100 mx-6">
-        <p className="text-xl text-gray-400">Không tìm thấy khóa học nào phù hợp 😢</p>
+        <p className="text-xl text-gray-400">No courses found 😢</p>
       </div>
     );
   }

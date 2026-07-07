@@ -1,13 +1,12 @@
 'use client';
 import { motion } from 'motion/react';
-import { BookOpen, Users } from 'lucide-react';
 import { DynamicIcon } from '../../dynamic-icon';
 
 interface CourseStatsProps {
-  totalCourses: string;
-  published: string;
-  draft: string;
-  totalEnrollments: string;
+  totalCourses: number;
+  published: number;
+  draft: number;
+  totalEnrollments: number;
 }
 
 export default function CourseStats({ totalCourses, published, draft, totalEnrollments }: CourseStatsProps) {

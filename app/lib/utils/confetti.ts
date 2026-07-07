@@ -1,7 +1,7 @@
 import confetti from 'canvas-confetti';
 
 export const triggerConfetti = () => {
-  const duration = 1500; // 1.5 seconds
+  const duration = 1000;
   const end = Date.now() + duration;
 
   const frame = () => {

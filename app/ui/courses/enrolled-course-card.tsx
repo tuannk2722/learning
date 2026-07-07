@@ -1,10 +1,10 @@
 'use client';
 import { motion } from 'motion/react';
-import { Play } from 'lucide-react';
+import { Check, Play } from 'lucide-react';
 import Link from 'next/link';
 import { DynamicIcon } from '../dynamic-icon';
 import { CourseListing } from '@/app/lib/definitions/courses';
-import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { getColorClasses } from '@/app/lib/utils/color-palette';
 import { updateLastAccessCourse } from '@/app/lib/actions/course';
 
 
@@ -60,8 +60,8 @@ export default function CourseCardEnrolled({ enrolledCourses }: { enrolledCourse
               onClick={() => updateLastAccessCourse(course.id)}
               className="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg hover:bg-indigo-700 transition-colors"
             >
-              <Play className="w-4 h-4 fill-current" />
-              <span>Continue Learning</span>
+              {course.progress_percent === 100 ? <Check className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+              <span>{course.progress_percent === 100 ? "Completed" : "Continue Learning"}</span>
             </Link>
           </motion.div>
         </motion.div>

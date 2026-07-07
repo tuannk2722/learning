@@ -1,6 +1,11 @@
 import { db } from "../db";
-import { quiz_attempts, user_lesson_progress, lessons, user_daily_quests, daily_quest_definitions, user_achievements, achievements } from "../db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import {
+  quiz_attempts, user_lesson_progress, lessons,
+  user_daily_quests, daily_quest_definitions,
+  user_achievements, achievements,
+  users, courses, enrollments, activity_logs
+} from "../db/schema";
+import { eq, and, sql, desc } from "drizzle-orm";
 
 
 function generateLast7Days() {
@@ -98,7 +103,6 @@ export async function getOverviewStats(userId: string) {
         .where(eq(quiz_attempts.user_id, userId))
     ]);
 
-    // 1. Tính tổng XP trong tuần từ các nguồn
     const sumXp = (arr: { xp: number }[]) => arr.reduce((sum, r) => sum + Number(r.xp || 0), 0);
     const weeklyXp =
       sumXp(weeklyXpSources.quiz) +
@@ -106,7 +110,6 @@ export async function getOverviewStats(userId: string) {
       sumXp(weeklyXpSources.dailyQuest) +
       sumXp(weeklyXpSources.achievement);
 
-    // 2-4. Các số liệu khác
     const lessonsCount = Number(lessonsResult[0]?.count) || 0;
     const totalMinutes = Number(timeResult[0]?.minutes) || 0;
     const studyHours = (totalMinutes / 60).toFixed(1);
@@ -180,4 +183,150 @@ export async function getWeeklyXP(userId: string) {
     console.error('Failed to fetch weekly XP:', error);
     return [];
   }
+}
+
+
+export async function getAdminDashboardData() {
+  const last7Days = generateLast7Days();
+
+  const [
+    totalUsersResult,
+    activeUsersResult,
+    publishedCoursesResult,
+    badgesAwardedResult,
+    lessonsCompletedResult,
+    studyTimeResult,
+    dauResult,
+    weeklyLessonsResult,
+    topCoursesResult,
+    topAchievementsResult,
+  ] = await Promise.all([
+    // 1. Tổng số user đã onboarded
+    db.select({ count: sql<number>`cast(count(*) as int)` })
+      .from(users)
+      .where(eq(users.is_onboarded, true)),
+
+    // 2. Active users trong 7 ngày qua (có last_study_date)
+    db.select({ count: sql<number>`cast(count(*) as int)` })
+      .from(users)
+      .where(sql`${users.last_study_date} >= CURRENT_DATE - INTERVAL '7 days'`),
+
+    // 3. Khóa học đã published
+    db.select({ count: sql<number>`cast(count(*) as int)` })
+      .from(courses)
+      .where(eq(courses.status, 'published')),
+
+    // 4. Tổng số lần unlock achievement (badges được trao)
+    db.select({ count: sql<number>`cast(count(*) as int)` })
+      .from(user_achievements),
+
+    // 5. Tổng số lessons đã hoàn thành
+    db.select({ count: sql<number>`cast(count(*) as int)` })
+      .from(user_lesson_progress)
+      .where(eq(user_lesson_progress.status, 'completed')),
+
+    // 6. Tổng giờ học của toàn platform
+    db.select({ minutes: sql<number>`sum(${lessons.duration_minutes})` })
+      .from(user_lesson_progress)
+      .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
+      .where(eq(user_lesson_progress.status, 'completed')),
+
+    // 7. DAU chart: đếm user login theo ngày từ activity_logs
+    db.select({
+      date: sql<string>`DATE(${activity_logs.created_at})`,
+      users: sql<number>`cast(count(distinct ${activity_logs.user_id}) as int)`,
+    })
+      .from(activity_logs)
+      .where(and(
+        eq(activity_logs.action, 'USER_LOGIN'),
+        sql`${activity_logs.created_at} >= CURRENT_DATE - INTERVAL '6 days'`
+      ))
+      .groupBy(sql`DATE(${activity_logs.created_at})`),
+
+    // 8. Lessons Completed chart: số lesson hoàn thành theo ngày
+    db.select({
+      date: sql<string>`DATE(${user_lesson_progress.completed_at})`,
+      count: sql<number>`cast(count(*) as int)`,
+    })
+      .from(user_lesson_progress)
+      .where(and(
+        eq(user_lesson_progress.status, 'completed'),
+        sql`${user_lesson_progress.completed_at} >= CURRENT_DATE - INTERVAL '6 days'`
+      ))
+      .groupBy(sql`DATE(${user_lesson_progress.completed_at})`),
+
+    // 9. Top Courses: tổng enrollments + completion rate
+    db.select({
+      id: courses.id,
+      name: courses.name,
+      iconName: courses.icon_name,
+      themeColor: courses.theme_color,
+      enrollments: sql<number>`cast(count(${enrollments.user_id}) as int)`,
+      completions: sql<number>`cast(sum(case when ${enrollments.status} = 'COMPLETED' then 1 else 0 end) as int)`,
+    })
+      .from(courses)
+      .leftJoin(enrollments, eq(courses.id, enrollments.course_id))
+      .where(eq(courses.status, 'published'))
+      .groupBy(courses.id, courses.name)
+      .orderBy(desc(sql`count(${enrollments.user_id})`))
+      .limit(4),
+
+    // 10. Recent Badges: achievement được unlock nhiều nhất
+    db.select({
+      badge: achievements.title,
+      description: achievements.description,
+      iconName: achievements.icon_name,
+      themeColor: achievements.theme_color,
+      awarded: sql<number>`cast(count(${user_achievements.user_id}) as int)`,
+    })
+      .from(user_achievements)
+      .innerJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
+      .groupBy(achievements.id, achievements.title)
+      .orderBy(desc(sql`count(${user_achievements.user_id})`))
+      .limit(4),
+  ]);
+
+  const totalUsers = totalUsersResult[0]?.count ?? 0;
+  const activeUsers = activeUsersResult[0]?.count ?? 0;
+  const publishedCourses = publishedCoursesResult[0]?.count ?? 0;
+  const badgesAwarded = badgesAwardedResult[0]?.count ?? 0;
+  const lessonsCompleted = lessonsCompletedResult[0]?.count ?? 0;
+  const totalMinutes = Number(studyTimeResult[0]?.minutes ?? 0);
+  const studyHours = (totalMinutes / 60).toFixed(1);
+
+  const stats = [
+    { label: 'Total Users', value: totalUsers.toLocaleString(), change: '', icon: 'users', color: 'text-blue-600', bg: 'bg-blue-100' },
+    { label: 'Active Users (7 days)', value: activeUsers.toLocaleString(), change: '', icon: 'zap', color: 'text-green-600', bg: 'bg-green-100' },
+    { label: 'Courses Published', value: publishedCourses.toLocaleString(), change: '', icon: 'book-open', color: 'text-purple-600', bg: 'bg-purple-100' },
+    { label: 'Badges Awarded', value: badgesAwarded.toLocaleString(), change: '', icon: 'trophy', color: 'text-yellow-600', bg: 'bg-yellow-100' },
+    { label: 'Lessons Completed', value: lessonsCompleted.toLocaleString(), change: '', icon: 'target', color: 'text-indigo-600', bg: 'bg-indigo-100' },
+    { label: 'Study Time', value: `${studyHours}h`, change: '', icon: 'clock', color: 'text-orange-600', bg: 'bg-orange-100' },
+  ];
+
+  const dailyActiveUsers = last7Days.map(({ dayName, dateString }) => {
+    const found = dauResult.find(r => r.date === dateString);
+    return { day: dayName, users: found?.users ?? 0 };
+  });
+
+  const weeklyLessons = last7Days.map(({ dayName, dateString }) => {
+    const found = weeklyLessonsResult.find(r => r.date === dateString);
+    return { day: dayName, count: found?.count ?? 0 };
+  });
+
+  const topCourses = topCoursesResult.map((c) => ({
+    name: c.name,
+    enrollments: c.enrollments,
+    iconName: c.iconName ?? 'Book',
+    themeColor: c.themeColor ?? 'blue',
+  }));
+
+  const topAchievements = topAchievementsResult.map(b => ({
+    badge: b.badge,
+    description: b.description ?? '',
+    iconName: b.iconName ?? 'Trophy',
+    themeColor: b.themeColor ?? 'gray',
+    awarded: b.awarded,
+  }));
+
+  return { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements };
 }

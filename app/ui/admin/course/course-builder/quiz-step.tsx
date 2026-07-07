@@ -3,25 +3,27 @@
 import { motion } from 'motion/react';
 import { HelpCircle } from 'lucide-react';
 import Link from 'next/link';
-import { CourseData } from './course-types';
+
+import { useCourseBuilderStore } from './course-store';
+import { useState } from 'react';
+import { ConfirmModal } from '@/app/ui/modal-confirm';
 
 interface QuizStepProps {
-  isNew: boolean;
-  courseId: string;
-  courseData: CourseData;
-  isSaving: boolean;
   onBack: () => void;
-  onSave: () => void;
+  onPublish: () => void;
 }
 
 export default function QuizStep({
-  isNew,
-  courseId,
-  courseData,
-  isSaving,
   onBack,
-  onSave
+  onPublish
 }: QuizStepProps) {
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const { courseId, isDirty, courseData, isSaving } = useCourseBuilderStore();
+
+  const isPublished = courseData.status === 'published';
+  const isDisabled = isSaving || (isPublished && !isDirty);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,16 +40,7 @@ export default function QuizStep({
           <p className="text-gray-500 font-medium">Configure assessments to validate student progress</p>
         </div>
 
-        {isNew && (
-          <div className="mb-8 p-5 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-amber-800 shadow-sm mx-auto max-w-2xl">
-            <HelpCircle className="w-6 h-6 flex-shrink-0" />
-            <p className="text-sm">
-              <strong>Draft Mode:</strong> You cannot create quizzes yet. Please <strong>Save Course</strong> first, then you will be able to edit quizzes for each lesson.
-            </p>
-          </div>
-        )}
-
-        {courseData.curriculum.length === 0 ? (
+        {courseData.sections.length === 0 ? (
           <div className="text-center py-16 border-2 border-dashed border-gray-100 rounded-3xl bg-slate-50/50">
             <p className="text-gray-400 font-bold uppercase tracking-widest text-xs mb-6">No sections or lessons found</p>
             <button
@@ -59,7 +52,7 @@ export default function QuizStep({
           </div>
         ) : (
           <div className="grid gap-6">
-            {courseData.curriculum.map((section) => (
+            {courseData.sections.map((section) => (
               <div key={section.id} className="bg-slate-50/50 border border-gray-100 rounded-2xl p-6 hover:bg-white hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="font-bold text-gray-900 text-lg flex items-center gap-3">
@@ -81,17 +74,21 @@ export default function QuizStep({
                         </div>
                       </div>
 
-                      {isNew ? (
-                        <span className="px-6 py-2 bg-gray-100 border border-gray-200 text-gray-400 rounded-xl text-[10px] font-bold uppercase tracking-wider cursor-not-allowed">
-                          Save to Create Quiz
-                        </span>
-                      ) : (
+                      {courseId !== null && !isDirty ? (
                         <Link
-                          href={`/admin/courses/${courseId}/lessons/${lesson.id}/quiz`}
+                          href={`/admin/courses/${courseData.id}/lessons/${lesson.id}/quiz`}
                           className="px-6 py-2 bg-white border-2 border-indigo-600 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
                         >
-                          {index === 0 ? "Create Quiz" : "Edit Quiz"}
+                          Edit Quiz
                         </Link>
+                      ) : (
+                        <button
+                          className="px-6 py-2 bg-gray-100 border border-gray-200 text-gray-400 rounded-xl text-[10px] font-bold uppercase tracking-wider cursor-not-allowed"
+                          title={isDirty ? "Save changes first" : "Save course first"}
+                          disabled
+                        >
+                          {isDirty ? "Save to Edit" : "Save to Create Quiz"}
+                        </button>
                       )}
                     </div>
                   ))}
@@ -123,14 +120,33 @@ export default function QuizStep({
             Previous
           </button>
           <button
-            onClick={onSave}
-            disabled={isSaving}
-            className="px-10 py-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white rounded-2xl font-bold hover:shadow-2xl hover:shadow-indigo-500/40 transition-all uppercase tracking-widest text-xs disabled:opacity-70 disabled:cursor-not-allowed"
+            onClick={() => setShowConfirm(true)}
+            disabled={isDisabled}
+            className={`px-10 py-4 text-white rounded-2xl font-bold transition-all uppercase tracking-widest text-xs ${isDisabled
+                ? "bg-gray-300 cursor-not-allowed opacity-70"
+                : "bg-gradient-to-r from-indigo-600 to-violet-700 hover:shadow-2xl hover:shadow-indigo-500/40"
+              }`}
           >
-            {isSaving ? "Saving..." : isNew ? "Save Course & Publish" : "Update Course"}
+            {isSaving ? "Saving..." : !isPublished ? "Publish Course" : "Update Course"}
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          onPublish();
+        }}
+        title={isPublished ? "Update Course" : "Publish Course"}
+        description={
+          isPublished
+            ? "Are you sure you want to save and update this course? Any changes will be applied instantly!"
+            : "Are you sure you want to publish this course? Make sure you have added all lessons and quizzes!"
+        }
+        type={isPublished ? "info" : "warning"}
+      />
     </motion.div>
   );
 }

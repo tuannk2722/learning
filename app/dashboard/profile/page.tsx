@@ -2,7 +2,7 @@ import { ProfileTitle } from '@/app/ui/profile/title';
 import { ProfileHeader } from '@/app/ui/profile/header';
 import { ProfileSetting } from '@/app/ui/profile/setting';
 import { Suspense } from 'react';
-import { ProfileHeaderSkeleton, ProfileSettingSkeleton } from '@/app/ui/skeletons';
+import { ProfileHeaderSkeleton, ProfileSettingSkeleton } from '@/app/ui/skeleton/skeletons';
 import { auth } from "@/auth";
 import { getUserById } from "@/app/lib/data/users";
 

@@ -1,5 +1,8 @@
 'use client';
-import { motion } from 'motion/react';
+
+import { Users } from "lucide-react";
+import { motion } from "motion/react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DAUData {
   day: string;
@@ -7,33 +10,33 @@ interface DAUData {
 }
 
 export default function ActiveUsersChart({ data }: { data: DAUData[] }) {
-  const maxDAU = Math.max(...data.map(d => d.users));
-
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.3 }}
-      className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.3 }}
+      className="bg-white rounded-3xl p-8 shadow-lg border-2 border-blue-100"
     >
-      <h2 className="text-xl font-semibold mb-6">Daily Active Users</h2>
-
-      <div className="flex items-end justify-between h-64 gap-3">
-        {data.map((day, index) => (
-          <div key={day.day} className="flex-1 flex flex-col items-center gap-2">
-            <div className="w-full flex items-end h-full">
-              <motion.div
-                initial={{ height: 0 }}
-                animate={{ height: `${(day.users / maxDAU) * 100}%` }}
-                transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
-                className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-lg min-h-2"
-              />
-            </div>
-            <div className="text-sm text-muted-foreground">{day.day}</div>
-            <div className="text-xs font-medium">{day.users.toLocaleString()}</div>
-          </div>
-        ))}
-      </div>
+      <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-800">
+        <Users className="w-6 h-6 text-blue-600" />
+        Daily Active Users
+      </h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+          <XAxis dataKey="day" stroke="#6B7280" />
+          <YAxis stroke="#6B7280" allowDecimals={false} />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: '#fff',
+              border: '2px solid #3B82F6',
+              borderRadius: '12px',
+              padding: '12px'
+            }}
+          />
+          <Bar dataKey="users" fill="#3B82F6" name="Active Users" radius={[8, 8, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
     </motion.div>
   );
 }

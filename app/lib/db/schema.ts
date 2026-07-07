@@ -28,6 +28,7 @@ export const users = pgTable('users', {
   last_study_date: timestamp('last_study_date'),
   is_onboarded: boolean('is_onboarded').default(false),
   created_at: timestamp('created_at').defaultNow(),
+  status: varchar('status', { length: 50 }).default('active'),
 });
 
 // 15. BẢNG PASSWORD_RESET_TOKENS
@@ -55,10 +56,11 @@ export const courses = pgTable('courses', {
   level: varchar('level', { length: 50 }),
   icon_name: varchar('icon_name', { length: 50 }),
   theme_color: varchar('theme_color', { length: 50 }),
-  estimated_hours: integer('estimated_hours'),
   rating: numeric('rating', { precision: 2, scale: 1 }).default('0.0'),
   reviews_count: integer('reviews_count').default(0),
+  status: varchar('status', { length: 50 }).default('draft'),
   created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 4. BẢNG SECTIONS
@@ -67,6 +69,8 @@ export const sections = pgTable('sections', {
   course_id: integer('course_id').references(() => courses.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   order_index: integer('order_index').notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 5. BẢNG LESSONS
@@ -76,10 +80,11 @@ export const lessons = pgTable('lessons', {
   title: text('title').notNull(),
   duration_minutes: integer('duration_minutes'),
   xp_reward: integer('xp_reward').default(0),
-  lesson_type: varchar('lesson_type', { length: 50 }).default('video'),
-  content: text('content'),
-  video_url: text('video_url'),
+  blocks: jsonb('blocks'),
   order_index: integer('order_index').notNull(),
+  status: varchar('status', { length: 50 }).default('draft'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 6. BẢNG ENROLLMENTS
@@ -111,7 +116,8 @@ export const quizzes = pgTable('quizzes', {
   lesson_id: integer('lesson_id').references(() => lessons.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   passing_score: integer('passing_score').default(50),
-  xp_reward: integer('xp_reward').default(0),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 9. BẢNG QUESTIONS
@@ -121,9 +127,12 @@ export const questions = pgTable('questions', {
   question_type: varchar('question_type', { length: 50 }).notNull(),
   question_text: text('question_text').notNull(),
   explanation: text('explanation'),
+  xp_reward: integer('xp_reward').default(0),
   metadata: jsonb('metadata'),
   correct_answer: text('correct_answer').notNull(),
   order_index: integer('order_index').notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 10. BẢNG QUIZ_ATTEMPTS (Lịch sử làm quiz)
@@ -193,3 +202,14 @@ export const user_daily_quests = pgTable('user_daily_quests', {
   reward_claimed: boolean('reward_claimed').default(false),
 });
 
+// 16. BẢNG ACTIVITY_LOGS (Nhật ký hoạt động cho admin)
+export const activity_logs = pgTable('activity_logs', {
+  id: serial('id').primaryKey(),
+  user_id: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  action: varchar('action', { length: 100 }).notNull(),
+  entity_type: varchar('entity_type', { length: 50 }),
+  entity_id: integer('entity_id'),
+  entity_name: text('entity_name'),
+  metadata: jsonb('metadata'),
+  created_at: timestamp('created_at').defaultNow(),
+});

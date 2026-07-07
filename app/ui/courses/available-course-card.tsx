@@ -5,7 +5,7 @@ import { Star, Users } from 'lucide-react';
 import { DynamicIcon } from '../dynamic-icon';
 import Link from 'next/link';
 import { CourseListing } from '@/app/lib/definitions/courses';
-import { getColorClasses } from '@/app/lib/utils/color-classes';
+import { getColorClasses } from '@/app/lib/utils/color-palette';
 
 interface Props {
   course: CourseListing;
@@ -36,8 +36,6 @@ export const CourseCardAvailable = ({ course, index }: Props) => {
         <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">{course.level}</span>
         <span>•</span>
         <span>{course.total_lessons || 0} lessons</span>
-        <span>•</span>
-        <span>{course.estimated_hours}h</span>
       </div>
 
       <div className="flex items-center justify-between mb-4">

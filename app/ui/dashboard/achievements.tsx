@@ -1,7 +1,7 @@
 'use client';
 
 import { AchievementPreview } from "@/app/lib/definitions/definitions";
-import { getColorClasses } from "@/app/lib/utils/color-classes";
+import { getColorClasses } from "@/app/lib/utils/color-palette";
 import { Award, LinkIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { DynamicIcon } from "../dynamic-icon";

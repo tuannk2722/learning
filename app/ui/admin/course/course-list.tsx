@@ -1,25 +1,48 @@
 'use client';
-import { useState } from 'react';
-import { Course } from '@/app/lib/definitions/definitions';
+import { useState, useEffect } from 'react';
 import { CourseFilter } from './course-filter';
 import { CourseRow } from './course-row';
-import { CoursePagination } from './course-pagination';
+import { CourseListing } from '@/app/lib/definitions/courses';
+import { Pagination } from '../../pagination';
 
 interface CourseListProps {
-  initialCourses: Course[];
+  initialCourses: CourseListing[];
 }
 
 export default function CourseList({ initialCourses }: CourseListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredCourses = initialCourses.filter(course =>
-    course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCourses = initialCourses.filter(course => {
+    const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.category_name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesLevel = selectedLevel === "All" || course.level === selectedLevel;
+    return matchesSearch && matchesLevel;
+  });
+
+  const ITEM_PER_PAGE = 6;
+  const totalPages = Math.ceil(filteredCourses.length / ITEM_PER_PAGE);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const safePage = Math.min(currentPage, Math.max(totalPages, 1));
+  const startPage = (safePage - 1) * ITEM_PER_PAGE;
+  const currentCourses = filteredCourses.slice(startPage, startPage + ITEM_PER_PAGE)
 
   return (
     <>
-      <CourseFilter searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+      <CourseFilter
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedLevel={selectedLevel}
+        onLevelChange={setSelectedLevel}
+      />
 
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -35,15 +58,25 @@ export default function CourseList({ initialCourses }: CourseListProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredCourses.map((course, index) => (
-                <CourseRow key={course.id} course={course} index={index} />
+              {currentCourses.map((course, index) => (
+                <CourseRow
+                  key={course.id}
+                  course={course}
+                  index={index}
+                />
               ))}
             </tbody>
           </table>
         </div>
       </div>
 
-      <CoursePagination filteredItems={filteredCourses.length} totalItems={initialCourses.length} />
+      <div className="px-6 py-4 border-t border-gray-100 flex justify-center bg-slate-50/30">
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      </div>
     </>
   );
 }

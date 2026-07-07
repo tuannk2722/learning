@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, BarChart3, BookOpen, Crown, Flame, User, LayoutDashboard, Users, Award, Target } from 'lucide-react';
+import { Home, BarChart3, BookOpen, Crown, Flame, User, LayoutDashboard, Users, Activity } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -17,8 +17,7 @@ const adminNavItems = [
   { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/admin/courses", icon: BookOpen, label: "Course Management" },
   { path: "/admin/user-management", icon: Users, label: "User Management" },
-  { path: "/admin/achievement", icon: Award, label: "Achievements System" },
-  { path: "/admin/quests", icon: Target, label: "Quests System" },
+  { path: "/admin/activitylog", icon: Activity, label: "Activity Log" },
 ]
 
 interface Props {

@@ -1,3 +1,7 @@
+export interface Category {
+  id: number;
+  name: string;
+}
 
 export interface Course {
   id: number;
@@ -7,10 +11,12 @@ export interface Course {
   level: string;
   icon_name: string;
   theme_color: string;
-  estimated_hours: number;
+  total_duration: number;
   rating: number;
   reviews_count: number;
   created_at: string;
+  updated_at: string;
+  status: string;
 }
 
 // Type cho danh sách khóa học (Course Card)

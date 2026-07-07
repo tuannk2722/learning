@@ -4,9 +4,23 @@ import { Search } from 'lucide-react';
 interface CourseFilterProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  selectedLevel: string;
+  onLevelChange: (value: string) => void;
 }
 
-export function CourseFilter({ searchQuery, onSearchChange }: CourseFilterProps) {
+const levels = ["Beginner", "Intermediate", "Advanced"];
+
+export function CourseFilter({
+  searchQuery,
+  onSearchChange,
+  selectedLevel,
+  onLevelChange,
+}: CourseFilterProps) {
+  const handleRefresh = () => {
+    onSearchChange('');
+    onLevelChange('All');
+  }
+
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mb-6">
       <div className="flex flex-col md:flex-row items-center gap-4">
@@ -21,17 +35,22 @@ export function CourseFilter({ searchQuery, onSearchChange }: CourseFilterProps)
           />
         </div>
         <div className="flex w-full md:w-auto gap-4">
-          <select className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium">
-            <option>All Categories</option>
-            <option>Programming</option>
-            <option>Web Development</option>
-            <option>AI & ML</option>
+          <select
+            value={selectedLevel}
+            onChange={(e) => onLevelChange(e.target.value)}
+            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white hover:border-blue-600"
+          >
+            <option value="All">All Levels</option>
+            {levels.map(l => (
+              <option key={l} value={l}>{l}</option>
+            ))}
           </select>
-          <select className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium">
-            <option>All Status</option>
-            <option>Published</option>
-            <option>Draft</option>
-          </select>
+          <button
+            onClick={handleRefresh}
+            className="flex-1 md:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:outline-none transition-all font-medium bg-white hover:border-blue-600"
+          >
+            Refresh
+          </button>
         </div>
       </div>
     </div>

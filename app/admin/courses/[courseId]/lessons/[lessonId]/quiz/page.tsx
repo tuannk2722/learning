@@ -1,21 +1,23 @@
+import { getQuizForBuilder } from '@/app/lib/data/quiz';
 import QuizBuilderClient from '@/app/ui/admin/quiz-builder/quiz-builder-client';
 
 interface Props {
-  params: { courseId: string; lessonId: string };
+  params: Promise<{ courseId: string; lessonId: string }>;
 }
 
 export default async function QuizBuilderPage({ params }: Props) {
-  const { courseId, lessonId } = params;
+  const { courseId, lessonId } = await params;
 
-  // TODO: Thay bằng fetch thật khi có DB
-  // const quiz = await getQuizByLessonId(lessonId);
+  const quizForBuilder = await getQuizForBuilder(Number(lessonId));
 
   return (
     <QuizBuilderClient
       courseId={courseId}
       lessonId={lessonId}
-      // initialQuizData={quiz.data}
-      // initialQuestions={quiz.questions}
+      quizId={quizForBuilder?.quizId}
+      initialTitle={quizForBuilder?.title || 'New Quiz'}
+      initialPassingScore={quizForBuilder?.passingScore || 70}
+      initialQuestions={quizForBuilder?.questions || []}
     />
   );
 }

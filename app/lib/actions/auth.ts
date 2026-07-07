@@ -10,6 +10,7 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { password_reset_tokens } from "../db/schema";
 import { sendPasswordResetEmail } from "../email";
+import { logActivity } from "./activity-log";
 
 export async function registerUser(name: string, email: string, password: string): Promise<{ success: boolean; error?: string }> {
   try {
@@ -19,10 +20,19 @@ export async function registerUser(name: string, email: string, password: string
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.insert(users).values({
+    const [newUser] = await db.insert(users).values({
       name,
       email,
       password_hash: hashedPassword,
+    }).returning({ id: users.id });
+
+    // Log registration event
+    void logActivity({
+      userId: newUser?.id ?? null,
+      action: 'USER_REGISTER',
+      entityType: 'user',
+      entityName: name,
+      metadata: { email },
     });
 
     return { success: true };

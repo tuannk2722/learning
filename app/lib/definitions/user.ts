@@ -10,7 +10,8 @@ export type User = {
   last_study_date: Date | null;
   is_onboarded: boolean;
   avatar_url: string | null;
-  joinDate: Date;
+  created_at: Date;
+  status: string;
 };
 
 export type UserInfoLogin = {
@@ -19,4 +20,5 @@ export type UserInfoLogin = {
   email: string;
   password_hash?: string;
   is_onboarded: boolean;
+  status?: string;
 };

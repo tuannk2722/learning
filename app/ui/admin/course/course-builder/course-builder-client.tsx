@@ -1,156 +1,99 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
-import { CourseData, Section, Lesson, CourseBuilderClientProps, categories, levels, iconOptions, colorOptions } from './course-types';
 import Header from './header';
 import ProgressSteps from './progress-steps';
-import CourseInfoStep from '../course-info-step';
+import CourseInfoStep from './course-info-step';
 import CurriculumStep from './curriculum-step';
 import QuizStep from './quiz-step';
+import { CourseBuilderResult } from '@/app/lib/definitions/lessons';
+import { useCourseBuilderStore } from './course-store';
+import { saveCourseBuilder } from '@/app/lib/actions/course';
+import { toast } from 'sonner';
 
-const defaultCourseData: CourseData = {
-  name: '',
-  description: '',
-  category: categories[0],
-  level: levels[0],
-  icon: iconOptions[0].name,
-  theme_color: colorOptions[0].bg,
-  text_color: colorOptions[0].text,
-  duration: '',
-  curriculum: [
-    {
-      id: 1,
-      title: 'Introduction',
-      lessons: [
-        { id: 1, title: 'Getting Started', type: 'video', duration: 15, xp: 50 },
-        { id: 2, title: 'Basic Concepts', type: 'lesson', duration: 10, xp: 30 }
-      ]
-    }
-  ]
-};
+export interface CourseBuilderClientProps {
+  initialData?: CourseBuilderResult;
+}
 
-// --- Main Component ---
 export default function CourseBuilderClient({
-  isNew = false,
-  courseId = "draft",
   initialData
 }: CourseBuilderClientProps) {
   const router = useRouter();
-  const [step, setStep] = useState(1);
-  const [expandedCurriculum, setExpandedCurriculum] = useState<number[]>([0]);
-  const [courseData, setCourseData] = useState<CourseData>(initialData || defaultCourseData);
-  const [isSaving, setIsSaving] = useState(false);
 
-  // --- Handlers ---
-  const toggleCurriculum = (index: number) => {
-    setExpandedCurriculum(prev =>
-      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
-    );
-  };
+  const {
+    courseData,
+    isDirty,
+    isSaving,
+    step,
+    courseId,
+    initCourse,
+    setStep,
+    setCourseId,
+    setIsSaving,
+    setIsDirty,
+  } = useCourseBuilderStore();
 
-  const addCurriculum = () => {
-    const newSection: Section = {
-      id: Date.now(),
-      title: 'New Section',
-      lessons: []
+  const lastSyncedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const fingerprint = JSON.stringify({ id: initialData?.id, sections: initialData?.sections });
+    if (fingerprint !== lastSyncedRef.current) {
+      lastSyncedRef.current = fingerprint;
+      initCourse(initialData);
+    }
+  }, [initialData, initCourse]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
     };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
-    setCourseData(prev => {
-      const newCurriculum = [...prev.curriculum, newSection];
-      setExpandedCurriculum(ex => [...ex, newCurriculum.length - 1]);
-      return { ...prev, curriculum: newCurriculum };
-    });
-  };
-
-  const addLesson = (sectionIndex: number) => {
-    const newLesson: Lesson = {
-      id: Date.now(),
-      title: `Lesson ${courseData.curriculum[sectionIndex].lessons.length + 1}`,
-      type: 'video',
-      duration: 15,
-      xp: 50
-    };
-
-    setCourseData(prev => {
-      const newCurriculum = prev.curriculum.map((section, idx) => {
-        if (idx === sectionIndex) {
-          return { ...section, lessons: [...section.lessons, newLesson] };
-        }
-        return section;
-      });
-      return { ...prev, curriculum: newCurriculum };
-    });
-  };
-
-  const deleteSection = (index: number) => {
-    setCourseData(prev => ({
-      ...prev,
-      curriculum: prev.curriculum.filter((_, i) => i !== index)
-    }));
-  };
-
-  const deleteLesson = (sectionIndex: number, lessonId: string | number) => {
-    setCourseData(prev => {
-      const newCurriculum = prev.curriculum.map((section, idx) => {
-        if (idx === sectionIndex) {
-          return {
-            ...section,
-            lessons: section.lessons.filter(l => l.id !== lessonId)
-          };
-        }
-        return section;
-      });
-      return { ...prev, curriculum: newCurriculum };
-    });
-  };
-
-  const updateSectionTitle = (currIndex: number, newTitle: string) => {
-    setCourseData(prev => ({
-      ...prev,
-      curriculum: prev.curriculum.map((s, idx) =>
-        idx === currIndex ? { ...s, title: newTitle } : s
-      )
-    }));
-  };
-
-  const handleSaveCourse = async () => {
+  const saveCourse = async (publish: boolean = false) => {
     setIsSaving(true);
-    try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+    const actionName = publish ? "publish" : "save";
 
+    try {
+      const result = await saveCourseBuilder(courseData, publish);
+      if (!result.success || !result.course) {
+        throw new Error(result.error || `Failed to ${actionName} course`);
+      }
+
+      const isNew = courseId === null;
+      initCourse(result.course);
       if (isNew) {
-        // In a real app, you would get the newly created courseId from the API response
-        const newCourseId = "1";
-        router.push(`/admin/courses/${newCourseId}`);
+        router.replace(`/admin/courses/${result.course.id}`, { scroll: false });
       } else {
-        alert("Course updated successfully!");
         router.refresh();
       }
+
+      toast.success(
+        publish ? "Course published successfully!" : "Course saved successfully!"
+      );
     } catch (error) {
       console.error(error);
-      alert("Failed to save course");
+      toast.error(
+        error instanceof Error ? error.message : `Failed to ${actionName} course`
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
-  const totalLessons = courseData.curriculum.reduce(
-    (sum, section) => sum + section.lessons.length,
-    0
-  );
+  const handleSaveCourse = () => saveCourse(false);
+  const handlePublishCourse = () => saveCourse(true);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <Header
-          isNew={isNew}
-          isSaving={isSaving}
-          onSave={handleSaveCourse}
-        />
+        <Header onSave={handleSaveCourse} />
 
         <ProgressSteps step={step} setStep={setStep} />
 
@@ -158,8 +101,6 @@ export default function CourseBuilderClient({
           {step === 1 && (
             <CourseInfoStep
               key="step1"
-              courseData={courseData}
-              setCourseData={setCourseData}
               onNext={() => setStep(2)}
             />
           )}
@@ -167,17 +108,6 @@ export default function CourseBuilderClient({
           {step === 2 && (
             <CurriculumStep
               key="step2"
-              isNew={isNew}
-              courseId={courseId}
-              courseData={courseData}
-              expandedCurriculum={expandedCurriculum}
-              totalLessons={totalLessons}
-              onToggleCurriculum={toggleCurriculum}
-              onAddCurriculum={addCurriculum}
-              onAddLesson={addLesson}
-              onDeleteSection={deleteSection}
-              onDeleteLesson={deleteLesson}
-              onUpdateSectionTitle={updateSectionTitle}
               onBack={() => setStep(1)}
               onNext={() => setStep(3)}
             />
@@ -186,12 +116,8 @@ export default function CourseBuilderClient({
           {step === 3 && (
             <QuizStep
               key="step3"
-              isNew={isNew}
-              courseId={courseId}
-              courseData={courseData}
-              isSaving={isSaving}
               onBack={() => setStep(2)}
-              onSave={handleSaveCourse}
+              onPublish={handlePublishCourse}
             />
           )}
         </AnimatePresence>
@@ -199,4 +125,3 @@ export default function CourseBuilderClient({
     </div>
   );
 }
-
