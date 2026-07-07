@@ -31,7 +31,7 @@ export default async function QuizResultsPage(props: { params: Params }) {
   );
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-violet-50 to-white pt-20 pb-20 px-6">
+    <main className="min-h-screen bg-gradient-to-b from-violet-50 to-white pt-5 pb-20 px-6">
       <QuizResultsContainer
         courseId={params.courseId}
         lessonId={params.lessonId}

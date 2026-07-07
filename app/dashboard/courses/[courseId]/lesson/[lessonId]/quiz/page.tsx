@@ -43,7 +43,7 @@ export default async function QuizPage(props: { params: Promise<{ courseId: stri
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white pt-10 pb-20 px-6 mt-20">
+    <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white pt-5 pb-20 px-6">
       <QuizContainer
         quiz={quizData}
         courseId={courseId}

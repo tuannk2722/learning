@@ -10,6 +10,7 @@ import QuizPreviewSidebar from './quiz-preview-sidebar';
 import QuizPreviewModal from './quiz-preview-modal';
 import { Question, QuestionType } from '@/app/lib/definitions/quizzes';
 import { saveQuizBuilder } from '@/app/lib/actions/quiz';
+import { ScrollToTop } from '../../scroll-to-top';
 
 interface QuizBuilderClientProps {
   courseId: string;
@@ -164,6 +165,8 @@ export default function QuizBuilderClient({
         passingScore={passingScore}
         questions={questions}
       />
+
+      <ScrollToTop />
     </div>
   );
 }

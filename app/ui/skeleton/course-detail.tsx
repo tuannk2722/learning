@@ -2,7 +2,7 @@ import { shimmer } from "./skeletons";
 
 export function CourseHeroSectionSkeleton() {
   return (
-    <section className="pt-32 pb-12 px-6">
+    <section className="pt-5 pb-12 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Course Info Skeleton (lg:col-span-2) */}

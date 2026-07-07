@@ -7,10 +7,10 @@ export default function ActivityLogEmpty() {
         <FileQuestion className="w-8 h-8 text-slate-400" />
       </div>
       <h3 className="text-lg font-semibold text-slate-800 mb-1">
-        Không tìm thấy hoạt động nào
+        No activity found.
       </h3>
       <p className="text-sm text-muted-foreground max-w-sm">
-        Thử thay đổi từ khóa tìm kiếm hoặc điều chỉnh lại bộ lọc để tìm kết quả mong muốn.
+        Try changing your search keywords or adjusting the filters to find the results you're looking for.
       </p>
     </div>
   );

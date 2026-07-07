@@ -91,7 +91,7 @@ export default function ActivityLogItem({ log }: ActivityLogItemProps) {
                 </div>
               )}
               <span className="text-sm font-semibold text-indigo-600">
-                {log.user_name ?? "Người dùng ẩn danh"}
+                {log.user_name ?? "Anonymous user"}
               </span>
               {log.user_email && (
                 <span className="text-xs text-muted-foreground hidden sm:inline">
@@ -123,18 +123,17 @@ export default function ActivityLogItem({ log }: ActivityLogItemProps) {
                 )}
                 {typeof metaData.score === "number" && typeof metaData.total === "number" && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
-                    {metaData.score}/{metaData.total} câu
+                    {metaData.score}/{metaData.total} questions
                   </span>
                 )}
                 {typeof metaData.passed === "boolean" && (
                   <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      metaData.passed
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${metaData.passed
                         ? "bg-green-100 text-green-700"
                         : "bg-red-100 text-red-700"
-                    }`}
+                      }`}
                   >
-                    {metaData.passed ? "Đạt" : "Chưa đạt"}
+                    {metaData.passed ? "Passed" : "Failed"}
                   </span>
                 )}
                 {typeof metaData.provider === "string" && (
