@@ -16,15 +16,17 @@ export default async function History() {
   const events = await getActivityHistory(session.user.id);
 
   return (
-    <div className="p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <HistoryHeader />
+    <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
+      <div className="pt-5 pb-12 px-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <HistoryHeader />
 
-        {/* Content with Filter and Timeline */}
-        <Suspense fallback={<HistoryTimelineSkeleton />}>
-          <HistoryFilterBar events={events} />
-        </Suspense>
+          {/* Content with Filter and Timeline */}
+          <Suspense fallback={<HistoryTimelineSkeleton />}>
+            <HistoryFilterBar events={events} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

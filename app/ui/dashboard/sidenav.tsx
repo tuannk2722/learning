@@ -39,7 +39,7 @@ export default function SideNav({ avatarUrl, userName, currentStreak = 0, isAdmi
   if (pathname === '/onboarding') return null;
 
   return (
-    <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-violet-100 shadow-sm">
+    <nav ref={navRef} className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-violet-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
 
         {/* Logo */}

@@ -359,8 +359,6 @@ export async function getUserDetailsForModal(userId: string) {
       quizAverage = Math.round((totalPercent / quizAttempts.length) * 100);
     }
 
-    const assignmentScore = quizAverage > 0 ? Math.min(100, quizAverage + 3) : 85;
-
     const totalEnrolledLessons = courseStats.reduce((sum, c) => sum + (c.totalLessons || 0), 0);
     const completedEnrolledLessons = courseStats.reduce((sum, c) => sum + (c.completedLessons || 0), 0);
     const participation = totalEnrolledLessons > 0
@@ -393,7 +391,6 @@ export async function getUserDetailsForModal(userId: string) {
       studyTime,
       performance: {
         quizAverage,
-        assignmentScore,
         participation,
       }
     };

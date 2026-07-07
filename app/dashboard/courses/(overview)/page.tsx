@@ -19,22 +19,24 @@ export default async function Courses() {
     enrolledCourses.length == 0 ? (
       <AllCoursesPage />
     ) : (
-      <div className="p-6">
-        <div className="max-w-7xl mx-auto">
-          <CourseTitle />
+      <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
+        <div className="pt-5 pb-12 px-6">
+          <div className="max-w-7xl mx-auto">
+            <CourseTitle />
 
-          {/* Enrolled Courses */}
-          <div>
-            <h2 className="text-xl mb-4 flex items-center gap-2">
-              <BookOpen className="w-5 h-5" />
-              Enrolled Courses
-            </h2>
-            <CourseCardEnrolled enrolledCourses={enrolledCourses} />
+            {/* Enrolled Courses */}
+            <div>
+              <h2 className="text-xl mb-4 flex items-center gap-2">
+                <BookOpen className="w-5 h-5" />
+                Enrolled Courses
+              </h2>
+              <CourseCardEnrolled enrolledCourses={enrolledCourses} />
+            </div>
+
+            {/* Available Courses */}
+            <CourseListContainer initialCourses={notEnrolledCourses} categories={categories} />
+
           </div>
-
-          {/* Available Courses */}
-          <CourseListContainer initialCourses={notEnrolledCourses} categories={categories} />
-
         </div>
       </div>
     )

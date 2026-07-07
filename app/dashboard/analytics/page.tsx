@@ -19,33 +19,35 @@ export default async function Analytics() {
   const weeklyXP = userId ? await getWeeklyXP(userId) : [];
 
   return (
-    <div className="p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Title Section */}
-        <AnalyticsTitle />
+    <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
+      <div className="pt-5 pb-12 px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Title Section */}
+          <AnalyticsTitle />
 
-        {/* Stats Grid */}
-        <Suspense fallback={<StatsOverviewSkeleton />}>
-          <AnalyticsStatsGrid stats={stats} />
-        </Suspense>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Weekly Activity */}
-          <Suspense fallback={<ChartSkeleton />}>
-            <AnalyticsWeeklyActivity weeklyActivity={weeklyActivity} />
+          {/* Stats Grid */}
+          <Suspense fallback={<StatsOverviewSkeleton />}>
+            <AnalyticsStatsGrid stats={stats} />
           </Suspense>
 
-          {/* Subject Breakdown */}
-          <Suspense fallback={<ChartSkeleton />}>
-            <AnalyticsWeeklyXP weeklyXP={weeklyXP} />
-          </Suspense>
-        </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Weekly Activity */}
+            <Suspense fallback={<ChartSkeleton />}>
+              <AnalyticsWeeklyActivity weeklyActivity={weeklyActivity} />
+            </Suspense>
 
-        {/* Quiz History */}
-        <div className="mt-8">
-          <Suspense fallback={<QuizAttemptSkeleton />}>
-            <QuizHistorySection attempts={quizHistory} />
-          </Suspense>
+            {/* Subject Breakdown */}
+            <Suspense fallback={<ChartSkeleton />}>
+              <AnalyticsWeeklyXP weeklyXP={weeklyXP} />
+            </Suspense>
+          </div>
+
+          {/* Quiz History */}
+          <div className="mt-8">
+            <Suspense fallback={<QuizAttemptSkeleton />}>
+              <QuizHistorySection attempts={quizHistory} />
+            </Suspense>
+          </div>
         </div>
       </div>
     </div>

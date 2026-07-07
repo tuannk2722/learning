@@ -14,20 +14,22 @@ export default async function Leaderboard() {
   const leaderboardData = await getLeaderboardData(userId);
 
   return (
-    <div className="p-6">
-      <div className="max-w-5xl mx-auto">
-        {/* Title Section */}
-        <LeaderboardTitle />
+    <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
+      <div className="pt-5 pb-12 px-6">
+        <div className="max-w-5xl mx-auto">
+          {/* Title Section */}
+          <LeaderboardTitle />
 
-        {/* Top 3 Podium */}
-        <Suspense fallback={<Top3PodiumSkeleton />}>
-          <Top3Podium leaderboardData={leaderboardData.slice(0, 3)} />
-        </Suspense>
+          {/* Top 3 Podium */}
+          <Suspense fallback={<Top3PodiumSkeleton />}>
+            <Top3Podium leaderboardData={leaderboardData.slice(0, 3)} />
+          </Suspense>
 
-        {/* Full Leaderboard */}
-        <Suspense fallback={<FullLeaderboardSkeleton />}>
-          <FullLeaderboard leaderboardData={leaderboardData} />
-        </Suspense>
+          {/* Full Leaderboard */}
+          <Suspense fallback={<FullLeaderboardSkeleton />}>
+            <FullLeaderboard leaderboardData={leaderboardData} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

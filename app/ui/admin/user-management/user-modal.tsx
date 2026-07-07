@@ -115,8 +115,8 @@ export default function UserModal({ userId, onClose }: UserModalProps) {
                               <div className="text-xs text-gray-500">{course.lessons} lessons completed</div>
                             </div>
                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${course.status === "Completed"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-blue-100 text-blue-700"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-blue-100 text-blue-700"
                               }`}>
                               {course.status}
                             </span>
@@ -181,8 +181,8 @@ export default function UserModal({ userId, onClose }: UserModalProps) {
                         <div
                           key={i}
                           className={`p-4 rounded-xl border text-center flex flex-col items-center justify-center transition-all ${badge.unlocked
-                              ? "border-amber-200 bg-amber-50/50 shadow-sm"
-                              : "border-gray-200 bg-gray-50 opacity-40"
+                            ? "border-amber-200 bg-amber-50/50 shadow-sm"
+                            : "border-gray-200 bg-gray-50 opacity-40"
                             }`}
                           title={badge.desc}
                         >
@@ -256,15 +256,6 @@ export default function UserModal({ userId, onClose }: UserModalProps) {
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{ width: `${data.performance.quizAverage}%` }} />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="text-gray-600">Estimated Assignment</span>
-                        <span className="font-bold text-gray-900">{data.performance.assignmentScore}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full transition-all duration-500" style={{ width: `${data.performance.assignmentScore}%` }} />
                       </div>
                     </div>
                     <div>
