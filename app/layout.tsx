@@ -3,7 +3,7 @@ import { inter } from "./ui/fonts";
 import { Footer } from "./ui/footer";
 import "./ui/global.css";
 import { Navigation } from "./ui/home/navigation";
-import SideNav from "./ui/dashboard/sidenav";
+import ConditionalNav from "./ui/conditional-nav";
 import { getUserById } from "./lib/data/users";
 import { Toaster } from 'sonner';
 import { getEffectiveStreak } from "./lib/actions/streak";
@@ -32,7 +32,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased bg-slate-100`}>
-        {isLoggedIn ? (<SideNav avatarUrl={avatarUrl} userName={userName} currentStreak={currentStreak} isAdmin={isAdmin} />) : (<Navigation />)}
+        {isLoggedIn ? (<ConditionalNav avatarUrl={avatarUrl} userName={userName} currentStreak={currentStreak} isAdmin={isAdmin} />) : (<Navigation />)}
         <main className="min-h-screen">
           {children}
         </main>
