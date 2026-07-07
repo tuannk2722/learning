@@ -4,9 +4,10 @@ import LessonsCompletedChart from '@/app/ui/admin/dashboard/lessons-completed-ch
 import TopCourses from '@/app/ui/admin/dashboard/top-courses';
 import RecentBadges from '@/app/ui/admin/dashboard/recent-badges';
 import { getAdminDashboardData } from '@/app/lib/data/analytics';
+import { EnrollmentTrends } from '../ui/admin/dashboard/enrollment-trends';
 
 export default async function AdminDashboard() {
-  const { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements } =
+  const { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements, enrollmentTrends } =
     await getAdminDashboardData();
 
   return (
@@ -30,10 +31,13 @@ export default async function AdminDashboard() {
           </div>
 
           {/* Bottom Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <TopCourses data={topCourses} />
+          <div className="grid grid-cols-3 gap-6 mb-6">
+            <EnrollmentTrends data={enrollmentTrends} />
             <RecentBadges data={topAchievements} />
           </div>
+
+          <TopCourses data={topCourses} />
+
         </div>
       </div>
     </div>
