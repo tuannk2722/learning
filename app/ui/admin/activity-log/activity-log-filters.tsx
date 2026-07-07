@@ -18,7 +18,6 @@ export default function ActivityLogFilters() {
 
   const [searchValue, setSearchValue] = useState(searchParams.get("userSearch") ?? "");
 
-  // Đồng bộ searchValue khi searchParams trên URL thay đổi (nhấn nút Back/Forward hoặc Clear filters)
   useEffect(() => {
     setSearchValue(searchParams.get("userSearch") ?? "");
   }, [searchParams]);
@@ -33,7 +32,6 @@ export default function ActivityLogFilters() {
           params.delete(key);
         }
       });
-      // Reset to page 1 on filter change
       params.delete("page");
       return params.toString();
     },
@@ -54,7 +52,7 @@ export default function ActivityLogFilters() {
   };
 
   const handleReset = () => {
-    setSearchValue(""); // Clear input state
+    setSearchValue("");
     startTransition(() => {
       router.push(pathname);
     });

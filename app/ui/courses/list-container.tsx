@@ -6,6 +6,7 @@ import { Search } from "lucide-react";
 import { CourseFilter } from "./course-filter";
 import { CourseGrid } from "./courseGrid";
 import { CourseListing, Category } from "@/app/lib/definitions/courses";
+import { removeAccents } from "@/app/lib/utils/removeAccents";
 
 interface CourseListContainerProps {
   initialCourses: CourseListing[];
@@ -18,8 +19,8 @@ export function CourseListContainer({ initialCourses, categories }: CourseListCo
   const [selectedLevel, setSelectedLevel] = useState("All");
 
   const filteredCourses = initialCourses.filter((course) => {
-    const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = removeAccents(course.name).includes(removeAccents(searchQuery)) ||
+      removeAccents(course.description).includes(removeAccents(searchQuery));
 
     const matchesCategory = selectedCategory === "All" || course.category_name === selectedCategory;
     const matchesLevel = selectedLevel === "All" || course.level === selectedLevel;

@@ -4,6 +4,7 @@ import { CourseFilter } from './course-filter';
 import { CourseRow } from './course-row';
 import { CourseListing } from '@/app/lib/definitions/courses';
 import { Pagination } from '../../pagination';
+import { removeAccents } from '@/app/lib/utils/removeAccents';
 
 interface CourseListProps {
   initialCourses: CourseListing[];
@@ -15,8 +16,8 @@ export default function CourseList({ initialCourses }: CourseListProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredCourses = initialCourses.filter(course => {
-    const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.category_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = removeAccents(course.name).includes(removeAccents(searchQuery)) ||
+      removeAccents(course.category_name).includes(removeAccents(searchQuery));
 
     const matchesLevel = selectedLevel === "All" || course.level === selectedLevel;
     return matchesSearch && matchesLevel;
