@@ -191,47 +191,35 @@ export async function getAdminDashboardData() {
 
   const [
     totalUsersResult,
-    activeUsersResult,
     publishedCoursesResult,
     badgesAwardedResult,
     lessonsCompletedResult,
-    studyTimeResult,
     dauResult,
     weeklyLessonsResult,
     topCoursesResult,
     topAchievementsResult,
+    enrollmentTrendsResult,
   ] = await Promise.all([
     // 1. Tổng số user đã onboarded
     db.select({ count: sql<number>`cast(count(*) as int)` })
       .from(users)
       .where(eq(users.is_onboarded, true)),
 
-    // 2. Active users trong 7 ngày qua (có last_study_date)
-    db.select({ count: sql<number>`cast(count(*) as int)` })
-      .from(users)
-      .where(sql`${users.last_study_date} >= CURRENT_DATE - INTERVAL '7 days'`),
-
-    // 3. Khóa học đã published
+    // 2. Khóa học đã published
     db.select({ count: sql<number>`cast(count(*) as int)` })
       .from(courses)
       .where(eq(courses.status, 'published')),
 
-    // 4. Tổng số lần unlock achievement (badges được trao)
+    // 3. Tổng số lần unlock achievement
     db.select({ count: sql<number>`cast(count(*) as int)` })
       .from(user_achievements),
 
-    // 5. Tổng số lessons đã hoàn thành
+    // 4. Tổng số lessons đã hoàn thành
     db.select({ count: sql<number>`cast(count(*) as int)` })
       .from(user_lesson_progress)
       .where(eq(user_lesson_progress.status, 'completed')),
 
-    // 6. Tổng giờ học của toàn platform
-    db.select({ minutes: sql<number>`sum(${lessons.duration_minutes})` })
-      .from(user_lesson_progress)
-      .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
-      .where(eq(user_lesson_progress.status, 'completed')),
-
-    // 7. DAU chart: đếm user login theo ngày từ activity_logs
+    // 5. DAU chart: đếm user login theo ngày từ activity_logs
     db.select({
       date: sql<string>`DATE(${activity_logs.created_at})`,
       users: sql<number>`cast(count(distinct ${activity_logs.user_id}) as int)`,
@@ -243,7 +231,7 @@ export async function getAdminDashboardData() {
       ))
       .groupBy(sql`DATE(${activity_logs.created_at})`),
 
-    // 8. Lessons Completed chart: số lesson hoàn thành theo ngày
+    // 6. Lessons Completed chart: số lesson hoàn thành theo ngày
     db.select({
       date: sql<string>`DATE(${user_lesson_progress.completed_at})`,
       count: sql<number>`cast(count(*) as int)`,
@@ -255,23 +243,21 @@ export async function getAdminDashboardData() {
       ))
       .groupBy(sql`DATE(${user_lesson_progress.completed_at})`),
 
-    // 9. Top Courses: tổng enrollments + completion rate
+    // 7. Top Courses: tổng enrollments + completion rate
     db.select({
       id: courses.id,
       name: courses.name,
-      iconName: courses.icon_name,
-      themeColor: courses.theme_color,
       enrollments: sql<number>`cast(count(${enrollments.user_id}) as int)`,
       completions: sql<number>`cast(sum(case when ${enrollments.status} = 'COMPLETED' then 1 else 0 end) as int)`,
+      rating: courses.rating,
     })
       .from(courses)
       .leftJoin(enrollments, eq(courses.id, enrollments.course_id))
       .where(eq(courses.status, 'published'))
       .groupBy(courses.id, courses.name)
-      .orderBy(desc(sql`count(${enrollments.user_id})`))
-      .limit(4),
+      .orderBy(desc(sql`count(${enrollments.user_id})`)),
 
-    // 10. Recent Badges: achievement được unlock nhiều nhất
+    // 8. Recent Badges: achievement được unlock nhiều nhất
     db.select({
       badge: achievements.title,
       description: achievements.description,
@@ -284,23 +270,38 @@ export async function getAdminDashboardData() {
       .groupBy(achievements.id, achievements.title)
       .orderBy(desc(sql`count(${user_achievements.user_id})`))
       .limit(4),
+
+    // 9. Enrollment Trends: thống kê enrollments, completions, drop-offs theo tháng (6 tháng gần nhất)
+    db.select({
+      month: sql<string>`to_char(${enrollments.enrolled_at}, 'Mon')`,
+      monthIndex: sql<number>`cast(extract(month from ${enrollments.enrolled_at}) as int)`,
+      yearVal: sql<number>`cast(extract(year from ${enrollments.enrolled_at}) as int)`,
+      enrollments: sql<number>`cast(count(*) as int)`,
+      completions: sql<number>`cast(sum(case when ${enrollments.status} = 'COMPLETED' then 1 else 0 end) as int)`,
+    })
+      .from(enrollments)
+      .where(sql`${enrollments.enrolled_at} >= date_trunc('month', CURRENT_DATE) - INTERVAL '5 months'`)
+      .groupBy(
+        sql`to_char(${enrollments.enrolled_at}, 'Mon')`,
+        sql`extract(month from ${enrollments.enrolled_at})`,
+        sql`extract(year from ${enrollments.enrolled_at})`,
+      )
+      .orderBy(
+        sql`extract(year from ${enrollments.enrolled_at})`,
+        sql`extract(month from ${enrollments.enrolled_at})`,
+      ),
   ]);
 
   const totalUsers = totalUsersResult[0]?.count ?? 0;
-  const activeUsers = activeUsersResult[0]?.count ?? 0;
   const publishedCourses = publishedCoursesResult[0]?.count ?? 0;
   const badgesAwarded = badgesAwardedResult[0]?.count ?? 0;
   const lessonsCompleted = lessonsCompletedResult[0]?.count ?? 0;
-  const totalMinutes = Number(studyTimeResult[0]?.minutes ?? 0);
-  const studyHours = (totalMinutes / 60).toFixed(1);
 
   const stats = [
-    { label: 'Total Users', value: totalUsers.toLocaleString(), change: '', icon: 'users', color: 'text-blue-600', bg: 'bg-blue-100' },
-    { label: 'Active Users (7 days)', value: activeUsers.toLocaleString(), change: '', icon: 'zap', color: 'text-green-600', bg: 'bg-green-100' },
-    { label: 'Courses Published', value: publishedCourses.toLocaleString(), change: '', icon: 'book-open', color: 'text-purple-600', bg: 'bg-purple-100' },
-    { label: 'Badges Awarded', value: badgesAwarded.toLocaleString(), change: '', icon: 'trophy', color: 'text-yellow-600', bg: 'bg-yellow-100' },
-    { label: 'Lessons Completed', value: lessonsCompleted.toLocaleString(), change: '', icon: 'target', color: 'text-indigo-600', bg: 'bg-indigo-100' },
-    { label: 'Study Time', value: `${studyHours}h`, change: '', icon: 'clock', color: 'text-orange-600', bg: 'bg-orange-100' },
+    { label: 'Total Users', value: totalUsers.toLocaleString(), icon: 'users', color: 'text-blue-600', bg: 'bg-blue-100' },
+    { label: 'Courses Published', value: publishedCourses.toLocaleString(), icon: 'book-open', color: 'text-purple-600', bg: 'bg-purple-100' },
+    { label: 'Achievements Awarded', value: badgesAwarded.toLocaleString(), icon: 'trophy', color: 'text-yellow-600', bg: 'bg-yellow-100' },
+    { label: 'Lessons Completed', value: lessonsCompleted.toLocaleString(), icon: 'target', color: 'text-indigo-600', bg: 'bg-indigo-100' },
   ];
 
   const dailyActiveUsers = last7Days.map(({ dayName, dateString }) => {
@@ -316,8 +317,8 @@ export async function getAdminDashboardData() {
   const topCourses = topCoursesResult.map((c) => ({
     name: c.name,
     enrollments: c.enrollments,
-    iconName: c.iconName ?? 'Book',
-    themeColor: c.themeColor ?? 'blue',
+    completionRate: Number((c.completions / c.enrollments * 100).toFixed(1)),
+    rating: c.rating ?? '0',
   }));
 
   const topAchievements = topAchievementsResult.map(b => ({
@@ -328,5 +329,11 @@ export async function getAdminDashboardData() {
     awarded: b.awarded,
   }));
 
-  return { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements };
+  const enrollmentTrends = enrollmentTrendsResult.map(r => ({
+    month: r.month,
+    enrollments: r.enrollments,
+    completions: r.completions,
+  }));
+
+  return { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements, enrollmentTrends };
 }
