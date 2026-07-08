@@ -65,6 +65,14 @@ export const authConfig = {
         // Gán role dựa trên email
         const email = user.email ?? '';
         token.role = ADMIN_EMAILS.includes(email) ? 'admin' : 'user';
+
+        // Remember me: 30 ngày nếu tick, 1 ngày nếu không
+        const rememberMe = (user as any).rememberMe === true;
+        const maxAge = rememberMe
+          ? 30 * 24 * 60 * 60  // 30 ngày
+          : 24 * 60 * 60;      // 1 ngày
+        token.exp = Math.floor(Date.now() / 1000) + maxAge;
+        token.rememberMe = rememberMe;
       }
       if (trigger === "update" && session) {
         token.is_onboarded = session.user?.is_onboarded ?? session.is_onboarded;

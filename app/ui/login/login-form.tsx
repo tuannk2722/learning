@@ -14,6 +14,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
   const [isPending, setIsPending] = useState(false);
 
@@ -23,6 +24,9 @@ export function LoginForm() {
     setErrorMessage(undefined);
 
     const formData = new FormData(e.currentTarget);
+    // Ghi đè rememberMe bằng giá trị string vì FormData chỉ nhận string/Blob
+    formData.set('rememberMe', String(rememberMe));
+
     const result = await authenticate(undefined, formData);
 
     if (result) {
@@ -104,8 +108,13 @@ export function LoginForm() {
         </div>
 
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500" />
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 cursor-pointer"
+            />
             <span className="text-sm text-gray-600">Remember me</span>
           </label>
           <Link href="/forgot-password" className="text-sm text-violet-600 hover:text-violet-700 font-medium">

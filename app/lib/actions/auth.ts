@@ -47,7 +47,15 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', formData);
+    // Đọc rememberMe từ form và truyền tường minh vào credentials
+    // để authorize callback → jwt callback có thể set thời hạn session phù hợp
+    const rememberMe = formData.get('rememberMe') === 'true';
+    await signIn('credentials', {
+      email: formData.get('email'),
+      password: formData.get('password'),
+      rememberMe: String(rememberMe),
+      redirect: false,
+    });
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

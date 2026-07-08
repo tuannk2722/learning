@@ -25,7 +25,13 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           if (!user || !user.password_hash) return null;
           const passwordsMatch = await bcrypt.compare(password, user.password_hash);
 
-          if (passwordsMatch) return user;
+          if (passwordsMatch) {
+            // Gắn rememberMe vào user object để jwt callback có thể đọc
+            return {
+              ...user,
+              rememberMe: (credentials as any).rememberMe === 'true',
+            };
+          }
         }
 
         return null;
