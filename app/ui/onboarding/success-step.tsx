@@ -63,14 +63,14 @@ export function SuccessStep({ nickname, avatarUrl, onFinish }: SuccessStepProps)
         Welcome, {nickname}!
       </h2>
       <p className="text-lg text-gray-600 mb-10 max-w-md">
-        Your profile is ready. You've earned the <b>Pioneer Badge</b> and 100 XP to start your learning journey.
+        Your profile is ready. You've earned the <b>Explorer Started</b> and 100 XP to start your learning journey.
       </p>
 
       <button
         onClick={onFinish}
         className="w-full max-w-xs py-4 bg-gray-900 text-white rounded-2xl font-bold text-lg hover:shadow-2xl hover:bg-black transition-all flex items-center justify-center gap-2 group transform hover:-translate-y-1 relative z-30"
       >
-        Go to Courses
+        Start learning now
         <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
       </button>
     </motion.div>

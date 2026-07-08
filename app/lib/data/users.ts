@@ -212,7 +212,7 @@ export async function getTop1User() {
     const lessonsResult = await db
       .select({
         count: sql<number>`count(*)`,
-        minutes: sql<number>`sum(${lessons.duration_minutes})`
+        minutes: sql<number>`sum(${lessons.duration_minutes})`,
       })
       .from(user_lesson_progress)
       .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
@@ -221,12 +221,20 @@ export async function getTop1User() {
         eq(user_lesson_progress.status, 'completed')
       ));
 
+    const totalLesson = await db
+      .select({
+        count: sql<number>`count(*)`
+      })
+      .from(lessons);
+
     const lessonsCompleted = Number(lessonsResult[0]?.count) || 0;
     const studyHours = Math.round((Number(lessonsResult[0]?.minutes) || 0) / 60);
     const levelObj = calculateLevel(user.total_xp || 0);
     const initials = user.name
       ? user.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
       : 'U';
+    const totalLessons = Number(totalLesson[0]?.count) || 0;
+    const lessonProgress = totalLessons > 0 ? Math.round((lessonsCompleted / totalLessons) * 100) : 0;
 
     return {
       avatar: user.avatar_url || initials,
@@ -234,10 +242,9 @@ export async function getTop1User() {
       level: levelObj.level,
       total_xp: user.total_xp || 0,
       longest_streak: user.longest_streak || 0,
-      current_streak: user.current_streak || 0,
       total_study_time: studyHours,
       lesson_completed: lessonsCompleted,
-      level_progress: levelObj.progress,
+      lesson_progress: lessonProgress,
     };
   } catch (error) {
     console.error('Failed to get top 1 user:', error);

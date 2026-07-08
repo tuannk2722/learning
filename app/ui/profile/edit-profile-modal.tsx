@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Check, Loader2 } from 'lucide-react';
 import { User } from '@/app/lib/definitions/user';
 import { updateUserProfile } from '@/app/lib/actions/users';
-import { uploadAvatar } from '@/app/lib/actions/upload';
 import { toast } from 'sonner';
 
 import { AvatarSelector } from '@/app/ui/avatar-selector';
@@ -21,7 +20,7 @@ export function EditProfileModal({ isOpen, onClose, userInfo }: EditProfileModal
   const [bio, setBio] = useState(userInfo.bio || '');
   const [location, setLocation] = useState(userInfo.location || '');
   const [avatarUrl, setAvatarUrl] = useState(userInfo.avatar_url || '');
-  
+
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -66,7 +65,7 @@ export function EditProfileModal({ isOpen, onClose, userInfo }: EditProfileModal
           className="fixed inset-0 bg-black/40 backdrop-blur-sm"
           onClick={onClose}
         />
-        
+
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -85,7 +84,7 @@ export function EditProfileModal({ isOpen, onClose, userInfo }: EditProfileModal
 
           <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
             <form id="edit-profile-form" onSubmit={handleSubmit} className="space-y-6">
-              
+
               <AvatarSelector
                 avatarUrl={avatarUrl}
                 setAvatarUrl={setAvatarUrl}

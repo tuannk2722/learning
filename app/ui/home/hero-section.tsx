@@ -94,12 +94,12 @@ export function HeroSection({ topUser }: { topUser?: any }) {
               </div>
 
               <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl p-6 text-white">
-                <div className="text-sm mb-2 opacity-80">Level Progress</div>
-                <div className="text-3xl font-bold mb-4">{Math.round(topUser.level_progress)}%</div>
+                <div className="text-sm mb-2 opacity-80">Lessons Progress</div>
+                <div className="text-3xl font-bold mb-4">{Math.round(topUser.lesson_progress)}%</div>
                 <div className="h-2 bg-white/20 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${topUser.level_progress}%` }}
+                    animate={{ width: `${topUser.lesson_progress}%` }}
                     transition={{ duration: 1.5, delay: 0.8 }}
                     className="h-full bg-white rounded-full"
                   />
@@ -109,7 +109,7 @@ export function HeroSection({ topUser }: { topUser?: any }) {
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-orange-50 rounded-xl p-4 text-center">
                   <div className="text-2xl mb-1">{topUser.longest_streak}</div>
-                  <div className="text-xs text-muted-foreground">Max Streak</div>
+                  <div className="text-xs text-muted-foreground">Longest Streak</div>
                 </div>
                 <div className="bg-blue-50 rounded-xl p-4 text-center">
                   <div className="text-2xl mb-1">{topUser.total_study_time}h</div>

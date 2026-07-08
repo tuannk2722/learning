@@ -2,7 +2,7 @@ import StatCards from '@/app/ui/admin/dashboard/stat-cards';
 import ActiveUsersChart from '@/app/ui/admin/dashboard/active-users-chart';
 import LessonsCompletedChart from '@/app/ui/admin/dashboard/lessons-completed-chart';
 import TopCourses from '@/app/ui/admin/dashboard/top-courses';
-import RecentBadges from '@/app/ui/admin/dashboard/recent-badges';
+import RecentBadges from '@/app/ui/admin/dashboard/recent-achievemnts';
 import { getAdminDashboardData } from '@/app/lib/data/analytics';
 import { EnrollmentTrends } from '../ui/admin/dashboard/enrollment-trends';
 

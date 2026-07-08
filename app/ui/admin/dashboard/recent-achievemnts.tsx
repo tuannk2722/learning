@@ -3,15 +3,15 @@ import { motion } from 'motion/react';
 import { DynamicIcon } from '../../dynamic-icon';
 import { getColorClasses } from '@/app/lib/utils/color-palette';
 
-interface BadgeData {
-  badge: string;
+interface AchievementData {
+  name: string;
   awarded: number;
   description: string;
   iconName: string;
   themeColor: string;
 }
 
-export default function TopAchievements({ data }: { data: BadgeData[] }) {
+export default function TopAchievements({ data }: { data: AchievementData[] }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -26,7 +26,7 @@ export default function TopAchievements({ data }: { data: BadgeData[] }) {
           const { gradient } = getColorClasses(item.themeColor);
           return (
             <motion.div
-              key={item.badge}
+              key={item.name}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.7 + index * 0.1 }}
@@ -37,7 +37,7 @@ export default function TopAchievements({ data }: { data: BadgeData[] }) {
                   <DynamicIcon name={item.iconName} className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-medium">{item.badge}</h3>
+                  <h3 className="font-medium">{item.name}</h3>
                   <p className="text-sm text-muted-foreground">{item.description}</p>
                 </div>
               </div>

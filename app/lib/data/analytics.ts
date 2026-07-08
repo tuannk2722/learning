@@ -257,9 +257,9 @@ export async function getAdminDashboardData() {
       .groupBy(courses.id, courses.name)
       .orderBy(desc(sql`count(${enrollments.user_id})`)),
 
-    // 8. Recent Badges: achievement được unlock nhiều nhất
+    // 8. Recent Achievements: achievement được unlock nhiều nhất
     db.select({
-      badge: achievements.title,
+      name: achievements.title,
       description: achievements.description,
       iconName: achievements.icon_name,
       themeColor: achievements.theme_color,
@@ -269,7 +269,7 @@ export async function getAdminDashboardData() {
       .innerJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
       .groupBy(achievements.id, achievements.title)
       .orderBy(desc(sql`count(${user_achievements.user_id})`))
-      .limit(4),
+      .limit(3),
 
     // 9. Enrollment Trends: thống kê enrollments, completions, drop-offs theo tháng (6 tháng gần nhất)
     db.select({
@@ -322,7 +322,7 @@ export async function getAdminDashboardData() {
   }));
 
   const topAchievements = topAchievementsResult.map(b => ({
-    badge: b.badge,
+    name: b.name,
     description: b.description ?? '',
     iconName: b.iconName ?? 'Trophy',
     themeColor: b.themeColor ?? 'gray',
