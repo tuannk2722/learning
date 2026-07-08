@@ -22,10 +22,6 @@ export function ContinueCourses({ data }: { data: CourseListing[] }) {
           </div>
           <h2 className="text-2xl font-bold">Continue Learning</h2>
         </div>
-        <Link href="/dashboard/courses" className="text-violet-600 hover:text-violet-700 flex items-center gap-1 text-sm font-medium">
-          View All
-          <ChevronRight className="w-4 h-4" />
-        </Link>
       </div>
 
       <div className="space-y-6">
