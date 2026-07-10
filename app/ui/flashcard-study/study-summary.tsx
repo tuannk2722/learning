@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
 
 interface StudySummaryProps {
+  trackProgress: boolean;
   set: FlashcardSet;
   correct: number;
   incorrect: number;
@@ -13,7 +14,7 @@ interface StudySummaryProps {
   onRestart: () => void;
 }
 
-export function StudySummary({ set, correct, incorrect, total, onRestart }: StudySummaryProps) {
+export function StudySummary({ trackProgress, set, correct, incorrect, total, onRestart }: StudySummaryProps) {
   const pct = Math.round((correct / total) * 100);
   const isPerfect = correct === total;
 
@@ -27,19 +28,12 @@ export function StudySummary({ set, correct, incorrect, total, onRestart }: Stud
           className="bg-white rounded-3xl border border-gray-100 shadow-xl p-10 w-full max-w-md text-center"
         >
           {/* Result icon */}
-          <div className={`w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center ${isPerfect ? "bg-amber-100" : pct >= 70 ? "bg-violet-100" : "bg-gray-100"
-            }`}>
-            {isPerfect ? (
-              <Trophy className="w-10 h-10 text-amber-500" />
-            ) : pct >= 70 ? (
-              <CheckCircle2 className="w-10 h-10 text-violet-500" />
-            ) : (
-              <BarChart3 className="w-10 h-10 text-gray-400" />
-            )}
+          <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center bg-violet-100">
+            <CheckCircle2 className="w-10 h-10 text-violet-500" />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {isPerfect ? "Perfect! 🎉" : pct >= 70 ? "Great Job! 💪" : "Keep practicing! 📚"}
+            {isPerfect ? "Perfect! 🎉" : pct >= 70 ? "Great Job! 💪" : "Try Again! 📚"}
           </h2>
           <p className="text-gray-500 text-sm mb-8">
             You've completed <strong className="text-gray-900">{set.title}</strong>
@@ -62,34 +56,37 @@ export function StudySummary({ set, correct, incorrect, total, onRestart }: Stud
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-bold text-gray-900">{pct}%</span>
-              <span className="text-xs text-gray-400">accuracy</span>
+              <span className="text-xs text-gray-400">{trackProgress ? "accuracy" : "completed"}</span>
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-emerald-500">{correct}</div>
-              <div className="text-xs text-gray-400 mt-0.5">Mastered</div>
+          {trackProgress &&
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-500">{correct}</div>
+                <div className="text-xs text-gray-400 mt-0.5">Mastered</div>
+              </div>
+              <div className="text-center border-x border-gray-100">
+                <div className="text-2xl font-bold text-gray-700">{total}</div>
+                <div className="text-xs text-gray-400 mt-0.5">Total Cards</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-red-400">{incorrect}</div>
+                <div className="text-xs text-gray-400 mt-0.5">To Review</div>
+              </div>
             </div>
-            <div className="text-center border-x border-gray-100">
-              <div className="text-2xl font-bold text-gray-700">{total}</div>
-              <div className="text-xs text-gray-400 mt-0.5">Total Cards</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-red-400">{incorrect}</div>
-              <div className="text-xs text-gray-400 mt-0.5">To Review</div>
-            </div>
-          </div>
+          }
 
           {/* Buttons */}
           <div className="flex flex-col gap-3">
-            <button
-              // onClick={onRestart}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-violet-500/25 transition-all"
-            >
-              Focus on {incorrect} Still learning cards
-            </button>
+            {trackProgress && incorrect > 0 &&
+              <button
+                // onClick={onRestart}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-violet-500/25 transition-all"
+              >
+                Focus on {incorrect} Still learning cards
+              </button>}
             <button
               onClick={onRestart}
               className="flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-600 rounded-2xl font-medium hover:bg-gray-50 transition-colors"

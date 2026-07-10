@@ -61,7 +61,7 @@ export function BuilderCardItem({
               onChange={(e) => onUpdate(card.id, "front", e.target.value)}
               placeholder="E.g: Photosynthesis"
               rows={2}
-              className="rounded-xl w-full px-0 py-2 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-100 focus:border-violet-300 transition-colors"
+              className="rounded-xl w-full px-4 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-100 focus:border-violet-300 transition-colors"
             />
             <label className="text-xs font-semibold text-gray-300 uppercase tracking-widest mt-1 block">
               Term
@@ -76,7 +76,7 @@ export function BuilderCardItem({
                 onChange={(e) => onUpdate(card.id, "back", e.target.value)}
                 placeholder="E.g: abc"
                 rows={2}
-                className="rounded-xl w-full px-0 py-2 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-100 focus:border-violet-300 transition-colors"
+                className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-100 focus:border-violet-300 transition-colors"
               />
               <label className="text-xs font-semibold text-gray-300 uppercase tracking-widest mt-1 block">
                 Definition

@@ -131,6 +131,7 @@ export default function FlashcardStudyClient({ set }: Props) {
   if (showSummary) {
     return (
       <StudySummary
+        trackProgress={trackProgress}
         set={set}
         correct={correct}
         incorrect={incorrect}
@@ -166,7 +167,7 @@ export default function FlashcardStudyClient({ set }: Props) {
         )}
 
         {/* Sliding card wrapper — key changes only on index change, not on flip */}
-        <div className="w-full max-w-2xl overflow-hidden">
+        <div className="rounded-3xl w-full max-w-2xl overflow-hidden">
           <AnimatePresence mode="wait" custom={slideDirection}>
             <motion.div
               key={currentIndex}
