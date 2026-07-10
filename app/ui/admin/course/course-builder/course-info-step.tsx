@@ -120,15 +120,13 @@ export default function CourseInfoStep({
                 {COLOR_PALETTE.map((option) => (
                   <button
                     key={option.name}
-                    onClick={() => updateCourseData(prev => ({ ...prev, theme_color: option.name }))}
-                    className={`p-3 rounded-xl border-2 transition-all ${courseData.theme_color === option.name
+                    className={`w-10 h-10 rounded-full ${option.bg} border-2 ${courseData.theme_color === option.name
                       ? "border-violet-500"
                       : "border-gray-200 hover:border-violet-300"
                       }`}
-                    type="button"
-                  >
-                    <div className={`h-8 rounded-lg ${option.bg}`} />
-                  </button>
+                    type='button'
+                    onClick={() => updateCourseData(prev => ({ ...prev, theme_color: option.name }))}
+                  />
                 ))}
               </div>
             </div>

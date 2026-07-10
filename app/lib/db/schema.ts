@@ -213,3 +213,39 @@ export const activity_logs = pgTable('activity_logs', {
   metadata: jsonb('metadata'),
   created_at: timestamp('created_at').defaultNow(),
 });
+
+// 17. BẢNG FLASHCARD_SETS (Bộ thẻ flashcard)
+export const flashcard_sets = pgTable('flashcard_sets', {
+  id: serial('id').primaryKey(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  category_id: integer('category_id').references(() => categories.id, { onDelete: 'set null' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  is_public: boolean('is_public').default(false).notNull(),
+  tags: jsonb('tags').default('[]'),
+  card_count: integer('card_count').default(0).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// 18. BẢNG FLASHCARDS (Từng thẻ flashcard)
+export const flashcards = pgTable('flashcards', {
+  id: serial('id').primaryKey(),
+  set_id: integer('set_id').notNull().references(() => flashcard_sets.id, { onDelete: 'cascade' }),
+  term: text('term').notNull(),
+  definition: text('definition').notNull(),
+  image_url: text('image_url'),
+  order_index: integer('order_index').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+});
+
+// 19. BẢNG USER_FLASHCARD_PROGRESS (Tiến độ học flashcard)
+export const user_flashcard_progress = pgTable('user_flashcard_progress', {
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  flashcard_id: integer('flashcard_id').notNull().references(() => flashcards.id, { onDelete: 'cascade' }),
+  set_id: integer('set_id').notNull().references(() => flashcard_sets.id, { onDelete: 'cascade' }),
+  status: varchar('status', { length: 50 }).default('learning').notNull(),
+  last_reviewed_at: timestamp('last_reviewed_at').defaultNow().notNull(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.user_id, t.flashcard_id] }),
+}));

@@ -4,7 +4,13 @@ import { usePathname } from "next/navigation";
 
 export function Footer() {
   const pathname = usePathname();
-  if (pathname === '/onboarding') return null;
+  const shouldHideFooter =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/admin') ||
+    pathname === '/onboarding' ||
+    ['/login', '/signup', '/forgot-password', '/reset-password'].includes(pathname);
+
+  if (shouldHideFooter) return null;
   return (
     <footer className="py-12 px-6 bg-gray-50 border-t border-gray-200">
       <div className="max-w-7xl mx-auto text-center text-gray-600">
