@@ -65,7 +65,7 @@ export const sampleSets: FlashcardSet[] = [
     lastStudied: "2024-07-06",
     mastered: 14,
     tags: ["Tiếng Nhật", "JLPT", "N5"],
-    color: "from-violet-500 to-purple-600",
+    color: "blue",
   },
   {
     id: "react-concepts",
@@ -90,7 +90,7 @@ export const sampleSets: FlashcardSet[] = [
     lastStudied: "2024-07-07",
     mastered: 8,
     tags: ["React", "JavaScript", "Frontend"],
-    color: "from-cyan-500 to-blue-600",
+    color: "violet",
   },
   {
     id: "english-ielts",
@@ -111,7 +111,7 @@ export const sampleSets: FlashcardSet[] = [
     lastStudied: "2024-06-30",
     mastered: 3,
     tags: ["Tiếng Anh", "IELTS", "Từ vựng"],
-    color: "from-emerald-500 to-teal-600",
+    color: "emerald",
   },
   {
     id: "python-basics",
@@ -130,7 +130,7 @@ export const sampleSets: FlashcardSet[] = [
     lastStudied: undefined,
     mastered: 0,
     tags: ["Python", "Lập trình"],
-    color: "from-amber-500 to-orange-600",
+    color: "orange",
   },
 ];
 

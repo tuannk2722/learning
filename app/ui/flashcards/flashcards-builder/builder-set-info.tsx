@@ -1,13 +1,17 @@
 'use client';
 
+import { COLOR_PALETTE } from "@/app/lib/utils/color-palette";
 import { Globe, Lock } from "lucide-react";
+import { motion } from "motion/react";
 
 interface BuilderSetInfoProps {
   title: string;
   description: string;
   isPublic: boolean;
+  themeColor: string;
   onTitleChange: (val: string) => void;
   onDescriptionChange: (val: string) => void;
+  setThemeColor: (val: string) => void;
   onTogglePublic: () => void;
 }
 
@@ -15,8 +19,10 @@ export function BuilderSetInfo({
   title,
   description,
   isPublic,
+  themeColor,
   onTitleChange,
   onDescriptionChange,
+  setThemeColor,
   onTogglePublic,
 }: BuilderSetInfoProps) {
   return (
@@ -50,7 +56,7 @@ export function BuilderSetInfo({
         </div>
       </div>
 
-      <div>
+      <div className="mb-4">
         <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
           Description
         </label>
@@ -64,6 +70,43 @@ export function BuilderSetInfo({
           />
         </div>
       </div>
+
+      <div className="mb-4">
+        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+          Tags
+        </label>
+        <div>
+          <input
+            type="text"
+            placeholder="Write tags with commas"
+            // value={tags}
+            // onChange={(e) => onTagsChange(e.target.value)}
+            className="w-full px-4 py-3 text-sm text-gray-700 bg-transparent rounded-xl focus:outline-none resize-none placeholder:text-gray-300"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+          Theme Color
+        </label>
+        <div>
+          <div className="grid grid-cols-10 gap-2">
+            {COLOR_PALETTE.map((option) => (
+              <button
+                key={option.name}
+                className={`w-10 h-10 rounded-full ${option.bg} border-2 ${themeColor === option.name
+                  ? "border-violet-500"
+                  : "border-gray-200 hover:border-violet-300"
+                  }`}
+                type='button'
+                onClick={() => setThemeColor(option.name)}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 }

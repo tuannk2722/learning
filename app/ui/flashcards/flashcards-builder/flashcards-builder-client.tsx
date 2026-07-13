@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowLeft, Plus, Check, BookOpen } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
 import { BuilderSetInfo } from "./builder-set-info";
 import { BuilderToolbar } from "./builder-toolbar";
 import { BuilderSearchBar } from "./builder-search-bar";
 import { BuilderCardItem, type EditableCard } from "./builder-card-item";
+import FlashcardBuilderHeader from "./builder-header";
 
 function generateId() {
   return Math.random().toString(36).slice(2, 9);
@@ -32,6 +32,8 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
   const [title, setTitle] = useState(existingSet?.title ?? "");
   const [description, setDescription] = useState(existingSet?.description ?? "");
   const [isPublic, setIsPublic] = useState(existingSet?.isPublic ?? true);
+  const [themeColor, setThemeColor] = useState(existingSet?.color ?? "blue");
+  const [tags, setTages] = useState(existingSet?.tags.map((tag) => tag.tagName).join(",") ?? "");
 
   // Cards state
   const [cards, setCards] = useState<EditableCard[]>(
@@ -98,48 +100,22 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20">
 
         {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/dashboard/flashcards"
-              className="flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 bg-white text-gray-500 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 transition-all shadow-sm"
-              title="Back"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <div>
-                <h1 className="text-lg font-bold text-gray-900 leading-none">
-                  {isEditing ? "Edit Flashcard Set" : "Create New Flashcard Set"}
-                </h1>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {isEditing ? existingSet.title : "Flashcards"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Save button */}
-          <motion.button
-            onClick={handleSave}
-            whileTap={{ scale: 0.97 }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all ${saved
-              ? "bg-emerald-500 text-white shadow-emerald-200"
-              : "bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:shadow-lg hover:shadow-violet-500/30 hover:scale-105"
-              }`}
-          >
-            {saved ? <Check className="w-4 h-4" /> : null}
-            {saved ? "Saved!" : isEditing ? "Save Changes" : "Finish"}
-          </motion.button>
-        </div>
+        <FlashcardBuilderHeader
+          title={title}
+          isEditing={isEditing}
+          handleSave={handleSave}
+          saved={saved}
+        />
 
         {/* Set Info Section */}
         <BuilderSetInfo
           title={title}
           description={description}
           isPublic={isPublic}
+          themeColor={themeColor}
           onTitleChange={setTitle}
           onDescriptionChange={setDescription}
+          setThemeColor={setThemeColor}
           onTogglePublic={() => setIsPublic((p) => !p)}
         />
 

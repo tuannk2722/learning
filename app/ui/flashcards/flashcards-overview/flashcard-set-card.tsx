@@ -5,6 +5,7 @@ import { Clock, Play } from "lucide-react";
 import Link from "next/link";
 import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
 import ContextMenu from "./context-menu";
+import { getColorClasses } from "@/app/lib/utils/color-palette";
 
 interface Props {
   set: FlashcardSet;
@@ -21,6 +22,7 @@ const user = {
 
 export function FlashcardSetCard({ set, index, isMenuOpen, onMenuToggle, onDelete }: Props) {
   const masteredPct = Math.round((set.mastered / set.cards.length) * 100);
+  const { gradient } = getColorClasses(set.color);
 
   return (
     <motion.div
@@ -65,9 +67,11 @@ export function FlashcardSetCard({ set, index, isMenuOpen, onMenuToggle, onDelet
             <span className="text-xs font-semibold text-violet-600">{masteredPct}%</span>
           </div>
           <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full bg-gradient-to-r ${set.color} rounded-full transition-all duration-500`}
-              style={{ width: `${masteredPct}%` }}
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${masteredPct}%` }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
+              className={`h-full bg-gradient-to-r ${gradient} rounded-full transition-all duration-500`}
             />
           </div>
         </div>
@@ -80,13 +84,13 @@ export function FlashcardSetCard({ set, index, isMenuOpen, onMenuToggle, onDelet
           </div>
           <Link
             href={`/dashboard/flashcards/${set.id}`}
-            className={`flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r ${set.color} text-white text-xs font-medium rounded-xl hover:shadow-md hover:scale-105 transition-all`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:shadow-md hover:scale-105 transition-all`}
           >
             <Play className="w-3 h-3" />
             Study
           </Link>
         </div>
       </div>
-    </motion.div>
+    </motion.div >
   );
 }
