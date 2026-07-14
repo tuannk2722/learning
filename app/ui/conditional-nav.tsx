@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import SideNav from './dashboard/sidenav';
+import OnboardingNav from './onboarding/onboarding-nav';
 
 interface ConditionalNavProps {
   avatarUrl?: string | null;
@@ -10,14 +11,13 @@ interface ConditionalNavProps {
   isAdmin?: boolean;
 }
 
-/**
- * Renders the user top navbar only when NOT on admin routes.
- * Admin routes have their own sidebar via AdminSidebar.
- */
 export default function ConditionalNav({ avatarUrl, userName, currentStreak = 0, isAdmin = false }: ConditionalNavProps) {
   const pathname = usePathname();
 
-  // Don't render user navbar on admin pages — admin has its own sidebar
+  if (pathname === '/onboarding') {
+    return <OnboardingNav />;
+  }
+
   if (pathname.startsWith('/admin')) {
     return null;
   }

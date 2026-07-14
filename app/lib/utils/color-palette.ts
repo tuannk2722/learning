@@ -109,14 +109,6 @@ export type ColorEntry = typeof COLOR_PALETTE[number];
 /** Type cho tên màu hợp lệ (union của tất cả các `name`) */
 export type ColorName = ColorEntry['name'];
 
-/**
- * Tra cứu các CSS class tương ứng với tên màu.
- * Trả về màu fallback `indigo` nếu không tìm thấy.
- *
- * @example
- * const { bg, text, gradient } = getColorClasses('blue');
- * // bg = 'bg-blue-100', text = 'text-blue-600', ...
- */
 export function getColorClasses(colorName: string | undefined | null): ColorEntry {
   return (
     COLOR_PALETTE.find((c) => c.name === colorName) ??

@@ -6,7 +6,6 @@ import { User, Menu, X } from 'lucide-react';
 import Logo from '@/app/ui/logo';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { usePathname } from 'next/navigation';
 import AnimatedStreakBadge from '../streak-badge';
 
 interface SideNavProps {
@@ -17,7 +16,6 @@ interface SideNavProps {
 }
 
 export default function SideNav({ avatarUrl, userName, currentStreak = 0, isAdmin = false }: SideNavProps) {
-  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
@@ -35,8 +33,6 @@ export default function SideNav({ avatarUrl, userName, currentStreak = 0, isAdmi
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
-
-  if (pathname === '/onboarding') return null;
 
   return (
     <nav ref={navRef} className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-violet-100 shadow-sm">
@@ -60,7 +56,6 @@ export default function SideNav({ avatarUrl, userName, currentStreak = 0, isAdmi
             className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center text-white font-bold hover:shadow-lg hover:ring-2 hover:ring-violet-200 transition-all hover:scale-105 overflow-hidden"
           >
             {avatarUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
               <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
             ) : userName ? (
               <span>{userName.charAt(0).toUpperCase()}</span>

@@ -74,9 +74,10 @@ export function LoginForm() {
               type="email"
               name='email'
               value={email}
+              disabled={isPending}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors"
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               required
             />
           </div>
@@ -92,15 +93,17 @@ export function LoginForm() {
               type={showPassword ? "text" : "password"}
               name='password'
               value={password}
+              disabled={isPending}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors"
+              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               required
             />
             <button
               type="button"
+              disabled={isPending}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -111,13 +114,16 @@ export function LoginForm() {
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
+              disabled={isPending}
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 cursor-pointer"
+              className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
             />
             <span className="text-sm text-gray-600">Remember me</span>
           </label>
-          <Link href="/forgot-password" className="text-sm text-violet-600 hover:text-violet-700 font-medium">
+          <Link
+            href={isPending ? '#' : '/forgot-password'}
+            className="text-sm text-violet-600 hover:text-violet-700 font-medium disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100">
             Forgot password?
           </Link>
         </div>
@@ -142,7 +148,7 @@ export function LoginForm() {
         </div>
       </form>
 
-      <div className="mt-8">
+      <div>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200"></div>
@@ -152,11 +158,13 @@ export function LoginForm() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6">
           <form action={signInWithGoogle} className="w-full">
-            <ButtonGoogle className="w-full" type="submit" />
+            <ButtonGoogle className="w-full" type="submit" disabled={isPending} />
           </form>
-          <ButtonFacebook />
+          {/* <form action={signInWithGoogle} className="w-full">
+            <ButtonFacebook className="w-full" type="submit" disabled={isPending} />
+          </form> */}
         </div>
       </div>
     </motion.div>

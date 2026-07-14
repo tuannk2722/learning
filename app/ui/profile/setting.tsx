@@ -1,11 +1,12 @@
 'use client';
 
-import { handleLogout } from '@/app/lib/actions/auth';
-import { Settings, LogOut, History } from 'lucide-react';
+import { Settings, LogOut, History, Flame, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { useLogout } from './logout-context';
 
 export function ProfileSetting() {
+  const { isLoggingOut, triggerLogout } = useLogout();
 
   return (
     <motion.div
@@ -31,10 +32,10 @@ export function ProfileSetting() {
           </svg>
         </Link>
 
-        <Link href="/forgot-password" className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-violet-50 transition-colors group">
+        <Link href="/dashboard/profile/achievements" className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-violet-50 transition-colors group">
           <div className="flex items-center gap-3">
-            <Settings className="w-5 h-5 text-gray-600 group-hover:text-violet-600" />
-            <span className="font-medium text-gray-900">Change Password</span>
+            <Flame className="w-5 h-5 text-gray-600 group-hover:text-violet-600" />
+            <span className="font-medium text-gray-900">Achievements</span>
           </div>
           <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -42,14 +43,21 @@ export function ProfileSetting() {
         </Link>
 
         <button
-          onClick={() => handleLogout()}
+          onClick={triggerLogout}
+          disabled={isLoggingOut}
           className="w-full flex items-center justify-between p-4 bg-red-50 rounded-2xl hover:bg-red-100 transition-colors group"
         >
           <div className="flex items-center gap-3">
-            <LogOut className="w-5 h-5 text-red-600" />
-            <span className="font-medium text-red-600">Logout</span>
+            {isLoggingOut
+              ? <Loader2 className="w-5 h-5 text-red-600 animate-spin" />
+              : <LogOut className="w-5 h-5 text-red-600" />
+            }
+            <span className="font-medium text-red-600">
+              {isLoggingOut ? 'Đang đăng xuất...' : 'Logout'}
+            </span>
           </div>
         </button>
+
       </div>
     </motion.div>
   )

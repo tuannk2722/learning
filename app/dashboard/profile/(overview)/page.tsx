@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { ProfileHeaderSkeleton, ProfileSettingSkeleton } from '@/app/ui/skeleton/skeletons';
 import { auth } from "@/auth";
 import { getUserById } from "@/app/lib/data/users";
+import { LogoutProvider } from '@/app/ui/profile/logout-context';
 
 export default async function Profile() {
   const session = await auth();
@@ -23,15 +24,18 @@ export default async function Profile() {
           {/* Profile Title */}
           <ProfileTitle />
 
-          {/* Profile Header */}
-          <Suspense fallback={<ProfileHeaderSkeleton />}>
-            <ProfileHeader userInfo={userInfo} />
-          </Suspense>
+          {/* LogoutProvider shares isLoggingOut state between ProfileHeader and ProfileSetting */}
+          <LogoutProvider>
+            {/* Profile Header */}
+            <Suspense fallback={<ProfileHeaderSkeleton />}>
+              <ProfileHeader userInfo={userInfo} />
+            </Suspense>
 
-          {/* Settings Section */}
-          <Suspense fallback={<ProfileSettingSkeleton />}>
-            <ProfileSetting />
-          </Suspense>
+            {/* Settings Section */}
+            <Suspense fallback={<ProfileSettingSkeleton />}>
+              <ProfileSetting />
+            </Suspense>
+          </LogoutProvider>
 
         </div>
       </div>
