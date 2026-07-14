@@ -5,10 +5,12 @@ import { motion } from 'motion/react';
 import { User } from '@/app/lib/definitions/user';
 import { useState } from 'react';
 import { EditProfileModal } from './edit-profile-modal';
+import { useLogout } from './logout-context';
 
 export function ProfileHeader({ userInfo }: { userInfo: User }) {
 
   const [isEditing, setIsEditing] = useState(false);
+  const { isLoggingOut } = useLogout();
 
   return (
     <>
@@ -24,7 +26,6 @@ export function ProfileHeader({ userInfo }: { userInfo: User }) {
                   border-4 border-white shadow-md">
 
             {userInfo.avatar_url ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={userInfo.avatar_url}
                 alt={userInfo.name || 'avatar'}
@@ -49,8 +50,8 @@ export function ProfileHeader({ userInfo }: { userInfo: User }) {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setIsEditing(true)}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-violet-50 text-violet-700 font-medium border border-violet-100 rounded-xl hover:bg-violet-100 transition-colors w-full md:w-auto flex-shrink-0 mt-2 md:mt-0"
+                onClick={() => !isLoggingOut && setIsEditing(true)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-violet-50 text-violet-700 font-medium border border-violet-100 rounded-xl transition-colors w-full md:w-auto flex-shrink-0 mt-2 md:mt-0 hover:bg-violet-100"
               >
                 <Edit2 className="w-4 h-4" />
                 Edit profile

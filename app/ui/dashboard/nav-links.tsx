@@ -1,6 +1,6 @@
 'use client';
 
-import { Home, BarChart3, BookOpen, Crown, Flame, User, LayoutDashboard, CreditCard } from 'lucide-react';
+import { Home, BarChart3, BookOpen, Crown, User, LayoutDashboard, CreditCard } from 'lucide-react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -9,7 +9,6 @@ const navItems = [
   { path: '/dashboard', icon: Home, label: 'Dashboard' },
   { path: '/dashboard/courses', icon: BookOpen, label: 'Courses' },
   { path: '/dashboard/flashcards', icon: CreditCard, label: 'Flashcards' },
-  { path: '/dashboard/achievements', icon: Flame, label: 'Achievements' },
   { path: '/dashboard/leaderboard', icon: Crown, label: 'Leaderboard' },
   { path: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
 ];

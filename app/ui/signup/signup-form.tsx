@@ -27,16 +27,6 @@ export function SignUpForm() {
       transition={{ duration: 0.6 }}
       className="bg-white rounded-3xl p-8 lg:p-12 shadow-2xl"
     >
-      <div className="lg:hidden mb-8 text-center">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-            Gamified Learning
-          </span>
-        </Link>
-      </div>
 
       <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign up</h2>
       <p className="text-gray-600 mb-8">
@@ -57,9 +47,10 @@ export function SignUpForm() {
               type="text"
               name="name"
               value={formData.name}
+              disabled={isPending}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Nguyễn Văn A"
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors"
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               required
             />
           </div>
@@ -75,9 +66,10 @@ export function SignUpForm() {
               type="email"
               name="email"
               value={formData.email}
+              disabled={isPending}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="your.email@example.com"
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors"
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               required
             />
           </div>
@@ -93,9 +85,10 @@ export function SignUpForm() {
               type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
+              disabled={isPending}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               placeholder="••••••••"
-              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors"
+              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               required
             />
             <button
@@ -117,6 +110,7 @@ export function SignUpForm() {
             <input
               type={showConfirmPassword ? "text" : "password"}
               value={formData.confirmPassword}
+              disabled={isPending}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               placeholder="••••••••"
               className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:outline-none transition-colors ${formData.confirmPassword.length > 0
@@ -124,7 +118,8 @@ export function SignUpForm() {
                   ? 'border-emerald-500 focus:border-emerald-600'
                   : 'border-rose-400 focus:border-rose-500'
                 : 'border-gray-200 focus:border-violet-500'
-                }`}
+                }
+                disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
               required
             />
             {formData.confirmPassword.length > 0 && (
@@ -138,8 +133,9 @@ export function SignUpForm() {
             )}
             <button
               type="button"
+              disabled={isPending}
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -153,7 +149,7 @@ export function SignUpForm() {
           className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
         >
           <Sparkles className="w-5 h-5" />
-          Create an account
+          {isPending ? 'Creating...' : 'Create an account'}
         </button>
 
         <div className="flex h-8 items-end space-x-1" aria-live="polite" aria-atomic="true">
@@ -166,7 +162,7 @@ export function SignUpForm() {
         </div>
       </form>
 
-      <div className="mt-8">
+      <div>
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200"></div>
@@ -176,11 +172,13 @@ export function SignUpForm() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6">
           <form action={signInWithGoogle} className="w-full">
-            <ButtonGoogle className="w-full" type="submit" />
+            <ButtonGoogle className="w-full" type="submit" disabled={isPending} />
           </form>
-          <ButtonFacebook />
+          {/* <form action={signInWithGoogle} className="w-full">
+            <ButtonFacebook className="w-full" type="submit" disabled={isPending} />
+          </form> */}
         </div>
       </div>
     </motion.div>

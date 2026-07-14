@@ -4,7 +4,7 @@ export const shimmer =
 
 export function TitleSection() {
   return (
-    <div className="mt-20 mb-10">
+    <div className="mb-10">
       <div className="flex items-center gap-3">
         <div className={`${shimmer} p-3 rounded-xl bg-gray-200 w-12 h-12 relative overflow-hidden`} />
         <div className="space-y-2">
@@ -74,7 +74,7 @@ export function AchievementsSkeleton() {
         </div>
 
         {/* Achievements Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <AchievementCardSkeleton key={i} />
           ))}
