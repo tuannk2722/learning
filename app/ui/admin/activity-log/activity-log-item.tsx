@@ -1,4 +1,4 @@
-﻿import {
+import {
   BookOpen, Trophy, Target, User, LogIn, UserPlus,
   Settings, Star, CheckCircle, Trash2, Eye, EyeOff, PenLine,
 } from "lucide-react";
@@ -18,6 +18,8 @@ const ACTION_ICONS: Record<ActivityAction, React.ElementType> = {
   COMPLETE_QUEST: Target,
   CREATE_COURSE: PenLine,
   UPDATE_COURSE: PenLine,
+  PUBLISH_COURSE: Eye,
+  UNPUBLISH_COURSE: EyeOff,
   DELETE_COURSE: Trash2,
   PUBLISH_LESSON: Eye,
   UNPUBLISH_LESSON: EyeOff,

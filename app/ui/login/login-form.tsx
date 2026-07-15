@@ -52,7 +52,7 @@ export function LoginForm() {
           href="/signup"
           aria-disabled={isPending}
           tabIndex={isPending ? -1 : undefined}
-          className={`text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
+          className={`text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-wait opacity-70' : 'cursor-pointer'}`}>
           Create an account
         </Link>
       </p>
@@ -71,7 +71,7 @@ export function LoginForm() {
               disabled={isPending}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
               required
             />
           </div>
@@ -90,14 +90,14 @@ export function LoginForm() {
               disabled={isPending}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
               required
             />
             <button
               type="button"
               disabled={isPending}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -111,7 +111,7 @@ export function LoginForm() {
               disabled={isPending}
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-4 h-4 rounded border-gray-300 text-violet-600 focus:ring-violet-500 cursor-pointer disabled:opacity-70 disabled:cursor-wait disabled:hover:scale-100"
             />
             <span className="text-sm text-gray-600">Remember me</span>
           </label>
@@ -119,7 +119,7 @@ export function LoginForm() {
             href='/forgot-password'
             aria-disabled={isPending}
             tabIndex={isPending ? -1 : undefined}
-            className={`text-sm text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
+            className={`text-sm text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-wait opacity-70' : 'cursor-pointer'}`}>
             Forgot password?
           </Link>
         </div>
@@ -127,7 +127,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100">
+          className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-105 disabled:opacity-70 disabled:cursor-wait disabled:hover:scale-100">
           {isPending ? 'Logging in...' : 'Log in'}
         </button>
         <div

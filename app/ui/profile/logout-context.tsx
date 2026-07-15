@@ -30,7 +30,7 @@ export function LogoutProvider({ children }: { children: ReactNode }) {
     <LogoutContext.Provider value={{ isLoggingOut, triggerLogout }}>
       {/* Full-page overlay khi đang logout */}
       {isLoggingOut && (
-        <div className="fixed inset-0 z-[9998] bg-white/10 backdrop-blur-sm cursor-not-allowed" />
+        <div className="fixed inset-0 z-[99999] bg-white/10 backdrop-blur-sm cursor-wait" />
       )}
       {children}
     </LogoutContext.Provider>

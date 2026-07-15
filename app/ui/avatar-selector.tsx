@@ -19,10 +19,9 @@ interface AvatarSelectorProps {
   setAvatarUrl: (url: string) => void;
   nickname: string;
   onUploadingChange?: (isUploading: boolean) => void;
-  isLoading: boolean;
 }
 
-export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname, onUploadingChange, isLoading }: AvatarSelectorProps) {
+export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname, onUploadingChange }: AvatarSelectorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -97,7 +96,7 @@ export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname, onUploadingC
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading || isLoading}
+          disabled={isUploading}
           className="absolute bottom-1 right-1 bg-violet-600 text-white p-2.5 rounded-full shadow-lg hover:bg-violet-700 transition-colors border-2 border-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           <Camera className="w-4 h-4" />
@@ -117,14 +116,14 @@ export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname, onUploadingC
           <button
             key={idx}
             type="button"
-            disabled={isLoading || isUploading}
+            disabled={isUploading}
             onClick={() => {
               setAvatarUrl(url);
               setPreviewUrl(null);
             }}
             className={`w-12 h-12 rounded-2xl overflow-hidden border-2 transition-all hover:scale-110 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 ${avatarUrl === url && isDefaultAvatar
-                ? 'border-violet-600 ring-4 ring-violet-100'
-                : 'border-gray-100'
+              ? 'border-violet-600 ring-4 ring-violet-100'
+              : 'border-gray-100'
               }`}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -135,7 +134,7 @@ export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname, onUploadingC
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          disabled={isLoading || isUploading}
+          disabled={isUploading}
           className="w-12 h-12 rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-violet-400 hover:text-violet-500 transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex-shrink-0"
         >
           <Upload className="w-5 h-5" />
