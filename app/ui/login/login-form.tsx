@@ -44,21 +44,15 @@ export function LoginForm() {
       transition={{ duration: 0.6 }}
       className="bg-white rounded-3xl p-8 lg:p-12 shadow-2xl"
     >
-      <div className="lg:hidden mb-8 text-center">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-            Gamified Learning
-          </span>
-        </Link>
-      </div>
 
       <h2 className="text-3xl font-bold text-gray-900 mb-2">Log in</h2>
       <p className="text-gray-600 mb-8">
         New to Gamified Learning?{" "}
-        <Link href="/signup" className="text-violet-600 hover:text-violet-700 font-medium">
+        <Link
+          href="/signup"
+          aria-disabled={isPending}
+          tabIndex={isPending ? -1 : undefined}
+          className={`text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
           Create an account
         </Link>
       </p>
@@ -122,8 +116,10 @@ export function LoginForm() {
             <span className="text-sm text-gray-600">Remember me</span>
           </label>
           <Link
-            href={isPending ? '#' : '/forgot-password'}
-            className="text-sm text-violet-600 hover:text-violet-700 font-medium disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100">
+            href='/forgot-password'
+            aria-disabled={isPending}
+            tabIndex={isPending ? -1 : undefined}
+            className={`text-sm text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
             Forgot password?
           </Link>
         </div>

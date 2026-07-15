@@ -39,12 +39,10 @@ export function LessonContentSkeleton() {
 
 export function LessonNoteSkeleton() {
   return (
-    <div className="max-w-4xl mx-auto px-6 pb-12">
-      <div className={`${shimmer} mt-8 bg-yellow-50 rounded-3xl p-8 border-2 border-yellow-200 relative overflow-hidden`}>
-        <div className="h-7 w-32 bg-gray-200 rounded mb-4" />
-        <div className="w-full h-28 bg-white border-2 border-yellow-300 rounded-xl mb-4" />
-        <div className="w-28 h-10 bg-yellow-500/20 rounded-xl" />
-      </div>
+    <div className={`${shimmer} bg-yellow-50 rounded-3xl p-8 border-2 border-yellow-200 relative overflow-hidden`}>
+      <div className="h-7 w-32 bg-gray-200 rounded mb-4" />
+      <div className="w-full h-28 bg-white border-2 border-yellow-300 rounded-xl mb-4" />
+      <div className="w-28 h-10 bg-yellow-500/20 rounded-xl" />
     </div>
   );
 }
@@ -57,8 +55,9 @@ export function LessonDetailSkeleton() {
           <div className="max-w-7xl mx-auto">
             <div className="grid lg:grid-cols-3 gap-8 items-start">
               {/* Lesson Content Skeleton */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 space-y-8">
                 <LessonContentSkeleton />
+                <LessonNoteSkeleton />
               </div>
 
               {/* Curriculum Skeleton */}
@@ -68,9 +67,6 @@ export function LessonDetailSkeleton() {
             </div>
           </div>
         </section>
-
-        {/* Lesson Note Skeleton */}
-        <LessonNoteSkeleton />
       </div>
     </div>
   );

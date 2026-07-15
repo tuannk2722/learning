@@ -31,7 +31,11 @@ export function SignUpForm() {
       <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign up</h2>
       <p className="text-gray-600 mb-8">
         Already have an account?{" "}
-        <Link href="/login" className="text-violet-600 hover:text-violet-700 font-medium">
+        <Link
+          href="/login"
+          aria-disabled={isPending}
+          tabIndex={isPending ? -1 : undefined}
+          className={`text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
           Log in
         </Link>
       </p>
