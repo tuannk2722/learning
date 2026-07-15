@@ -11,18 +11,20 @@ import { ConfirmModal } from '@/app/ui/modal-confirm';
 interface QuizStepProps {
   onBack: () => void;
   onPublish: () => void;
+  withdraw: () => void;
 }
 
 export default function QuizStep({
   onBack,
-  onPublish
+  onPublish,
+  withdraw
 }: QuizStepProps) {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const { courseId, isDirty, courseData, isSaving } = useCourseBuilderStore();
 
   const isPublished = courseData.status === 'published';
-  const isDisabled = isSaving || (isPublished && !isDirty);
+  const isDisabled = isSaving || isDirty;
 
   return (
     <motion.div
@@ -123,11 +125,11 @@ export default function QuizStep({
             onClick={() => setShowConfirm(true)}
             disabled={isDisabled}
             className={`px-10 py-4 text-white rounded-2xl font-bold transition-all uppercase tracking-widest text-xs ${isDisabled
-                ? "bg-gray-300 cursor-not-allowed opacity-70"
-                : "bg-gradient-to-r from-indigo-600 to-violet-700 hover:shadow-2xl hover:shadow-indigo-500/40"
+              ? "bg-gray-300 cursor-not-allowed opacity-70"
+              : "bg-gradient-to-r from-indigo-600 to-violet-700 hover:shadow-2xl hover:shadow-indigo-500/40"
               }`}
           >
-            {isSaving ? "Saving..." : !isPublished ? "Publish Course" : "Update Course"}
+            {isSaving ? "Saving..." : !isPublished ? "Publish Course" : "Unpublish Course"}
           </button>
         </div>
       </div>
@@ -137,15 +139,19 @@ export default function QuizStep({
         onClose={() => setShowConfirm(false)}
         onConfirm={() => {
           setShowConfirm(false);
-          onPublish();
+          if (isPublished) {
+            withdraw();
+          } else {
+            onPublish();
+          }
         }}
-        title={isPublished ? "Update Course" : "Publish Course"}
+        title={isPublished ? "Unpublish Course" : "Publish Course"}
         description={
           isPublished
-            ? "Are you sure you want to save and update this course? Any changes will be applied instantly!"
+            ? "Are you sure you want to unpublish this course?"
             : "Are you sure you want to publish this course? Make sure you have added all lessons and quizzes!"
         }
-        type={isPublished ? "info" : "warning"}
+        type="info"
       />
     </motion.div>
   );

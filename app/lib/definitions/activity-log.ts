@@ -17,6 +17,8 @@
   // Admin actions
   | "CREATE_COURSE"
   | "UPDATE_COURSE"
+  | "PUBLISH_COURSE"
+  | "UNPUBLISH_COURSE"
   | "DELETE_COURSE"
   | "PUBLISH_LESSON"
   | "UNPUBLISH_LESSON";
@@ -67,6 +69,8 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   COMPLETE_QUEST: "Complete quest",
   CREATE_COURSE: "Create course",
   UPDATE_COURSE: "Update course",
+  PUBLISH_COURSE: "Publish course",
+  UNPUBLISH_COURSE: "Unpublish course",
   DELETE_COURSE: "Delete course",
   PUBLISH_LESSON: "Publish lesson",
   UNPUBLISH_LESSON: "Unpublish lesson",
@@ -130,6 +134,16 @@ export const ACTION_COLORS: Record<
     bg: "bg-orange-100",
     text: "text-orange-700",
     badge: "bg-orange-100 text-orange-700",
+  },
+  PUBLISH_COURSE: {
+    bg: "bg-green-100",
+    text: "text-green-700",
+    badge: "bg-green-100 text-green-700",
+  },
+  UNPUBLISH_COURSE: {
+    bg: "bg-rose-100",
+    text: "text-rose-700",
+    badge: "bg-rose-100 text-rose-700",
   },
   DELETE_COURSE: {
     bg: "bg-red-100",

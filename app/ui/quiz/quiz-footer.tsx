@@ -31,7 +31,7 @@ export default function QuizFooter({
   return (
     <>
       {isSubmitting && (
-        <div className="fixed inset-0 z-[9998] bg-white/10 backdrop-blur-sm cursor-not-allowed" />
+        <div className="fixed inset-0 z-[9998] bg-white/10 backdrop-blur-sm cursor-wait" />
       )}
 
       <div className="mt-8 flex items-center justify-between">

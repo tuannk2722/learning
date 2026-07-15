@@ -34,7 +34,9 @@ export default async function Courses() {
           }
 
           {/* Available Courses */}
-          <CourseListContainer initialCourses={notEnrolledCourses} categories={categories} />
+          {notEnrolledCourses.length > 0 &&
+            <CourseListContainer initialCourses={notEnrolledCourses} categories={categories} />
+          }
 
         </div>
       </div>

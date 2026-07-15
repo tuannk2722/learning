@@ -35,7 +35,7 @@ export function SignUpForm() {
           href="/login"
           aria-disabled={isPending}
           tabIndex={isPending ? -1 : undefined}
-          className={`text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-not-allowed opacity-70' : 'cursor-pointer'}`}>
+          className={`text-violet-600 hover:text-violet-700 font-medium ${isPending ? 'pointer-events-none cursor-wait opacity-70' : 'cursor-pointer'}`}>
           Log in
         </Link>
       </p>
@@ -54,7 +54,7 @@ export function SignUpForm() {
               disabled={isPending}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Nguyễn Văn A"
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
               required
             />
           </div>
@@ -73,7 +73,7 @@ export function SignUpForm() {
               disabled={isPending}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               placeholder="your.email@example.com"
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
               required
             />
           </div>
@@ -92,7 +92,7 @@ export function SignUpForm() {
               disabled={isPending}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               placeholder="••••••••"
-              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-violet-500 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
               required
             />
             <button
@@ -123,7 +123,7 @@ export function SignUpForm() {
                   : 'border-rose-400 focus:border-rose-500'
                 : 'border-gray-200 focus:border-violet-500'
                 }
-                disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
+                disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100`}
               required
             />
             {formData.confirmPassword.length > 0 && (
@@ -139,7 +139,7 @@ export function SignUpForm() {
               type="button"
               disabled={isPending}
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-wait disabled:hover:scale-100"
             >
               {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
@@ -150,7 +150,7 @@ export function SignUpForm() {
           type="submit"
           disabled={isPending || !passwordsMatch}
           aria-disabled={isPending}
-          className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
+          className="w-full py-4 bg-gradient-to-r from-violet-600 to-purple-600 disabled:opacity-50 disabled:cursor-wait text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-violet-500/30 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
         >
           <Sparkles className="w-5 h-5" />
           {isPending ? 'Creating...' : 'Create an account'}

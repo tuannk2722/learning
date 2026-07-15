@@ -42,7 +42,7 @@ export default function CourseInfoStep({
 
           <div className="space-y-6">
             <div>
-              <label htmlFor="courseName" className="block text-sm font-medium mb-2">Course Name *</label>
+              <label htmlFor="courseName" className="block text-sm font-medium mb-2">Course Name <span className="text-red-500">*</span></label>
               <input
                 id="courseName"
                 type="text"
@@ -50,24 +50,26 @@ export default function CourseInfoStep({
                 value={courseData.name}
                 onChange={(e) => updateCourseData(prev => ({ ...prev, name: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
               />
             </div>
 
             <div>
-              <label htmlFor="courseDescription" className="block text-sm font-medium mb-2">Description *</label>
+              <label htmlFor="courseDescription" className="block text-sm font-medium mb-2">Description <span className="text-red-500">*</span></label>
               <textarea
                 id="courseDescription"
-                rows={4}
+                rows={3}
                 placeholder="Describe what students will learn in this course..."
                 value={courseData.description || ''}
                 onChange={(e) => updateCourseData(prev => ({ ...prev, description: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="courseCategory" className="block text-sm font-medium mb-2">Category *</label>
+                <label htmlFor="courseCategory" className="block text-sm font-medium mb-2">Category <span className="text-red-500">*</span></label>
                 <input
                   id="courseCategory"
                   type='text'
@@ -75,11 +77,12 @@ export default function CourseInfoStep({
                   value={courseData.category_name || ''}
                   onChange={(e) => updateCourseData(prev => ({ ...prev, category_name: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  required
                 />
               </div>
 
               <div>
-                <label htmlFor="courseLevel" className="block text-sm font-medium mb-2">Level *</label>
+                <label htmlFor="courseLevel" className="block text-sm font-medium mb-2">Level</label>
                 <select
                   id="courseLevel"
                   value={courseData.level || ''}
@@ -114,7 +117,7 @@ export default function CourseInfoStep({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Theme Color *
+                Theme Color
               </label>
               <div className="grid grid-cols-10 gap-2">
                 {COLOR_PALETTE.map((option) => (
