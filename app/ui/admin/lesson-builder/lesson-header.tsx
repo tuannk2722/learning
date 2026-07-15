@@ -73,6 +73,7 @@ export default function LessonHeader({ courseId, onSave, onPreview, isSaving = f
           {isSaving ? 'Saving...' : 'Save Lesson'}
         </motion.button>
       </div>
+
       <ConfirmModal
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}

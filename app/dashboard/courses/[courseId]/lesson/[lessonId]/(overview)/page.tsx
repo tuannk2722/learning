@@ -5,7 +5,6 @@ import { getCourseStatus } from "@/app/lib/data/courses";
 import { auth } from "@/auth";
 import { notFound } from "next/navigation";
 import { CurriculumSection } from "@/app/ui/course-detail/course-curriculum";
-import { completeLesson } from "@/app/lib/actions/lesson";
 import { Suspense } from "react";
 import { LessonContentSkeleton, LessonNoteSkeleton } from "@/app/ui/skeleton/lesson";
 import { CurriculumSkeleton } from "@/app/ui/skeleton/course-detail";
@@ -44,11 +43,6 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
   const curriculum = await getCourseCurriculum(Number(courseId), userId);
   const initialNoteContent = await getLessonNote(Number(lessonId), userId);
 
-  const handleCompleteLesson = async () => {
-    "use server";
-    return await completeLesson(lessonId, userId);
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       {/* Lesson Header */}
@@ -61,15 +55,20 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
       <section className="py-12 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-8 items-start">
-            <div className="lg:col-span-2">
-              {/* Lesson Content */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Lesson Content — heartbeat-based, no server action needed */}
               <Suspense fallback={<LessonContentSkeleton />}>
-                <LessonContent lesson={lesson} courseId={courseId} lessonId={lessonId} onComplete={handleCompleteLesson} isAlreadyCompleted={lesson.isCompleted} />
+                <LessonContent lesson={lesson} courseId={courseId} lessonId={lessonId} isAlreadyCompleted={lesson.isCompleted} />
+              </Suspense>
+
+              {/* Lesson Note */}
+              <Suspense fallback={<LessonNoteSkeleton />}>
+                <LessonNote lessonId={lessonId} initialContent={initialNoteContent} />
               </Suspense>
             </div>
 
-            {/* Curriculum */}
-            <div className="lg:col-span-1 sticky top-32">
+            {/* Curriculum — independently scrollable column */}
+            <div className="lg:col-span-1 sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto rounded-3xl">
               <Suspense fallback={<CurriculumSkeleton />}>
                 <CurriculumSection curriculum={curriculum} courseId={courseId} activeLessonId={lessonId} />
               </Suspense>
@@ -78,11 +77,6 @@ export default async function LessonDetailPage(props: { params: Promise<{ course
           </div>
         </div>
       </section>
-
-      {/* Lesson Note */}
-      <Suspense fallback={<LessonNoteSkeleton />}>
-        <LessonNote lessonId={lessonId} initialContent={initialNoteContent} />
-      </Suspense>
 
       {/* Scroll to Top button */}
       <ScrollToTop />

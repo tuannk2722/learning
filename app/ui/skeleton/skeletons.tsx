@@ -259,3 +259,33 @@ export function HistoryTimelineSkeleton() {
     </div>
   );
 }
+
+export function HistorySkeleton() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
+      <div className="pt-5 pb-12 px-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="mb-8 space-y-2">
+            <div className={`${shimmer} h-9 w-56 bg-gray-200 rounded-md relative overflow-hidden`} />
+            <div className={`${shimmer} h-4 w-44 bg-gray-200 rounded-md relative overflow-hidden`} />
+          </div>
+
+          {/* Filter Bar Skeleton */}
+          <div className="flex flex-wrap gap-2 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className={`${shimmer} h-9 w-28 bg-gray-200 rounded-full relative overflow-hidden`}
+              />
+            ))}
+          </div>
+
+          {/* Timeline Skeleton */}
+          <HistoryTimelineSkeleton />
+        </div>
+      </div>
+    </div>
+  );
+}
+

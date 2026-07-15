@@ -15,7 +15,8 @@ import { logActivity } from "./activity-log";
 
 export async function completeLesson(
   lessonId: string,
-  userId: string
+  userId: string,
+  actualStudyMinutes?: number
 ): Promise<{ success: boolean; xpEarned: number; questUpdates: QuestUpdateInfo[]; streakResult?: StreakResult; unlockedAchievements?: UnlockedAchievement[] }> {
   try {
     const [, lessonInfoResult, courseData] = await Promise.all([
@@ -47,7 +48,8 @@ export async function completeLesson(
     ]);
 
     const xpEarned = lessonInfoResult[0]?.xp ?? 0;
-    const duration = lessonInfoResult[0]?.duration ?? 0;
+    // Dùng thời gian active thực tế từ heartbeat nếu có, ngược lại dùng duration ước tính
+    const duration = actualStudyMinutes ?? (lessonInfoResult[0]?.duration ?? 0);
 
     const [streakResult, , questXp, questStudy] = await Promise.all([
       updateStreak(userId),

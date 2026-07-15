@@ -249,3 +249,15 @@ export const user_flashcard_progress = pgTable('user_flashcard_progress', {
 }, (t) => ({
   pk: primaryKey({ columns: [t.user_id, t.flashcard_id] }),
 }));
+
+// 20. BẢNG LESSON_SESSIONS (Phiên học heartbeat-based)
+export const lesson_sessions = pgTable('lesson_sessions', {
+  id: serial('id').primaryKey(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  lesson_id: integer('lesson_id').notNull().references(() => lessons.id, { onDelete: 'cascade' }),
+  session_token: varchar('session_token', { length: 64 }).notNull().unique(),
+  accumulated_seconds: integer('accumulated_seconds').default(0),
+  last_heartbeat_at: timestamp('last_heartbeat_at').defaultNow(),
+  is_active: boolean('is_active').default(true),
+  created_at: timestamp('created_at').defaultNow(),
+});

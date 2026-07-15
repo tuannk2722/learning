@@ -73,3 +73,25 @@ export type Course = {
   status: string;
   bgGradient: string;
 }
+
+// Lesson Session (Heartbeat-based)
+export type StartSessionResponse = {
+  sessionToken: string;
+  accumulatedSeconds: number;
+  requiredSeconds: number;
+};
+
+export type HeartbeatResponse = {
+  status: 'ok' | 'session_replaced' | 'error';
+  accumulatedSeconds: number;
+  requiredSeconds: number;
+  canComplete: boolean;
+};
+
+export type CompleteSessionResponse = {
+  success: boolean;
+  xpEarned: number;
+  questUpdates: import('./quests').QuestUpdateInfo[];
+  streakResult?: StreakResult;
+  unlockedAchievements?: UnlockedAchievement[];
+};
