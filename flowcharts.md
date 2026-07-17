@@ -317,7 +317,7 @@ Admin — Course management
 ```mermaid
 flowchart TD
     Start([Start: Admin quản lý khóa học]) --> Choice{"Create New hay Edit?"}
-    Choice -->|Create New| CreateNew["Tạo khóa học mới, nhập đầy đủ thông tin (Tên, Mô tả, Category, Level), "Save Course" status = draft"]
+    Choice -->|Create New| CreateNew["Tạo khóa học mới, nhập đầy đủ thông tin (Tên, Mô tả, Category, Level), Save Course (status = draft)"]
     Choice -->|Edit| LoadCourse["Tải khóa học hiện có (mọi status)"]
     CreateNew --> EditSections["Thêm/Sửa Sections & Lessons"]
     LoadCourse --> EditSections
