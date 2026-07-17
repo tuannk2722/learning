@@ -117,7 +117,7 @@ export function EditProfileModal({ isOpen, onClose, userInfo }: EditProfileModal
 
                   <div>
                     <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                      Bio
+                      Bio <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       id="bio"
@@ -131,7 +131,7 @@ export function EditProfileModal({ isOpen, onClose, userInfo }: EditProfileModal
 
                   <div>
                     <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                      Location
+                      Location <span className="text-red-500">*</span>
                     </label>
                     <input
                       id="location"

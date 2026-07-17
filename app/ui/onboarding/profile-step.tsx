@@ -23,7 +23,7 @@ export function ProfileStep({ formData, setFormData, onNext }: ProfileStepProps)
     >
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-          <User className="w-4 h-4 text-violet-500" /> Nickname
+          <User className="w-4 h-4 text-violet-500" /> Nickname <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -36,7 +36,7 @@ export function ProfileStep({ formData, setFormData, onNext }: ProfileStepProps)
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-          <FileText className="w-4 h-4 text-violet-500" /> Bio
+          <FileText className="w-4 h-4 text-violet-500" /> Bio <span className="text-red-500">*</span>
         </label>
         <textarea
           value={formData.bio}
@@ -49,7 +49,7 @@ export function ProfileStep({ formData, setFormData, onNext }: ProfileStepProps)
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-violet-500" /> Location
+          <MapPin className="w-4 h-4 text-violet-500" /> Location <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
@@ -63,7 +63,7 @@ export function ProfileStep({ formData, setFormData, onNext }: ProfileStepProps)
       <div className="pt-4">
         <button
           onClick={onNext}
-          disabled={!formData.nickname}
+          disabled={!formData.nickname || !formData.bio || !formData.location}
           className="w-full py-4 bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-lg hover:shadow-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2 group"
         >
           Next Step

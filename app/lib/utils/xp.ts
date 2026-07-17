@@ -7,7 +7,7 @@ export function calculateLevel(totalXp: number) {
   while (xpRemaining >= xpNeededForNextLevel) {
     xpRemaining -= xpNeededForNextLevel;
     level++;
-    xpNeededForNextLevel = 200 + (level - 1) * 200;
+    xpNeededForNextLevel = 500 + (level - 1) * 200;
   }
 
   const progress = (xpRemaining / xpNeededForNextLevel) * 100;

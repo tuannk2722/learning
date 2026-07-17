@@ -140,7 +140,8 @@ export default function CourseInfoStep({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onNext}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              disabled={!courseData.name || !courseData.description || !courseData.category_name}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next: Curriculum
             </motion.button>
