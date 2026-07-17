@@ -129,59 +129,33 @@ export default function CourseBuilderClient({
     }
   }
 
-  const handleStepChange = (targetStep: number) => {
-    // 1. To access step 2 or step 3, step 1 fields must be valid
-    if (targetStep > 1) {
-      const missingFields: string[] = [];
-      if (!courseData.name?.trim()) missingFields.push("Course Name");
-      if (!courseData.description?.trim()) missingFields.push("Description");
-      if (!courseData.category_name?.trim()) missingFields.push("Category");
-
-      if (missingFields.length > 0) {
-        toast.error(`Please fill in all required fields: ${missingFields.join(", ")}`);
-        return;
-      }
-    }
-
-    // 2. To access step 3, curriculum must have at least 3 lessons
-    if (targetStep > 2) {
-      const totalLessons = courseData.sections.reduce((sum, s) => sum + s.lessons.length, 0);
-      if (totalLessons < 3) {
-        toast.error(`Need at least 3 lessons to proceed to step 3. Currently has ${totalLessons} lesson${totalLessons !== 1 ? 's' : ''}.`);
-        return;
-      }
-    }
-
-    setStep(targetStep);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 p-6">
       <div className="max-w-7xl mx-auto">
         <Header onSave={handleSaveCourse} />
 
-        <ProgressSteps step={step} setStep={handleStepChange} />
+        <ProgressSteps step={step} setStep={setStep} />
 
         <AnimatePresence mode="wait">
           {step === 1 && (
             <CourseInfoStep
               key="step1"
-              onNext={() => handleStepChange(2)}
+              onNext={() => setStep(2)}
             />
           )}
 
           {step === 2 && (
             <CurriculumStep
               key="step2"
-              onBack={() => handleStepChange(1)}
-              onNext={() => handleStepChange(3)}
+              onBack={() => setStep(1)}
+              onNext={() => setStep(3)}
             />
           )}
 
           {step === 3 && (
             <QuizStep
               key="step3"
-              onBack={() => handleStepChange(2)}
+              onBack={() => setStep(2)}
               onPublish={handlePublishCourse}
               withdraw={handleWithdraw}
             />

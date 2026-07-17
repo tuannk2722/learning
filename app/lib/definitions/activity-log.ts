@@ -4,6 +4,7 @@
   | "USER_LOGIN"
   | "COMPLETE_ONBOARDING"
   | "UPDATE_PROFILE"
+  | "RATE_COURSE"
   // Course actions (user)
   | "ENROLL_COURSE"
   // Lesson actions (user)
@@ -63,6 +64,7 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   COMPLETE_ONBOARDING: "Complete onboarding",
   UPDATE_PROFILE: "Update profile",
   ENROLL_COURSE: "Enroll course",
+  RATE_COURSE: "Rate course",
   COMPLETE_LESSON: "Complete lesson",
   COMPLETE_QUIZ: "Complete quiz",
   UNLOCK_ACHIEVEMENT: "Unlock achievement",
@@ -101,6 +103,11 @@ export const ACTION_COLORS: Record<
     badge: "bg-slate-100 text-slate-700",
   },
   ENROLL_COURSE: {
+    bg: "bg-purple-100",
+    text: "text-purple-700",
+    badge: "bg-purple-100 text-purple-700",
+  },
+  RATE_COURSE: {
     bg: "bg-purple-100",
     text: "text-purple-700",
     badge: "bg-purple-100 text-purple-700",

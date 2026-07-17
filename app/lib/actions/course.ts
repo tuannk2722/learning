@@ -147,6 +147,15 @@ export async function rateCourse(courseId: number, rating: number): Promise<{ su
         .where(eq(courses.id, courseId));
     }
 
+    const courseInfo = await db.select({ name: courses.name }).from(courses).where(eq(courses.id, courseId)).limit(1);
+    void logActivity({
+      userId,
+      action: 'RATE_COURSE',
+      entityType: 'course',
+      entityId: courseId,
+      entityName: courseInfo[0]?.name ?? undefined,
+    });
+
     revalidatePath(`/dashboard/courses/${courseId}`);
     return { success: true, message: 'Rating submitted successfully' };
   } catch (error) {
