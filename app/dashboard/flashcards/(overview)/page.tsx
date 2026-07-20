@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import FlashcardFilter from "@/app/ui/flashcards/flashcards-overview/flashcard-filter";
 import FlashcardHeader from "@/app/ui/flashcards/flashcards-overview/flashcard-header";
 import FlashcardSetList from "@/app/ui/flashcards/flashcards-overview/flashcard-set-list";
-import { Earth, Folder, FolderArchive, WholeWord, WholeWordIcon } from "lucide-react";
+import { Earth, Folder } from "lucide-react";
 
 // ─── Data Types ──────────────────────────────────────────────────────────────
 
@@ -10,7 +10,7 @@ export interface FlashcardItem {
   id: string;
   front: string;
   back: string;
-  hint?: string;
+  imageUrl?: string;
 }
 
 export interface FlashcardSet {
@@ -35,31 +35,31 @@ export const sampleSets: FlashcardSet[] = [
     description: "Bộ 25 kanji cần thiết cho kỳ thi JLPT N5",
     isPublic: true,
     cards: [
-      { id: "1", front: "医者", back: "Bác sĩ", hint: "いしゃ - isha" },
-      { id: "2", front: "犬", back: "Con chó", hint: "いぬ - inu" },
-      { id: "3", front: "猫", back: "Con mèo", hint: "ねこ - neko" },
-      { id: "4", front: "水", back: "Nước", hint: "みず - mizu" },
-      { id: "5", front: "火", back: "Lửa", hint: "ひ - hi" },
-      { id: "6", front: "山", back: "Núi", hint: "やま - yama" },
-      { id: "7", front: "川", back: "Sông", hint: "かわ - kawa" },
-      { id: "8", front: "木", back: "Cây", hint: "き - ki" },
-      { id: "9", front: "花", back: "Hoa", hint: "はな - hana" },
-      { id: "10", front: "空", back: "Bầu trời", hint: "そら - sora" },
-      { id: "11", front: "月", back: "Mặt trăng", hint: "つき - tsuki" },
-      { id: "12", front: "日", back: "Mặt trời / Ngày", hint: "ひ / にち" },
-      { id: "13", front: "年", back: "Năm", hint: "とし / ねん" },
-      { id: "14", front: "人", back: "Người", hint: "ひと - hito" },
-      { id: "15", front: "子", back: "Đứa trẻ", hint: "こ - ko" },
-      { id: "16", front: "女", back: "Phụ nữ", hint: "おんな - onna" },
-      { id: "17", front: "男", back: "Đàn ông", hint: "おとこ - otoko" },
-      { id: "18", front: "大", back: "To, lớn", hint: "おお - oo" },
-      { id: "19", front: "小", back: "Nhỏ", hint: "ちい - chii" },
-      { id: "20", front: "中", back: "Giữa, trong", hint: "なか - naka" },
-      { id: "21", front: "上", back: "Trên", hint: "うえ - ue" },
-      { id: "22", front: "下", back: "Dưới", hint: "した - shita" },
-      { id: "23", front: "右", back: "Phải", hint: "みぎ - migi" },
-      { id: "24", front: "左", back: "Trái", hint: "ひだり - hidari" },
-      { id: "25", front: "本", back: "Sách / Gốc", hint: "ほん - hon" },
+      { id: "1", front: "医者", back: "Bác sĩ", imageUrl: "https://tse3.mm.bing.net/th/id/OIP.sgmOx_ZbnKNxZPXFnpi1ywHaHE?r=0&pid=Api&P=0&w=300&h=300" },
+      { id: "2", front: "犬", back: "Con chó" },
+      { id: "3", front: "猫", back: "Con mèo" },
+      { id: "4", front: "水", back: "Nước" },
+      { id: "5", front: "火", back: "Lửa" },
+      { id: "6", front: "山", back: "Núi" },
+      { id: "7", front: "川", back: "Sông" },
+      { id: "8", front: "木", back: "Cây" },
+      { id: "9", front: "花", back: "Hoa" },
+      { id: "10", front: "空", back: "Bầu trời" },
+      { id: "11", front: "月", back: "Mặt trăng" },
+      { id: "12", front: "日", back: "Mặt trời / Ngày" },
+      { id: "13", front: "年", back: "Năm" },
+      { id: "14", front: "人", back: "Người" },
+      { id: "15", front: "子", back: "Đứa trẻ" },
+      { id: "16", front: "女", back: "Phụ nữ" },
+      { id: "17", front: "男", back: "Đàn ông" },
+      { id: "18", front: "大", back: "To, lớn" },
+      { id: "19", front: "小", back: "Nhỏ" },
+      { id: "20", front: "中", back: "Giữa, trong" },
+      { id: "21", front: "上", back: "Trên" },
+      { id: "22", front: "下", back: "Dưới" },
+      { id: "23", front: "右", back: "Phải" },
+      { id: "24", front: "左", back: "Trái" },
+      { id: "25", front: "本", back: "Sách / Gốc" },
     ],
     createdAt: "2024-06-15",
     lastStudied: "2024-07-06",

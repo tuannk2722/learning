@@ -17,7 +17,7 @@ function generateId() {
 }
 
 function makeEmptyCard(): EditableCard {
-  return { id: generateId(), front: "", back: "", hint: "" };
+  return { id: generateId(), front: "", back: "", imageUrl: "" };
 }
 
 interface Props {
@@ -33,12 +33,11 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
   const [description, setDescription] = useState(existingSet?.description ?? "");
   const [isPublic, setIsPublic] = useState(existingSet?.isPublic ?? true);
   const [themeColor, setThemeColor] = useState(existingSet?.color ?? "blue");
-  const [tags, setTages] = useState(existingSet?.tags.map((tag) => tag.tagName).join(",") ?? "");
 
   // Cards state
   const [cards, setCards] = useState<EditableCard[]>(
     existingSet
-      ? existingSet.cards.map((c) => ({ id: c.id, front: c.front, back: c.back, hint: c.hint ?? "" }))
+      ? existingSet.cards.map((c) => ({ id: c.id, front: c.front, back: c.back, imageUrl: c.imageUrl ?? "" }))
       : [makeEmptyCard(), makeEmptyCard(), makeEmptyCard()]
   );
 
@@ -162,7 +161,7 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
           onClick={addCard}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
-          className="w-full mt-4 py-5 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center gap-2 text-gray-400 hover:border-violet-400 hover:text-violet-600 hover:bg-violet-50 transition-all bg-white"
+          className="w-full mt-4 py-5 border-2 border-dashed border-gray-300 rounded-2xl flex items-center justify-center gap-2 text-gray-600 hover:border-violet-400 hover:text-violet-600 hover:bg-violet-50 transition-all bg-white"
         >
           <Plus className="w-5 h-5" />
           <span className="font-medium text-sm">Add new card</span>

@@ -1,9 +1,10 @@
 'use client';
 
 import { motion } from "motion/react";
-import { CheckCircle2, BarChart3, Trophy } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
+import { getColorClasses } from "@/app/lib/utils/color-palette";
 
 interface StudySummaryProps {
   trackProgress: boolean;
@@ -17,6 +18,7 @@ interface StudySummaryProps {
 export function StudySummary({ trackProgress, set, correct, incorrect, total, onRestart }: StudySummaryProps) {
   const pct = Math.round((correct / total) * 100);
   const isPerfect = correct === total;
+  const { text, bg } = getColorClasses(set.color);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white flex flex-col">
@@ -28,8 +30,8 @@ export function StudySummary({ trackProgress, set, correct, incorrect, total, on
           className="bg-white rounded-3xl border border-gray-100 shadow-xl p-10 w-full max-w-md text-center"
         >
           {/* Result icon */}
-          <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center bg-violet-100">
-            <CheckCircle2 className="w-10 h-10 text-violet-500" />
+          <div className={`w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center ${bg}`}>
+            <CheckCircle2 className={`w-10 h-10 ${text}`} />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -65,7 +67,7 @@ export function StudySummary({ trackProgress, set, correct, incorrect, total, on
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="text-center">
                 <div className="text-2xl font-bold text-emerald-500">{correct}</div>
-                <div className="text-xs text-gray-400 mt-0.5">Mastered</div>
+                <div className="text-xs text-gray-400 mt-0.5">Know</div>
               </div>
               <div className="text-center border-x border-gray-100">
                 <div className="text-2xl font-bold text-gray-700">{total}</div>
@@ -73,7 +75,7 @@ export function StudySummary({ trackProgress, set, correct, incorrect, total, on
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-red-400">{incorrect}</div>
-                <div className="text-xs text-gray-400 mt-0.5">To Review</div>
+                <div className="text-xs text-gray-400 mt-0.5">Still learning</div>
               </div>
             </div>
           }

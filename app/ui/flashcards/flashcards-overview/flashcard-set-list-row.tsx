@@ -22,7 +22,7 @@ const user = {
 
 export function FlashcardSetListRow({ set, index, isMenuOpen, onMenuToggle, onDelete }: Props) {
   const masteredPct = Math.round((set.mastered / set.cards.length) * 100);
-  const { gradient } = getColorClasses(set.color);
+  const { text, bg, gradient } = getColorClasses(set.color);
 
   return (
     <motion.div
@@ -76,7 +76,7 @@ export function FlashcardSetListRow({ set, index, isMenuOpen, onMenuToggle, onDe
       <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
         <Link
           href={`/dashboard/flashcards/${set.id}`}
-          className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3 sm:py-2 bg-indigo-500 text-white text-xs sm:text-sm font-medium rounded-xl hover:shadow-md transition-all`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3 sm:py-2 ${bg} ${text} text-xs sm:text-sm font-medium rounded-xl hover:shadow-md transition-all`}
         >
           <Play className="w-3.5 h-3.5 sm:w-4 h-4" />
           Study

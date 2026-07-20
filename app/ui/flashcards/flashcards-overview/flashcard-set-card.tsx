@@ -22,7 +22,7 @@ const user = {
 
 export function FlashcardSetCard({ set, index, isMenuOpen, onMenuToggle, onDelete }: Props) {
   const masteredPct = Math.round((set.mastered / set.cards.length) * 100);
-  const { gradient } = getColorClasses(set.color);
+  const { text, bg, gradient } = getColorClasses(set.color);
 
   return (
     <motion.div
@@ -78,13 +78,13 @@ export function FlashcardSetCard({ set, index, isMenuOpen, onMenuToggle, onDelet
 
         {/* Footer */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 text-xs text-gray-400">
+          <div className="flex items-center gap-1 text-sm text-gray-400">
             <Clock className="w-3.5 h-3.5" />
             {set.lastStudied ? `Studied ${set.lastStudied}` : "Not studied yet"}
           </div>
           <Link
             href={`/dashboard/flashcards/${set.id}`}
-            className={`flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-xl hover:shadow-md hover:scale-105 transition-all`}
+            className={`flex items-center gap-1.5 px-3 py-1.5 ${bg} ${text} text-sm font-medium rounded-xl hover:shadow-md hover:scale-105 transition-all`}
           >
             <Play className="w-3 h-3" />
             Study

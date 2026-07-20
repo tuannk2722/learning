@@ -33,7 +33,7 @@ export default function BlockItem({ block, isSelected, blockTypeInfo, onUpdate, 
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (block.type === 'text' && textareaRef.current) {
+    if ((block.type === 'text' || block.type === 'code') && textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
@@ -201,6 +201,7 @@ export default function BlockItem({ block, isSelected, blockTypeInfo, onUpdate, 
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Code</label>
               <textarea
+                ref={textareaRef}
                 value={block.content}
                 onChange={(e) => onUpdate(e.target.value)}
                 onFocus={onSelect}
@@ -217,9 +218,8 @@ export default function BlockItem({ block, isSelected, blockTypeInfo, onUpdate, 
   return (
     <motion.div
       layout
-      className={`bg-white border-2 rounded-2xl transition-all overflow-hidden ${
-        isSelected ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-gray-100 hover:border-gray-200'
-      }`}
+      className={`bg-white border-2 rounded-2xl transition-all overflow-hidden ${isSelected ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-gray-100 hover:border-gray-200'
+        }`}
     >
       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-slate-50/50">
         <GripVertical className="w-5 h-5 text-slate-300 cursor-grab active:cursor-grabbing" />

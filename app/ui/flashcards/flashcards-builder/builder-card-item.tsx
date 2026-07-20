@@ -1,13 +1,14 @@
 'use client';
 
 import { motion } from "motion/react";
-import { Trash2, Image, GripVertical } from "lucide-react";
+import { Trash2, Image } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 export interface EditableCard {
   id: string;
   front: string;
   back: string;
-  hint: string;
+  imageUrl: string;
 }
 
 interface BuilderCardItemProps {
@@ -25,6 +26,14 @@ export function BuilderCardItem({
   onUpdate,
   onDelete,
 }: BuilderCardItemProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [card.front, card.back])
 
   return (
     <motion.div
@@ -37,13 +46,13 @@ export function BuilderCardItem({
       {/* Card header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-gray-50">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-bold text-gray-400">{index + 1}</span>
+          <span className="text-sm font-bold text-gray-600">{index + 1}</span>
         </div>
         <div className="flex items-center gap-1">
           <button
             onClick={() => onDelete(card.id)}
             disabled={!canDelete}
-            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-400 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
             title="Delete card"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -57,13 +66,13 @@ export function BuilderCardItem({
           {/* Front (Term) */}
           <div className="relative">
             <textarea
+              ref={textareaRef}
               value={card.front}
               onChange={(e) => onUpdate(card.id, "front", e.target.value)}
               placeholder="E.g: Photosynthesis"
-              rows={2}
-              className="rounded-xl w-full px-4 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-100 focus:border-violet-300 transition-colors"
+              className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors"
             />
-            <label className="text-xs font-semibold text-gray-300 uppercase tracking-widest mt-1 block">
+            <label className="text-xs font-semibold text-gray-600 uppercase tracking-widest mt-1 block">
               Term
             </label>
           </div>
@@ -72,20 +81,20 @@ export function BuilderCardItem({
           <div className="flex gap-3">
             <div className="flex-1 relative">
               <textarea
+                ref={textareaRef}
                 value={card.back}
                 onChange={(e) => onUpdate(card.id, "back", e.target.value)}
                 placeholder="E.g: abc"
-                rows={2}
-                className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-100 focus:border-violet-300 transition-colors"
+                className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors"
               />
-              <label className="text-xs font-semibold text-gray-300 uppercase tracking-widest mt-1 block">
+              <label className="text-xs font-semibold text-gray-600 uppercase tracking-widest mt-1 block">
                 Definition
               </label>
             </div>
 
             {/* Image placeholder */}
             <button
-              className="flex-shrink-0 w-16 h-16 self-start border-2 border-dashed border-gray-400 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-all flex flex-col items-center justify-center gap-1 text-gray-300 hover:text-violet-400"
+              className="flex-shrink-0 w-16 h-16 self-start border-2 border-dashed border-gray-400 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-all flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-violet-400"
               title="Add image"
             >
               <Image className="w-5 h-5" />
