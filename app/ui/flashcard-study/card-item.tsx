@@ -3,12 +3,12 @@
 import { forwardRef } from "react";
 import { motion } from "motion/react";
 import { Volume2 } from "lucide-react";
-import type { FlashcardItem } from "@/app/dashboard/flashcards/(overview)/page";
+import type { FlashcardItemDTO } from "@/app/lib/definitions/flashcards";
 
 type AnswerStatus = "correct" | "incorrect" | null;
 
 interface CardItemProps {
-  card: FlashcardItem;
+  card: FlashcardItemDTO;
   isFlipped: boolean;
   isAnimating: boolean;
   pendingResult: AnswerStatus;

@@ -3,26 +3,24 @@
 import { motion } from "motion/react";
 import { Play } from "lucide-react";
 import Link from "next/link";
-import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
 import ContextMenu from "./context-menu";
 import { getColorClasses } from "@/app/lib/utils/color-palette";
+import type { FlashcardSetDTO } from "@/app/lib/definitions/flashcards";
 
 interface Props {
-  set: FlashcardSet;
+  set: FlashcardSetDTO;
   index: number;
   isMenuOpen: boolean;
+  canEdit: boolean;
   onMenuToggle: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-const user = {
-  name: 'User',
-  avatar: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-}
-
-export function FlashcardSetListRow({ set, index, isMenuOpen, onMenuToggle, onDelete }: Props) {
-  const masteredPct = Math.round((set.mastered / set.cards.length) * 100);
-  const { text, bg, gradient } = getColorClasses(set.color);
+export function FlashcardSetListRow({ set, index, isMenuOpen, canEdit, onMenuToggle, onDelete }: Props) {
+  const masteredPct = set.cardCount > 0
+    ? Math.round((set.masteredCount / set.cardCount) * 100)
+    : 0;
+  const { text, bg, gradient } = getColorClasses(set.themeColor);
 
   return (
     <motion.div
@@ -40,21 +38,25 @@ export function FlashcardSetListRow({ set, index, isMenuOpen, onMenuToggle, onDe
           )}
         </div>
         <div className="flex items-center gap-2 sm:gap-3 text-xs text-gray-400">
-          <span className="flex-shrink-0">{set.cards.length} cards</span>
-          {set.lastStudied && <span className="truncate">Last studied: {set.lastStudied}</span>}
+          <span className="flex-shrink-0">{set.cardCount} cards</span>
+          {set.lastAccessed && (
+            <span className="truncate">
+              Last studied: {new Date(set.lastAccessed).toLocaleDateString('vi-VN')}
+            </span>
+          )}
         </div>
       </div>
 
       {/* Avatar */}
       <div className="hidden sm:flex items-center gap-2 w-28 flex-shrink-0">
         <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-white font-medium text-sm overflow-hidden flex-shrink-0">
-          {user.avatar.startsWith('http') || user.avatar.startsWith('/') ? (
-            <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+          {set.ownerAvatar ? (
+            <img src={set.ownerAvatar} alt={set.ownerName} className="w-full h-full object-cover" />
           ) : (
-            user.avatar
+            <span className="text-[10px] text-gray-500">{set.ownerName[0]}</span>
           )}
         </div>
-        <span className="font-medium text-xs text-gray-500 truncate">{user.name}</span>
+        <span className="font-medium text-xs text-gray-500 truncate">{set.ownerName}</span>
       </div>
 
       {/* Progress bar */}
@@ -85,6 +87,7 @@ export function FlashcardSetListRow({ set, index, isMenuOpen, onMenuToggle, onDe
           set={set}
           index={index}
           isMenuOpen={isMenuOpen}
+          canEdit={canEdit}
           onMenuToggle={onMenuToggle}
           onDelete={onDelete}
         />

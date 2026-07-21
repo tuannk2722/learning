@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import type { FlashcardItem, FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
+import type {
+  FlashcardSetForStudy,
+  FlashcardItemDTO,
+  CardProgressMap,
+  CardProgressStatus,
+  CardProgressUpdate,
+} from "@/app/lib/definitions/flashcards";
+import { updateCardProgress, bulkUpdateCardProgress, resetSetProgress } from "@/app/lib/actions/flashcard";
 import { StudySummary } from "./study-summary";
 import { CardItem } from "./card-item";
 import { ButtonControl } from "./button-control";
@@ -11,19 +18,30 @@ import { FlashcardNotFound } from "./not-found";
 type AnswerStatus = "correct" | "incorrect" | null;
 
 interface CardState {
-  card: FlashcardItem;
+  card: FlashcardItemDTO;
   status: AnswerStatus;
   seen: boolean;
 }
 
 interface Props {
-  set: FlashcardSet;
+  set: FlashcardSetForStudy;
+  initialCardProgress?: CardProgressMap;
 }
 
-export default function FlashcardStudyClient({ set }: Props) {
+export default function FlashcardStudyClient({ set, initialCardProgress = {} }: Props) {
   const [cardStates, setCardStates] = useState<CardState[]>(() =>
-    (set?.cards ?? []).map((card) => ({ card, status: null, seen: false }))
+    (set?.cards ?? []).map((card) => {
+      const dbStatus = initialCardProgress[card.id];
+      const status: AnswerStatus =
+        dbStatus === "know" ? "correct" : dbStatus === "still_learning" ? "incorrect" : null;
+      return {
+        card,
+        status,
+        seen: status !== null,
+      };
+    })
   );
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [trackProgress, setTrackProgress] = useState(true);
@@ -36,15 +54,29 @@ export default function FlashcardStudyClient({ set }: Props) {
 
   const currentCardState = cardStates[currentIndex];
 
+  const finishSession = useCallback((updatedStates: CardState[]) => {
+    setShowSummary(true);
+    if (trackProgress) {
+      // Khi học xong (kết thúc session), đồng bộ lại progress với DB nếu bật track progress
+      const updates: CardProgressUpdate[] = updatedStates
+        .filter((cs) => cs.status !== null)
+        .map((cs) => ({
+          cardId: cs.card.id,
+          status: cs.status === "correct" ? "know" : "still_learning",
+        }));
+      void bulkUpdateCardProgress(set.id, updates);
+    }
+  }, [set.id, trackProgress]);
+
   const goNext = useCallback(() => {
     if (currentIndex < cardStates.length - 1) {
       setSlideDirection(1);
       setIsFlipped(false);
       setCurrentIndex((i) => i + 1);
     } else {
-      setShowSummary(true);
+      finishSession(cardStates);
     }
-  }, [currentIndex, cardStates.length]);
+  }, [currentIndex, cardStates, finishSession]);
 
   const goPrev = useCallback(() => {
     if (currentIndex > 0) {
@@ -54,62 +86,90 @@ export default function FlashcardStudyClient({ set }: Props) {
     }
   }, [currentIndex]);
 
-  const markCard = useCallback((status: AnswerStatus) => {
-    if (isAnimating) return;
+  const markCard = useCallback(
+    (status: AnswerStatus) => {
+      if (isAnimating) return;
 
-    if (trackProgress && status !== null) {
-      setIsAnimating(true);
-      setPendingResult(status);
+      if (trackProgress && status !== null) {
+        setIsAnimating(true);
+        setPendingResult(status);
 
-      setTimeout(() => {
+        // Optimistic background save
+        const cardId = currentCardState.card.id;
+        const progressStatus: CardProgressStatus = status === "correct" ? "know" : "still_learning";
+        void updateCardProgress(set.id, cardId, progressStatus);
+
+        setTimeout(() => {
+          const nextCardStates = cardStates.map((cs, i) =>
+            i === currentIndex ? { ...cs, status, seen: true } : cs
+          );
+          setCardStates(nextCardStates);
+
+          setSlideDirection(status === "correct" ? 1 : -1);
+          setIsFlipped(false);
+          setPendingResult(null);
+          setIsAnimating(false);
+
+          if (currentIndex < cardStates.length - 1) {
+            setCurrentIndex((i) => i + 1);
+          } else {
+            finishSession(nextCardStates);
+          }
+        }, 450);
+      } else {
         setCardStates((prev) =>
-          prev.map((cs, i) => (i === currentIndex ? { ...cs, status, seen: true } : cs))
+          prev.map((cs, i) => (i === currentIndex ? { ...cs, status: null, seen: true } : cs))
         );
-
-        setSlideDirection(status === "correct" ? 1 : -1);
-        setIsFlipped(false);
-        setPendingResult(null);
-        setIsAnimating(false);
-
-        if (currentIndex < cardStates.length - 1) {
-          setCurrentIndex((i) => i + 1);
-        } else {
-          setShowSummary(true);
-        }
-      }, 450);
-    } else {
-      setCardStates((prev) =>
-        prev.map((cs, i) => (i === currentIndex ? { ...cs, status, seen: true } : cs))
-      );
-      goNext();
-    }
-  }, [currentIndex, cardStates.length, trackProgress, goNext, isAnimating]);
+        goNext();
+      }
+    },
+    [isAnimating, trackProgress, currentCardState, set.id, cardStates, currentIndex, finishSession, goNext]
+  );
 
   const handleUndo = () => {
-    if (isAnimating) return;
-    setCardStates(prev => {
-      return prev.map((cs, i) => (i === currentIndex - 1 ? { ...cs, status: null, seen: false } : cs))
-    })
-    goPrev();
-  }
+    if (isAnimating || currentIndex === 0) return;
+    const prevIndex = currentIndex - 1;
+    const prevCard = cardStates[prevIndex].card;
 
+    if (trackProgress) {
+      // Reset trạng thái card trước đó về null trong UI và DB
+      setCardStates((prev) =>
+        prev.map((cs, i) => (i === prevIndex ? { ...cs, status: null, seen: false } : cs))
+      );
+      void updateCardProgress(set.id, prevCard.id, null);
+    }
+    goPrev();
+  };
+
+  /** Shuffle các cards tính từ card hiện tại trở về sau */
   const handleShuffle = () => {
     if (isAnimating) return;
     setCardStates((prev) => {
-      const shuffled = [...prev];
-      for (let i = shuffled.length - 1; i > 0; i--) {
+      const before = prev.slice(0, currentIndex);
+      const remaining = prev.slice(currentIndex);
+
+      for (let i = remaining.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
       }
-      return shuffled;
+
+      return [...before, ...remaining];
     });
-    setCurrentIndex(0);
     setIsFlipped(false);
-    setIsShuffled((s) => !s);
+    setIsShuffled(true);
   };
 
   const handleRestart = () => {
-    setCardStates((set?.cards ?? []).map((card) => ({ card, status: null, seen: false })));
+    if (trackProgress) {
+      void resetSetProgress(set.id);
+    }
+    setCardStates(
+      (set?.cards ?? []).map((card) => ({
+        card,
+        status: null,
+        seen: false,
+      }))
+    );
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowSummary(false);
@@ -117,10 +177,38 @@ export default function FlashcardStudyClient({ set }: Props) {
     setIsAnimating(false);
   };
 
+  /** Lọc các cards còn "still learning" để học tiếp */
+  const handleFocusStillLearning = () => {
+    const stillLearningCards = cardStates.filter((cs) => cs.status === "incorrect");
+    if (stillLearningCards.length === 0) return;
+
+    setCardStates(
+      stillLearningCards.map((cs) => ({
+        ...cs,
+        status: null,
+        seen: false,
+      }))
+    );
+    setCurrentIndex(0);
+    setIsFlipped(false);
+    setShowSummary(false);
+    setPendingResult(null);
+    setIsAnimating(false);
+  };
+
+  // Reset card progress in UI when trackProgress is disabled
+  useEffect(() => {
+    if (!trackProgress) {
+      setCardStates((prev) =>
+        prev.map((cs) => ({ ...cs, status: null }))
+      );
+    }
+  }, [trackProgress]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (isAnimating) return;
+      if (isAnimating || showSummary) return;
       if (e.code === "Space") {
         e.preventDefault();
         setIsFlipped((f) => !f);
@@ -134,19 +222,17 @@ export default function FlashcardStudyClient({ set }: Props) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [markCard, trackProgress, goPrev, isAnimating]);
+  }, [markCard, trackProgress, goPrev, isAnimating, showSummary]);
 
   const handleVolume = (e: React.MouseEvent) => {
     e.stopPropagation();
-  }
+  };
 
   const correct = cardStates.filter((c) => c.status === "correct").length;
   const incorrect = cardStates.filter((c) => c.status === "incorrect").length;
 
   if (!set) {
-    return (
-      <FlashcardNotFound />
-    );
+    return <FlashcardNotFound />;
   }
 
   if (showSummary) {
@@ -158,6 +244,7 @@ export default function FlashcardStudyClient({ set }: Props) {
         incorrect={incorrect}
         total={cardStates.length}
         onRestart={handleRestart}
+        onFocusStillLearning={handleFocusStillLearning}
       />
     );
   }
@@ -175,7 +262,6 @@ export default function FlashcardStudyClient({ set }: Props) {
 
       {/* Main flashcard area */}
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-3 overflow-hidden">
-
         {trackProgress && (
           <div className="flex items-center justify-between w-full max-w-2xl mb-3 px-1">
             <div className="flex items-center gap-1.5 text-sm">
@@ -197,7 +283,9 @@ export default function FlashcardStudyClient({ set }: Props) {
               isAnimating={isAnimating}
               pendingResult={pendingResult}
               slideDirection={slideDirection}
-              onClick={() => { if (!isAnimating) setIsFlipped((f) => !f); }}
+              onClick={() => {
+                if (!isAnimating) setIsFlipped((f) => !f);
+              }}
               onVolumeClick={handleVolume}
             />
           </AnimatePresence>

@@ -8,9 +8,11 @@ interface BuilderSetInfoProps {
   description: string;
   isPublic: boolean;
   themeColor: string;
+  tagsString: string;
   onTitleChange: (val: string) => void;
   onDescriptionChange: (val: string) => void;
   setThemeColor: (val: string) => void;
+  onTagsChange: (val: string) => void;
   onTogglePublic: () => void;
 }
 
@@ -19,9 +21,11 @@ export function BuilderSetInfo({
   description,
   isPublic,
   themeColor,
+  tagsString,
   onTitleChange,
   onDescriptionChange,
   setThemeColor,
+  onTagsChange,
   onTogglePublic,
 }: BuilderSetInfoProps) {
   return (
@@ -29,6 +33,7 @@ export function BuilderSetInfo({
 
       <div className="mb-5">
         <button
+          type="button"
           onClick={onTogglePublic}
           className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-all ${isPublic
             ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
@@ -72,14 +77,14 @@ export function BuilderSetInfo({
 
       <div className="mb-4">
         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">
-          Tags
+          Tags (separated by commas)
         </label>
         <div>
           <input
             type="text"
-            placeholder="Write tags with commas"
-            // value={tags}
-            // onChange={(e) => onTagsChange(e.target.value)}
+            placeholder="e.g. Japanese, N5, Vocabulary"
+            value={tagsString}
+            onChange={(e) => onTagsChange(e.target.value)}
             className="w-full px-4 py-3 text-sm text-gray-700 bg-transparent rounded-xl border border-gray-200 focus:outline-none resize-none placeholder:text-gray-300"
           />
         </div>
@@ -90,16 +95,17 @@ export function BuilderSetInfo({
           Theme Color
         </label>
         <div>
-          <div className="grid grid-cols-10 gap-2">
+          <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
             {COLOR_PALETTE.map((option) => (
               <button
                 key={option.name}
                 className={`w-10 h-10 rounded-full ${option.bg} border-2 ${themeColor === option.name
-                  ? "border-violet-500"
+                  ? "border-violet-500 scale-105"
                   : "border-gray-200 hover:border-violet-300"
                   }`}
-                type='button'
+                type="button"
                 onClick={() => setThemeColor(option.name)}
+                title={option.name}
               />
             ))}
           </div>

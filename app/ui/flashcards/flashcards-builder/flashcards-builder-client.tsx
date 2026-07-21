@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
+import type { FlashcardSetForStudy } from "@/app/lib/definitions/flashcards";
+import { createFlashcardSet, updateFlashcardSet } from "@/app/lib/actions/flashcard";
 import { BuilderSetInfo } from "./builder-set-info";
 import { BuilderToolbar } from "./builder-toolbar";
 import { BuilderSearchBar } from "./builder-search-bar";
@@ -21,7 +22,7 @@ function makeEmptyCard(): EditableCard {
 }
 
 interface Props {
-  existingSet?: FlashcardSet;
+  existingSet?: FlashcardSetForStudy;
 }
 
 export default function FlashcardBuilderClient({ existingSet }: Props) {
@@ -32,27 +33,34 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
   const [title, setTitle] = useState(existingSet?.title ?? "");
   const [description, setDescription] = useState(existingSet?.description ?? "");
   const [isPublic, setIsPublic] = useState(existingSet?.isPublic ?? true);
-  const [themeColor, setThemeColor] = useState(existingSet?.color ?? "blue");
+  const [themeColor, setThemeColor] = useState(existingSet?.themeColor ?? "blue");
+  const [tagsString, setTagsString] = useState(existingSet?.tags ? existingSet.tags.join(", ") : "");
 
   // Cards state
   const [cards, setCards] = useState<EditableCard[]>(
-    existingSet
-      ? existingSet.cards.map((c) => ({ id: c.id, front: c.front, back: c.back, imageUrl: c.imageUrl ?? "" }))
+    existingSet && existingSet.cards.length > 0
+      ? existingSet.cards.map((c) => ({
+          id: c.id,
+          front: c.front,
+          back: c.back,
+          imageUrl: c.imageUrl ?? "",
+        }))
       : [makeEmptyCard(), makeEmptyCard(), makeEmptyCard()]
   );
 
   // UI state
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Filtered cards for search
   const filteredCards = showSearch && searchQuery
     ? cards.filter(
-      (c) =>
-        c.front.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.back.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+        (c) =>
+          c.front.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          c.back.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     : cards;
 
   // Card operations
@@ -83,27 +91,90 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
   };
 
   // Save handler
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) {
       alert("Please enter a title for the flashcard set.");
       return;
     }
-    setSaved(true);
-    setTimeout(() => {
-      router.push("/dashboard/flashcards");
-    }, 800);
+
+    const validCards = cards.filter((c) => c.front.trim() || c.back.trim());
+    if (validCards.length === 0) {
+      alert("Please enter at least one card with content.");
+      return;
+    }
+
+    setIsSaving(true);
+    setErrorMessage("");
+
+    const tags = tagsString
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    const payload = {
+      title,
+      description,
+      isPublic,
+      themeColor,
+      tags,
+      cards: cards.map((c, idx) => ({
+        id: c.id.length > 20 ? c.id : undefined, // UUID check
+        front: c.front,
+        back: c.back,
+        imageUrl: c.imageUrl,
+        orderIndex: idx,
+      })),
+    };
+
+    try {
+      const res = isEditing && existingSet
+        ? await updateFlashcardSet(existingSet.id, payload)
+        : await createFlashcardSet(payload);
+
+      if (res.success) {
+        router.push(res.setId ? `/dashboard/flashcards/${res.setId}` : "/dashboard/flashcards");
+      } else {
+        setIsSaving(false);
+        setErrorMessage(res.message);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsSaving(false);
+      setErrorMessage("System error occurred. Please try again.");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* Full-screen Loading Overlay when Saving */}
+      <AnimatePresence>
+        {isSaving && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex flex-col items-center justify-center text-white gap-3"
+          >
+            <Loader2 className="w-10 h-10 animate-spin text-violet-400" />
+            <p className="text-lg font-medium">Saving your flashcard set...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-20">
+        {/* Error message if any */}
+        {errorMessage && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium">
+            {errorMessage}
+          </div>
+        )}
 
         {/* Page Header */}
         <FlashcardBuilderHeader
           title={title}
           isEditing={isEditing}
           handleSave={handleSave}
-          saved={saved}
+          saved={isSaving}
         />
 
         {/* Set Info Section */}
@@ -112,9 +183,11 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
           description={description}
           isPublic={isPublic}
           themeColor={themeColor}
+          tagsString={tagsString}
           onTitleChange={setTitle}
           onDescriptionChange={setDescription}
           setThemeColor={setThemeColor}
+          onTagsChange={setTagsString}
           onTogglePublic={() => setIsPublic((p) => !p)}
         />
 
@@ -149,9 +222,8 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
                   onUpdate={updateCard}
                   onDelete={deleteCard}
                 />
-              )
-            }
-            )}
+              );
+            })}
           </AnimatePresence>
           <div id="cards-bottom" />
         </div>
@@ -170,7 +242,7 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
 
       {/* Floating Save FAB */}
       <AnimatePresence>
-        {!saved && (
+        {!isSaving && (
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

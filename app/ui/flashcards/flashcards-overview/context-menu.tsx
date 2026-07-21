@@ -1,20 +1,21 @@
-"use client";
+'use client';
 
-import { Edit3, MoreHorizontal, Trash2 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import Link from "next/link";
-import { useEffect, useRef } from "react";
-import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
+import { Edit3, MoreHorizontal, Trash2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import Link from 'next/link';
+import { useEffect, useRef } from 'react';
+import type { FlashcardSetDTO } from '@/app/lib/definitions/flashcards';
 
 interface Props {
-  set: FlashcardSet;
+  set: FlashcardSetDTO;
   index: number;
   isMenuOpen: boolean;
+  canEdit: boolean;
   onMenuToggle: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-export default function ContextMenu({ set, index, isMenuOpen, onMenuToggle, onDelete }: Props) {
+export default function ContextMenu({ set, index, isMenuOpen, canEdit, onMenuToggle, onDelete }: Props) {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,11 +27,14 @@ export default function ContextMenu({ set, index, isMenuOpen, onMenuToggle, onDe
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isMenuOpen, onMenuToggle, set.id]);
+
+  // Nếu không có quyền edit thì không hiển thị menu
+  if (!canEdit) return null;
 
   return (
     <div ref={menuRef} className="relative flex-shrink-0 ml-2">
@@ -64,5 +68,5 @@ export default function ContextMenu({ set, index, isMenuOpen, onMenuToggle, onDe
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }

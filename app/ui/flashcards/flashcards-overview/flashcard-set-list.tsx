@@ -1,37 +1,45 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layers } from "lucide-react";
 import Link from "next/link";
-import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
+import type { FlashcardSetDTO } from "@/app/lib/definitions/flashcards";
 import { FlashcardSetCard } from "./flashcard-set-card";
 import { FlashcardSetListRow } from "./flashcard-set-list-row";
+import { deleteFlashcardSet } from "@/app/lib/actions/flashcard";
 
 interface FlashcardSetListProps {
-  sets: FlashcardSet[];
+  sets: FlashcardSetDTO[];
   viewMode: "grid" | "list";
+  currentUserId: string;
 }
 
-export default function FlashcardSetList({ sets, viewMode }: FlashcardSetListProps) {
+export default function FlashcardSetList({ sets, viewMode, currentUserId }: FlashcardSetListProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [localSets, setLocalSets] = useState<FlashcardSet[]>(sets);
+  const [localSets, setLocalSets] = useState<FlashcardSetDTO[]>(sets);
+
+  useEffect(() => {
+    setLocalSets(sets);
+  }, [sets]);
 
   const handleMenuToggle = (id: string) => {
     setOpenMenuId((prev) => (prev === id ? null : id));
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa bộ flashcard này?")) return;
     setLocalSets((prev) => prev.filter((s) => s.id !== id));
     setOpenMenuId(null);
+    await deleteFlashcardSet(id);
   };
 
   if (localSets.length === 0) {
     return (
-      <div className="text-center py-24">
-        <Layers className="w-14 h-14 mx-auto mb-4 text-gray-300" />
-        <p className="text-gray-500 font-medium mb-2">No flashcard sets found</p>
-        <Link href="/dashboard/flashcards/create" className="text-violet-600 text-sm hover:underline">
-          Create your first set →
+      <div className="text-center py-12">
+        <Layers className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+        <p className="text-gray-500 font-medium mb-1 text-sm">No flashcard sets found</p>
+        <Link href="/dashboard/flashcards/create" className="text-violet-600 text-xs hover:underline">
+          Create a new set →
         </Link>
       </div>
     );
@@ -46,6 +54,7 @@ export default function FlashcardSetList({ sets, viewMode }: FlashcardSetListPro
             set={set}
             index={i}
             isMenuOpen={openMenuId === set.id}
+            canEdit={set.ownerId === currentUserId}
             onMenuToggle={handleMenuToggle}
             onDelete={handleDelete}
           />
@@ -62,6 +71,7 @@ export default function FlashcardSetList({ sets, viewMode }: FlashcardSetListPro
           set={set}
           index={i}
           isMenuOpen={openMenuId === set.id}
+          canEdit={set.ownerId === currentUserId}
           onMenuToggle={handleMenuToggle}
           onDelete={handleDelete}
         />

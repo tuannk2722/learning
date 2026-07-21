@@ -1,14 +1,32 @@
-import FlashcardStudyClient from "@/app/ui/flashcard-study/flashcard-study-client";
-import { sampleSets } from "../../(overview)/page";
+import { auth } from '@/auth';
+import { redirect, notFound } from 'next/navigation';
+import { getFlashcardSetById } from '@/app/lib/data/flashcard';
+import { recordSetAccess } from '@/app/lib/actions/flashcard';
+import FlashcardStudyClient from '@/app/ui/flashcard-study/flashcard-study-client';
 
-export default async function FlashcardStudyPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
-  const setId = params.id.toString();
-  const set = sampleSets.find((s) => s.id === setId);
+interface Props {
+  params: Promise<{ id: string }>;
+}
 
-  if (!set) {
-    return <div>Not Found Set</div>
-  }
+export default async function FlashcardStudyPage({ params }: Props) {
+  const session = await auth();
+  if (!session?.user?.id) redirect('/login');
 
-  return <FlashcardStudyClient set={set} />
+  const { id } = await params;
+  const userId = session.user.id;
+
+  const result = await getFlashcardSetById(id, userId);
+  if (!result) return notFound();
+
+  const { set, cardProgress } = result;
+
+  // Ghi log truy cập (fire-and-forget — không block render)
+  void recordSetAccess(id);
+
+  return (
+    <FlashcardStudyClient
+      set={set}
+      initialCardProgress={cardProgress}
+    />
+  );
 }

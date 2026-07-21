@@ -3,22 +3,31 @@
 import { motion } from "motion/react";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import type { FlashcardSet } from "@/app/dashboard/flashcards/(overview)/page";
+import type { FlashcardSetForStudy } from "@/app/lib/definitions/flashcards";
 import { getColorClasses } from "@/app/lib/utils/color-palette";
 
 interface StudySummaryProps {
   trackProgress: boolean;
-  set: FlashcardSet;
+  set: FlashcardSetForStudy;
   correct: number;
   incorrect: number;
   total: number;
   onRestart: () => void;
+  onFocusStillLearning?: () => void;
 }
 
-export function StudySummary({ trackProgress, set, correct, incorrect, total, onRestart }: StudySummaryProps) {
-  const pct = Math.round((correct / total) * 100);
-  const isPerfect = correct === total;
-  const { text, bg } = getColorClasses(set.color);
+export function StudySummary({
+  trackProgress,
+  set,
+  correct,
+  incorrect,
+  total,
+  onRestart,
+  onFocusStillLearning,
+}: StudySummaryProps) {
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const isPerfect = correct === total && total > 0;
+  const { text, bg } = getColorClasses(set.themeColor);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white flex flex-col">
@@ -63,7 +72,7 @@ export function StudySummary({ trackProgress, set, correct, incorrect, total, on
           </div>
 
           {/* Stats */}
-          {trackProgress &&
+          {trackProgress && (
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="text-center">
                 <div className="text-2xl font-bold text-emerald-500">{correct}</div>
@@ -78,18 +87,21 @@ export function StudySummary({ trackProgress, set, correct, incorrect, total, on
                 <div className="text-xs text-gray-400 mt-0.5">Still learning</div>
               </div>
             </div>
-          }
+          )}
 
           {/* Buttons */}
           <div className="flex flex-col gap-3">
-            {trackProgress && incorrect > 0 &&
+            {trackProgress && incorrect > 0 && onFocusStillLearning && (
               <button
-                // onClick={onRestart}
+                type="button"
+                onClick={onFocusStillLearning}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-violet-500/25 transition-all"
               >
                 Focus on {incorrect} Still learning cards
-              </button>}
+              </button>
+            )}
             <button
+              type="button"
               onClick={onRestart}
               className="flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-600 rounded-2xl font-medium hover:bg-gray-50 transition-colors"
             >

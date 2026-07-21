@@ -9,7 +9,8 @@ import {
   serial,
   jsonb,
   numeric,
-  primaryKey
+  primaryKey,
+  index
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
@@ -213,3 +214,57 @@ export const activity_logs = pgTable('activity_logs', {
   metadata: jsonb('metadata'),
   created_at: timestamp('created_at').defaultNow(),
 });
+
+// ─── FLASHCARDS ────────────────────────────────────────────────────────────────
+
+// 17. BẢNG FLASHCARD_SETS
+export const flashcard_sets = pgTable('flashcard_sets', {
+  id: uuid('id').default(sql`uuid_generate_v4()`).primaryKey(),
+  owner_id: uuid('owner_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  is_public: boolean('is_public').default(true).notNull(),
+  theme_color: varchar('theme_color', { length: 50 }).default('blue'),
+  tags: text('tags').array().default(sql`'{}'::text[]`),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+}, (t) => ({
+  owner_idx: index('flashcard_sets_owner_idx').on(t.owner_id),
+}));
+
+// 18. BẢNG FLASHCARD_ITEMS
+export const flashcard_items = pgTable('flashcard_items', {
+  id: uuid('id').default(sql`uuid_generate_v4()`).primaryKey(),
+  set_id: uuid('set_id').notNull().references(() => flashcard_sets.id, { onDelete: 'cascade' }),
+  front: text('front').notNull(),
+  back: text('back').notNull(),
+  image_url: text('image_url'),
+  order_index: integer('order_index').notNull().default(0),
+  created_at: timestamp('created_at').defaultNow(),
+}, (t) => ({
+  set_idx: index('flashcard_items_set_idx').on(t.set_id),
+}));
+
+// 19. BẢNG FLASHCARD_ACCESS_LOG (dùng cho "Recent")
+export const flashcard_access_log = pgTable('flashcard_access_log', {
+  id: serial('id').primaryKey(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  set_id: uuid('set_id').notNull().references(() => flashcard_sets.id, { onDelete: 'cascade' }),
+  accessed_at: timestamp('accessed_at').defaultNow().notNull(),
+}, (t) => ({
+  user_set_idx: index('flashcard_access_log_user_set_idx').on(t.user_id, t.set_id),
+}));
+
+// 20. BẢNG FLASHCARD_CARD_PROGRESS (status mỗi card per user)
+// Chỉ lưu khi user đã bấm know / still_learning (không lưu null)
+// PK(user_id, card_id) — mỗi user chỉ có 1 status per card (của session gần nhất)
+export const flashcard_card_progress = pgTable('flashcard_card_progress', {
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  set_id: uuid('set_id').notNull().references(() => flashcard_sets.id, { onDelete: 'cascade' }),
+  card_id: uuid('card_id').notNull().references(() => flashcard_items.id, { onDelete: 'cascade' }),
+  status: varchar('status', { length: 20 }), // 'know' | 'still_learning' or null
+  updated_at: timestamp('updated_at').defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.user_id, t.card_id] }),
+  set_user_idx: index('flashcard_card_progress_set_user_idx').on(t.set_id, t.user_id),
+}));

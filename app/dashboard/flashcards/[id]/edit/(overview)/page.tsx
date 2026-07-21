@@ -1,18 +1,21 @@
-import { sampleSets } from "../../../(overview)/page";
-import FlashcardBuilderClient from "@/app/ui/flashcards/flashcards-builder/flashcards-builder-client";
-import { notFound } from "next/navigation";
+import { auth } from '@/auth';
+import { redirect, notFound } from 'next/navigation';
+import { getFlashcardSetForEdit } from '@/app/lib/data/flashcard';
+import FlashcardBuilderClient from '@/app/ui/flashcards/flashcards-builder/flashcards-builder-client';
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
 export default async function EditFlashcardPage({ params }: Props) {
-  const { id } = await params;
-  const existingSet = sampleSets.find((s) => s.id === id);
+  const session = await auth();
+  if (!session?.user?.id) redirect('/login');
 
-  if (!existingSet) {
-    notFound();
-  }
+  const { id } = await params;
+  const userId = session.user.id;
+
+  const existingSet = await getFlashcardSetForEdit(id, userId);
+  if (!existingSet) return notFound();
 
   return <FlashcardBuilderClient existingSet={existingSet} />;
 }
