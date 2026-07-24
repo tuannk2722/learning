@@ -18,7 +18,7 @@ export default async function FlashcardStudyPage({ params }: Props) {
   const result = await getFlashcardSetById(id, userId);
   if (!result) return notFound();
 
-  const { set, cardProgress, isOwner } = result;
+  const { set, cardProgress, studySession, isOwner } = result;
 
   // Ghi log truy cập (fire-and-forget — không block render)
   void recordSetAccess(id);
@@ -27,6 +27,7 @@ export default async function FlashcardStudyPage({ params }: Props) {
     <FlashcardStudyClient
       set={set}
       initialCardProgress={cardProgress}
+      initialStudySession={studySession}
       isOwner={isOwner}
     />
   );

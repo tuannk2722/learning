@@ -79,11 +79,10 @@ export function ButtonControl({
           <button
             onClick={onShuffle}
             disabled={isAnimating}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-              isShuffled
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed ${isShuffled
                 ? "bg-violet-100 text-violet-600 border-2 border-violet-300"
-                : "hover:bg-gray-100 text-gray-400 hover:text-gray-600"
-            }`}
+                : "hover:bg-gray-100 text-gray-500 hover:text-gray-600"
+              }`}
             title="Shuffle"
           >
             <Shuffle className="w-4 h-4" />

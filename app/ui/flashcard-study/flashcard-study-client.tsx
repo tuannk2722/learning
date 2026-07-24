@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AnimatePresence } from "motion/react";
 import type {
   FlashcardSetForStudy,
@@ -8,8 +8,9 @@ import type {
   CardProgressMap,
   CardProgressStatus,
   CardProgressUpdate,
+  StudySessionMeta,
 } from "@/app/lib/definitions/flashcards";
-import { updateCardProgress, bulkUpdateCardProgress, resetSetProgress } from "@/app/lib/actions/flashcard";
+import { updateCardProgress, bulkUpdateCardProgress, resetSetProgress, upsertStudySession } from "@/app/lib/actions/flashcard";
 import { StudySummary } from "./study-summary";
 import { CardItem } from "./card-item";
 import { ButtonControl } from "./button-control";
@@ -28,18 +29,28 @@ interface CardState {
 interface Props {
   set: FlashcardSetForStudy;
   initialCardProgress?: CardProgressMap;
+  initialStudySession?: StudySessionMeta | null;
   isOwner?: boolean;
 }
 
-export default function FlashcardStudyClient({ set, initialCardProgress = {}, isOwner = true }: Props) {
+export default function FlashcardStudyClient({
+  set,
+  initialCardProgress = {},
+  initialStudySession = null,
+  isOwner = true,
+}: Props) {
   // Always scroll to top when study page mounts
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, []);
 
-  const [cardStates, setCardStates] = useState<CardState[]>(() =>
-    (set?.cards ?? []).map((card) => {
-      const dbStatus = initialCardProgress[card.id];
+  // ─── Khởi tạo cardStates từ initialCardProgress ───────────────────────────
+  // Chỉ restore statuses từ DB khi trackProgress đang ON.
+  // Khi OFF: khởi tạo tất cả null để UI sạch, không bị lẫn lộn với dữ liệu cũ.
+  const [cardStates, setCardStates] = useState<CardState[]>(() => {
+    const savedTrackProgress = initialStudySession?.trackProgress ?? false;
+    return (set?.cards ?? []).map((card) => {
+      const dbStatus = savedTrackProgress ? initialCardProgress[card.id] : null;
       const status: AnswerStatus =
         dbStatus === "know" ? "correct" : dbStatus === "still_learning" ? "incorrect" : null;
       return {
@@ -47,12 +58,35 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {}, is
         status,
         seen: status !== null,
       };
-    })
+    });
+  });
+
+  // ─── Khởi tạo trackProgress từ session đã lưu ─────────────────────────────
+  const [trackProgress, setTrackProgress] = useState<boolean>(
+    () => initialStudySession?.trackProgress ?? false
   );
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // ─── Khởi tạo currentIndex dựa theo mode ──────────────────────────────────
+  const [currentIndex, setCurrentIndex] = useState<number>(() => {
+    const savedTrackProgress = initialStudySession?.trackProgress ?? false;
+
+    if (savedTrackProgress) {
+      // trackProgress ON: nhảy đến card still_learning đầu tiên (theo thứ tự gốc)
+      const cards = set?.cards ?? [];
+      const firstStillLearningIdx = cards.findIndex(
+        (card) => initialCardProgress[card.id] === "still_learning"
+      );
+      // Nếu không còn still_learning (all know hoặc chưa học) → về đầu
+      return firstStillLearningIdx >= 0 ? firstStillLearningIdx : 0;
+    } else {
+      // trackProgress OFF: khôi phục vị trí card đã lưu
+      const savedIdx = initialStudySession?.lastCardIndex ?? 0;
+      const maxIdx = Math.max(0, (set?.cards?.length ?? 1) - 1);
+      return Math.min(savedIdx, maxIdx);
+    }
+  });
+
   const [isFlipped, setIsFlipped] = useState(false);
-  const [trackProgress, setTrackProgress] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
@@ -62,11 +96,55 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {}, is
 
   const currentCardState = cardStates[currentIndex];
 
+  // ─── Debounce ref để lưu lastCardIndex khi trackProgress = OFF ────────────
+  const saveIndexTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const saveSessionDebounced = useCallback(
+    (trackProg: boolean, idx: number) => {
+      if (saveIndexTimerRef.current) clearTimeout(saveIndexTimerRef.current);
+      saveIndexTimerRef.current = setTimeout(() => {
+        void upsertStudySession(set.id, { trackProgress: trackProg, lastCardIndex: idx });
+      }, 500);
+    },
+    [set.id]
+  );
+
+  // ─── Lưu lastCardIndex khi index thay đổi và trackProgress = OFF ──────────
+  useEffect(() => {
+    if (!trackProgress) {
+      saveSessionDebounced(false, currentIndex);
+    }
+  }, [currentIndex, trackProgress, saveSessionDebounced]);
+
+  // ─── Lưu session + xử lý side-effect khi trackProgress toggle ───────────
+  const handleSetTrackProgress = useCallback(
+    (newVal: boolean | ((prev: boolean) => boolean)) => {
+      // Resolve giá trị mới ngay lập tức (không dùng updater để đơn giản hoá)
+      const resolved = typeof newVal === "function" ? newVal(trackProgress) : newVal;
+      setTrackProgress(resolved);
+
+      // Lưu ngay vào DB (không debounce)
+      if (saveIndexTimerRef.current) clearTimeout(saveIndexTimerRef.current);
+      void upsertStudySession(set.id, { trackProgress: resolved, lastCardIndex: resolved ? currentIndex : 0 });
+
+      // Khi bật ON từ OFF giữa chừng → reset về card đầu + xóa tất cả status
+      // (vì chưa có data nào đáng tin cậy để track)
+      if (resolved && !trackProgress) {
+        setCurrentIndex(0);
+        setIsFlipped(false);
+        setSlideDirection(1);
+        setCardStates((prev) => prev.map((cs) => ({ ...cs, status: null, seen: false })));
+      }
+    },
+    [set.id, currentIndex, trackProgress]
+  );
+
+
   const finishSession = useCallback((updatedStates: CardState[]) => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     setShowSummary(true);
     if (trackProgress) {
-      // Khi học xong (kết thúc session), đồng bộ lại progress với DB nếu bật track progress
+      // trackProgress ON: đồng bộ progress với DB
       const updates: CardProgressUpdate[] = updatedStates
         .filter((cs) => cs.status !== null)
         .map((cs) => ({
@@ -74,6 +152,11 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {}, is
           status: cs.status === "correct" ? "know" : "still_learning",
         }));
       void bulkUpdateCardProgress(set.id, updates);
+    } else {
+      // trackProgress OFF: kết thúc session hoàn toàn
+      // → xóa card progress trong DB và reset session index về 0
+      void resetSetProgress(set.id);
+      void upsertStudySession(set.id, { trackProgress: false, lastCardIndex: 0 });
     }
   }, [set.id, trackProgress]);
 
@@ -173,6 +256,8 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {}, is
     if (trackProgress) {
       void resetSetProgress(set.id);
     }
+    // Reset cả session index về 0
+    void upsertStudySession(set.id, { trackProgress, lastCardIndex: 0 });
     setCardStates(
       (set?.cards ?? []).map((card) => ({
         card,
@@ -206,15 +291,6 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {}, is
     setPendingResult(null);
     setIsAnimating(false);
   };
-
-  // Reset card progress in UI when trackProgress is disabled
-  useEffect(() => {
-    if (!trackProgress) {
-      setCardStates((prev) =>
-        prev.map((cs) => ({ ...cs, status: null }))
-      );
-    }
-  }, [trackProgress]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -333,7 +409,7 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {}, is
       {/* Bottom control bar */}
       <ButtonControl
         trackProgress={trackProgress}
-        setTrackProgress={setTrackProgress}
+        setTrackProgress={handleSetTrackProgress}
         currentIndex={currentIndex}
         totalCards={cardStates.length}
         isAnimating={isAnimating}

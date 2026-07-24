@@ -268,7 +268,20 @@ export const flashcard_card_progress = pgTable('flashcard_card_progress', {
   set_user_idx: index('flashcard_card_progress_set_user_idx').on(t.set_id, t.user_id),
 }));
 
-// 21. BẢNG LESSON_SESSIONS (Theo dõi phiên học bài theo thời gian thực)
+// 21. BẢNG FLASHCARD_STUDY_SESSIONS (Lưu trạng thái phiên học flashcard per user/set)
+// track_progress: user có bật track progress không
+// last_card_index: vị trí card cuối cùng (chỉ có ý nghĩa khi track_progress = false)
+export const flashcard_study_sessions = pgTable('flashcard_study_sessions', {
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  set_id: uuid('set_id').notNull().references(() => flashcard_sets.id, { onDelete: 'cascade' }),
+  track_progress: boolean('track_progress').notNull().default(false),
+  last_card_index: integer('last_card_index').notNull().default(0),
+  updated_at: timestamp('updated_at').defaultNow(),
+}, (t) => ({
+  pk: primaryKey({ columns: [t.user_id, t.set_id] }),
+}));
+
+// 22. BẢNG LESSON_SESSIONS (Theo dõi phiên học bài theo thời gian thực)
 // Mỗi lần user mở 1 lesson → tạo 1 session mới với session_token duy nhất.
 // Heartbeat API sẽ cộng dần accumulated_seconds.
 // Khi user mở tab mới → session cũ bị deactivate (is_active = false).
