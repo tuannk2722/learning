@@ -1,10 +1,10 @@
 'use client';
 
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import type { FlashcardSetForStudy } from "@/app/lib/definitions/flashcards";
-import { getColorClasses } from "@/app/lib/utils/color-palette";
 
 interface StudySummaryProps {
   trackProgress: boolean;
@@ -25,22 +25,25 @@ export function StudySummary({
   onRestart,
   onFocusStillLearning,
 }: StudySummaryProps) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
+
   const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
   const isPerfect = correct === total && total > 0;
-  const { text, bg } = getColorClasses(set.themeColor);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white flex flex-col">
+    <div className="h-[calc(100vh-64px)] bg-gradient-to-b from-violet-50 to-white flex flex-col items-center justify-center p-4 overflow-hidden">
 
-      <div className="flex-1 flex items-center justify-center px-4">
+      <div className="w-full flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl border border-gray-100 shadow-xl p-10 w-full max-w-md text-center"
+          className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8 w-full max-w-md text-center"
         >
           {/* Result icon */}
-          <div className={`w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center ${bg}`}>
-            <CheckCircle2 className={`w-10 h-10 ${text}`} />
+          <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center bg-blue-100">
+            <CheckCircle2 className="w-10 h-10 text-blue-600" />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -109,6 +112,7 @@ export function StudySummary({
             </button>
             <Link
               href="/dashboard/flashcards"
+              scroll={true}
               className="flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-600 rounded-2xl font-medium hover:bg-gray-50 transition-colors"
             >
               Back to Sets

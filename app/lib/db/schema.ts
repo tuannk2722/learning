@@ -224,7 +224,6 @@ export const flashcard_sets = pgTable('flashcard_sets', {
   title: text('title').notNull(),
   description: text('description'),
   is_public: boolean('is_public').default(true).notNull(),
-  theme_color: varchar('theme_color', { length: 50 }).default('blue'),
   tags: text('tags').array().default(sql`'{}'::text[]`),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
@@ -267,4 +266,22 @@ export const flashcard_card_progress = pgTable('flashcard_card_progress', {
 }, (t) => ({
   pk: primaryKey({ columns: [t.user_id, t.card_id] }),
   set_user_idx: index('flashcard_card_progress_set_user_idx').on(t.set_id, t.user_id),
-}));
+}));
+
+// 21. BẢNG LESSON_SESSIONS (Theo dõi phiên học bài theo thời gian thực)
+// Mỗi lần user mở 1 lesson → tạo 1 session mới với session_token duy nhất.
+// Heartbeat API sẽ cộng dần accumulated_seconds.
+// Khi user mở tab mới → session cũ bị deactivate (is_active = false).
+export const lesson_sessions = pgTable('lesson_sessions', {
+  id: serial('id').primaryKey(),
+  user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  lesson_id: integer('lesson_id').notNull().references(() => lessons.id, { onDelete: 'cascade' }),
+  session_token: varchar('session_token', { length: 64 }).notNull().unique(),
+  accumulated_seconds: integer('accumulated_seconds').default(0),
+  last_heartbeat_at: timestamp('last_heartbeat_at').defaultNow(),
+  is_active: boolean('is_active').default(true).notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+}, (t) => ({
+  user_lesson_idx: index('lesson_sessions_user_lesson_idx').on(t.user_id, t.lesson_id),
+  token_idx: index('lesson_sessions_token_idx').on(t.session_token),
+}));
