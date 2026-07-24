@@ -43,6 +43,12 @@ export interface FlashcardSetForStudy {
 /** Map cardId → status, truyền xuống từ server cho session gần nhất */
 export type CardProgressMap = Record<string, CardProgressStatus>;
 
+/** Metadata phiên học — lưu trạng thái toggle và vị trí card */
+export interface StudySessionMeta {
+  trackProgress: boolean;
+  lastCardIndex: number;
+}
+
 // ─── Builder / Form Types ──────────────────────────────────────────────────────
 
 /** Input khi tạo / update set từ builder */

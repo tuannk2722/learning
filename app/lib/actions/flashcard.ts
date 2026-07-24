@@ -6,6 +6,7 @@ import {
   flashcard_items,
   flashcard_access_log,
   flashcard_card_progress,
+  flashcard_study_sessions,
 } from '../db/schema';
 import { eq, and, inArray, notInArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
@@ -14,6 +15,7 @@ import type {
   FlashcardSetInput,
   FlashcardActionResult,
   CardProgressUpdate,
+  StudySessionMeta,
 } from '../definitions/flashcards';
 
 
@@ -377,3 +379,34 @@ export async function updateSingleCard(
   }
 }
 
+/**
+ * Upsert trạng thái phiên học (track_progress toggle + vị trí card).
+ * Gọi fire-and-forget từ client mỗi khi toggle trackProgress hoặc đổi index (khi OFF).
+ */
+export async function upsertStudySession(
+  setId: string,
+  data: StudySessionMeta
+): Promise<void> {
+  try {
+    const userId = await requireAuth();
+    await db
+      .insert(flashcard_study_sessions)
+      .values({
+        user_id: userId,
+        set_id: setId,
+        track_progress: data.trackProgress,
+        last_card_index: data.lastCardIndex,
+        updated_at: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [flashcard_study_sessions.user_id, flashcard_study_sessions.set_id],
+        set: {
+          track_progress: data.trackProgress,
+          last_card_index: data.lastCardIndex,
+          updated_at: new Date(),
+        },
+      });
+  } catch (err) {
+    console.error('[upsertStudySession]', err);
+  }
+}

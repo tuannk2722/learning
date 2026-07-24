@@ -4,6 +4,7 @@ import {
   flashcard_items,
   flashcard_access_log,
   flashcard_card_progress,
+  flashcard_study_sessions,
   users,
 } from '../db/schema';
 import { eq, and, inArray, notInArray, sql, desc } from 'drizzle-orm';
@@ -13,6 +14,7 @@ import type {
   FlashcardSetForStudy,
   FlashcardItemDTO,
   CardProgressMap,
+  StudySessionMeta,
 } from '../definitions/flashcards';
 
 /** Chuẩn hoá string để so sánh: bỏ dấu + lowercase */
@@ -164,6 +166,7 @@ export async function getFlashcardSetById(
 ): Promise<{
   set: FlashcardSetForStudy;
   cardProgress: CardProgressMap;
+  studySession: StudySessionMeta | null;
   isOwner: boolean;
 } | null> {
   const [setRow] = await db
@@ -185,29 +188,50 @@ export async function getFlashcardSetById(
   // Non-owner chỉ có thể xem public sets
   if (!isOwner && !setRow.is_public) return null;
 
-  const items = await db
-    .select()
-    .from(flashcard_items)
-    .where(eq(flashcard_items.set_id, setId))
-    .orderBy(flashcard_items.order_index);
-
-  const progressRows = await db
-    .select({
-      card_id: flashcard_card_progress.card_id,
-      status: flashcard_card_progress.status,
-    })
-    .from(flashcard_card_progress)
-    .where(
-      and(
-        eq(flashcard_card_progress.user_id, userId),
-        eq(flashcard_card_progress.set_id, setId)
+  const [items, progressRows, sessionRow] = await Promise.all([
+    db
+      .select()
+      .from(flashcard_items)
+      .where(eq(flashcard_items.set_id, setId))
+      .orderBy(flashcard_items.order_index),
+    db
+      .select({
+        card_id: flashcard_card_progress.card_id,
+        status: flashcard_card_progress.status,
+      })
+      .from(flashcard_card_progress)
+      .where(
+        and(
+          eq(flashcard_card_progress.user_id, userId),
+          eq(flashcard_card_progress.set_id, setId)
+        )
+      ),
+    db
+      .select({
+        track_progress: flashcard_study_sessions.track_progress,
+        last_card_index: flashcard_study_sessions.last_card_index,
+      })
+      .from(flashcard_study_sessions)
+      .where(
+        and(
+          eq(flashcard_study_sessions.user_id, userId),
+          eq(flashcard_study_sessions.set_id, setId)
+        )
       )
-    );
+      .limit(1),
+  ]);
 
   const cardProgress: CardProgressMap = {};
   for (const row of progressRows) {
     cardProgress[row.card_id] = row.status as 'know' | 'still_learning';
   }
+
+  const studySession: StudySessionMeta | null = sessionRow[0]
+    ? {
+        trackProgress: sessionRow[0].track_progress,
+        lastCardIndex: sessionRow[0].last_card_index,
+      }
+    : null;
 
   const set: FlashcardSetForStudy = {
     id: setRow.id,
@@ -226,7 +250,7 @@ export async function getFlashcardSetById(
     ),
   };
 
-  return { set, cardProgress, isOwner };
+  return { set, cardProgress, studySession, isOwner };
 }
 
 // ─── Query: Set chi tiết cho Builder (Edit page) ──────────────────────────────

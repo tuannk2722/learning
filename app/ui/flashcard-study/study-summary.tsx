@@ -29,8 +29,13 @@ export function StudySummary({
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, []);
 
-  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
-  const isPerfect = correct === total && total > 0;
+  let pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  let isPerfect = correct === total && total > 0;
+
+  if (!trackProgress) {
+    pct = 100;
+    isPerfect = true;
+  }
 
   return (
     <div className="h-[calc(100vh-64px)] bg-gradient-to-b from-violet-50 to-white flex flex-col items-center justify-center p-4 overflow-hidden">
@@ -70,7 +75,6 @@ export function StudySummary({
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-bold text-gray-900">{pct}%</span>
-              <span className="text-xs text-gray-400">{trackProgress ? "accuracy" : "completed"}</span>
             </div>
           </div>
 

@@ -1,5 +1,5 @@
 import {
-  BookOpen, Trophy, Target, User, LogIn, UserPlus,
+  BookOpen, Trophy, Target, LogIn, UserPlus,
   Settings, Star, CheckCircle, Trash2, Eye, EyeOff, PenLine,
 } from "lucide-react";
 import type { ActivityAction } from "@/app/lib/definitions/activity-log";
@@ -12,6 +12,7 @@ const ACTION_ICONS: Record<ActivityAction, React.ElementType> = {
   COMPLETE_ONBOARDING: CheckCircle,
   UPDATE_PROFILE: Settings,
   ENROLL_COURSE: BookOpen,
+  RATE_COURSE: Star,
   COMPLETE_LESSON: BookOpen,
   COMPLETE_QUIZ: Star,
   UNLOCK_ACHIEVEMENT: Trophy,
@@ -131,8 +132,8 @@ export default function ActivityLogItem({ log }: ActivityLogItemProps) {
                 {typeof metaData.passed === "boolean" && (
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${metaData.passed
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
                       }`}
                   >
                     {metaData.passed ? "Passed" : "Failed"}
