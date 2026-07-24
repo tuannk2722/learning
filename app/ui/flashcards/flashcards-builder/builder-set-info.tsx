@@ -1,17 +1,14 @@
 'use client';
 
-import { COLOR_PALETTE } from "@/app/lib/utils/color-palette";
 import { Globe, Lock } from "lucide-react";
 
 interface BuilderSetInfoProps {
   title: string;
   description: string;
   isPublic: boolean;
-  themeColor: string;
   tagsString: string;
   onTitleChange: (val: string) => void;
   onDescriptionChange: (val: string) => void;
-  setThemeColor: (val: string) => void;
   onTagsChange: (val: string) => void;
   onTogglePublic: () => void;
 }
@@ -20,11 +17,9 @@ export function BuilderSetInfo({
   title,
   description,
   isPublic,
-  themeColor,
   tagsString,
   onTitleChange,
   onDescriptionChange,
-  setThemeColor,
   onTagsChange,
   onTogglePublic,
 }: BuilderSetInfoProps) {
@@ -77,7 +72,7 @@ export function BuilderSetInfo({
 
       <div className="mb-4">
         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">
-          Tags (separated by commas)
+          Tags (separated by commas) <span className="text-red-400">*</span>
         </label>
         <div>
           <input
@@ -89,29 +84,6 @@ export function BuilderSetInfo({
           />
         </div>
       </div>
-
-      <div>
-        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">
-          Theme Color
-        </label>
-        <div>
-          <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
-            {COLOR_PALETTE.map((option) => (
-              <button
-                key={option.name}
-                className={`w-10 h-10 rounded-full ${option.bg} border-2 ${themeColor === option.name
-                  ? "border-violet-500 scale-105"
-                  : "border-gray-200 hover:border-violet-300"
-                  }`}
-                type="button"
-                onClick={() => setThemeColor(option.name)}
-                title={option.name}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
     </div>
   );
 }

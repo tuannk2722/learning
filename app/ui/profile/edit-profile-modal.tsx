@@ -21,7 +21,6 @@ export function EditProfileModal({ isOpen, onClose, userInfo }: EditProfileModal
   const [location, setLocation] = useState(userInfo.location || '');
   const [avatarUrl, setAvatarUrl] = useState(userInfo.avatar_url || '');
 
-  const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,7 +94,6 @@ export function EditProfileModal({ isOpen, onClose, userInfo }: EditProfileModal
                   avatarUrl={avatarUrl}
                   setAvatarUrl={setAvatarUrl}
                   nickname={name}
-                  onUploadingChange={setIsUploading}
                 />
 
                 {/* Form Fields */}

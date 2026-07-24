@@ -1,9 +1,3 @@
-/**
- * flashcards.ts — Type definitions cho tính năng Flashcards.
- * Được dùng ở cả Server (actions/data) và Client Components.
- */
-
-// ─── Card Progress ─────────────────────────────────────────────────────────────
 
 /** Status của một card trong một session học */
 export type CardProgressStatus = 'know' | 'still_learning' | null;
@@ -25,19 +19,12 @@ export interface FlashcardSetDTO {
   title: string;
   description: string | null;
   isPublic: boolean;
-  themeColor: string;
   tags: string[];
   cardCount: number;
-  /** Số cards có status "know" của session gần nhất (khi trackProgress bật) */
-  masteredCount: number;
   createdAt: Date;
-  /** Thời điểm user truy cập set này gần nhất (null nếu chưa từng truy cập) */
   lastAccessed: Date | null;
-  /** id của owner */
   ownerId: string;
-  /** Tên của owner */
   ownerName: string;
-  /** Avatar URL của owner */
   ownerAvatar: string | null;
 }
 
@@ -48,7 +35,6 @@ export interface FlashcardSetForStudy {
   id: string;
   title: string;
   description: string | null;
-  themeColor: string;
   isPublic: boolean;
   tags: string[];
   cards: FlashcardItemDTO[];
@@ -64,14 +50,11 @@ export interface FlashcardSetInput {
   title: string;
   description: string;
   isPublic: boolean;
-  themeColor: string;
-  /** Mảng tags sau khi parse từ string ngăn bởi dấu phẩy */
   tags: string[];
   cards: FlashcardCardInput[];
 }
 
 export interface FlashcardCardInput {
-  /** UUID nếu là card đang edit, bỏ trống nếu là card mới */
   id?: string;
   front: string;
   back: string;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { FlashcardSetForStudy } from "@/app/lib/definitions/flashcards";
@@ -12,6 +12,7 @@ import { BuilderToolbar } from "./builder-toolbar";
 import { BuilderSearchBar } from "./builder-search-bar";
 import { BuilderCardItem, type EditableCard } from "./builder-card-item";
 import FlashcardBuilderHeader from "./builder-header";
+import { toast } from "sonner";
 
 function generateId() {
   return Math.random().toString(36).slice(2, 9);
@@ -28,23 +29,23 @@ interface Props {
 export default function FlashcardBuilderClient({ existingSet }: Props) {
   const router = useRouter();
   const isEditing = !!existingSet;
+  // const [openModal, setOpenModal] = useState(false);
 
   // Set metadata state
   const [title, setTitle] = useState(existingSet?.title ?? "");
   const [description, setDescription] = useState(existingSet?.description ?? "");
   const [isPublic, setIsPublic] = useState(existingSet?.isPublic ?? true);
-  const [themeColor, setThemeColor] = useState(existingSet?.themeColor ?? "blue");
   const [tagsString, setTagsString] = useState(existingSet?.tags ? existingSet.tags.join(", ") : "");
 
   // Cards state
   const [cards, setCards] = useState<EditableCard[]>(
     existingSet && existingSet.cards.length > 0
       ? existingSet.cards.map((c) => ({
-          id: c.id,
-          front: c.front,
-          back: c.back,
-          imageUrl: c.imageUrl ?? "",
-        }))
+        id: c.id,
+        front: c.front,
+        back: c.back,
+        imageUrl: c.imageUrl ?? "",
+      }))
       : [makeEmptyCard(), makeEmptyCard(), makeEmptyCard()]
   );
 
@@ -57,10 +58,10 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
   // Filtered cards for search
   const filteredCards = showSearch && searchQuery
     ? cards.filter(
-        (c) =>
-          c.front.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.back.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      (c) =>
+        c.front.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.back.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : cards;
 
   // Card operations
@@ -84,22 +85,16 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
     setCards((prev) => prev.map((c) => ({ ...c, front: c.back, back: c.front })));
   };
 
-  const deleteAll = () => {
-    if (confirm("Are you sure you want to delete all cards?")) {
-      setCards([makeEmptyCard()]);
-    }
-  };
-
   // Save handler
   const handleSave = async () => {
-    if (!title.trim()) {
-      alert("Please enter a title for the flashcard set.");
+    if (!title.trim() || !tagsString.trim()) {
+      toast.error("Please enter the full Title and Tags to save the flashcard set.");
       return;
     }
 
-    const validCards = cards.filter((c) => c.front.trim() || c.back.trim());
-    if (validCards.length === 0) {
-      alert("Please enter at least one card with content.");
+    const validCards = cards.filter((c) => c.front.trim() && c.back.trim());
+    if (validCards.length < 3) {
+      toast.error("Please enter at least 3 cards with content.");
       return;
     }
 
@@ -115,7 +110,6 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
       title,
       description,
       isPublic,
-      themeColor,
       tags,
       cards: cards.map((c, idx) => ({
         id: c.id.length > 20 ? c.id : undefined, // UUID check
@@ -149,15 +143,7 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
       {/* Full-screen Loading Overlay when Saving */}
       <AnimatePresence>
         {isSaving && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex flex-col items-center justify-center text-white gap-3"
-          >
-            <Loader2 className="w-10 h-10 animate-spin text-violet-400" />
-            <p className="text-lg font-medium">Saving your flashcard set...</p>
-          </motion.div>
+          <div className="fixed inset-0 z-[99999] bg-white/10 backdrop-blur-sm cursor-wait" />
         )}
       </AnimatePresence>
 
@@ -182,11 +168,9 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
           title={title}
           description={description}
           isPublic={isPublic}
-          themeColor={themeColor}
           tagsString={tagsString}
           onTitleChange={setTitle}
           onDescriptionChange={setDescription}
-          setThemeColor={setThemeColor}
           onTagsChange={setTagsString}
           onTogglePublic={() => setIsPublic((p) => !p)}
         />
@@ -198,7 +182,7 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
           onAddCard={addCard}
           onToggleSearch={() => { setShowSearch((s) => !s); if (showSearch) setSearchQuery(""); }}
           onSwapFrontBack={swapFrontBack}
-          onDeleteAll={deleteAll}
+          onDeleteAll={() => setCards([makeEmptyCard()])}
         />
 
         {/* Search Bar */}

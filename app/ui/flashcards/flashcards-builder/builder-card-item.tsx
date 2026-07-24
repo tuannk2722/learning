@@ -143,7 +143,7 @@ export function BuilderCardItem({
               <textarea
                 value={card.back}
                 onChange={(e) => onUpdate(card.id, "back", e.target.value)}
-                placeholder="E.g: The process by which plants use sunlight to synthesize nutrients..."
+                placeholder="E.g: abc"
                 className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors"
               />
               <label className="text-xs font-semibold text-gray-600 uppercase tracking-widest mt-1 block">

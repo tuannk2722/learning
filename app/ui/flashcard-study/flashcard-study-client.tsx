@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import type {
   FlashcardSetForStudy,
   FlashcardItemDTO,
@@ -14,6 +14,8 @@ import { StudySummary } from "./study-summary";
 import { CardItem } from "./card-item";
 import { ButtonControl } from "./button-control";
 import { FlashcardNotFound } from "./not-found";
+import { FlashcardStudyHeader } from "./header";
+import { FlashcardKeyboard } from "./keyboard-hint-bar";
 
 type AnswerStatus = "correct" | "incorrect" | null;
 
@@ -26,9 +28,15 @@ interface CardState {
 interface Props {
   set: FlashcardSetForStudy;
   initialCardProgress?: CardProgressMap;
+  isOwner?: boolean;
 }
 
-export default function FlashcardStudyClient({ set, initialCardProgress = {} }: Props) {
+export default function FlashcardStudyClient({ set, initialCardProgress = {}, isOwner = true }: Props) {
+  // Always scroll to top when study page mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
+
   const [cardStates, setCardStates] = useState<CardState[]>(() =>
     (set?.cards ?? []).map((card) => {
       const dbStatus = initialCardProgress[card.id];
@@ -44,7 +52,7 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [trackProgress, setTrackProgress] = useState(true);
+  const [trackProgress, setTrackProgress] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
 
@@ -55,6 +63,7 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
   const currentCardState = cardStates[currentIndex];
 
   const finishSession = useCallback((updatedStates: CardState[]) => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     setShowSummary(true);
     if (trackProgress) {
       // Khi học xong (kết thúc session), đồng bộ lại progress với DB nếu bật track progress
@@ -160,6 +169,7 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
   };
 
   const handleRestart = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     if (trackProgress) {
       void resetSetProgress(set.id);
     }
@@ -179,6 +189,7 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
 
   /** Lọc các cards còn "still learning" để học tiếp */
   const handleFocusStillLearning = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     const stillLearningCards = cardStates.filter((cs) => cs.status === "incorrect");
     if (stillLearningCards.length === 0) return;
 
@@ -209,6 +220,17 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (isAnimating || showSummary) return;
+
+      const target = e.target as HTMLElement | null;
+      const isInputFocused =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          Boolean(target.closest("input, textarea, [contenteditable='true'], [role='dialog']")));
+
+      if (isInputFocused) return;
+
       if (e.code === "Space") {
         e.preventDefault();
         setIsFlipped((f) => !f);
@@ -227,6 +249,16 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
   const handleVolume = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
+
+  const handleCardUpdate = useCallback((updatedCard: { id: string; front: string; back: string }) => {
+    setCardStates((prev) =>
+      prev.map((cs) =>
+        cs.card.id === updatedCard.id
+          ? { ...cs, card: { ...cs.card, front: updatedCard.front, back: updatedCard.back } }
+          : cs
+      )
+    );
+  }, []);
 
   const correct = cardStates.filter((c) => c.status === "correct").length;
   const incorrect = cardStates.filter((c) => c.status === "incorrect").length;
@@ -250,24 +282,25 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-gradient-to-b from-slate-50 to-white flex flex-col overflow-hidden">
-      {/* Progress bar */}
-      <div className="w-full h-1 bg-gray-100">
-        <motion.div
-          className="h-full bg-gradient-to-r from-violet-500 to-purple-500"
-          animate={{ width: `${((currentIndex + 1) / cardStates.length) * 100}%` }}
-          transition={{ duration: 0.3 }}
-        />
-      </div>
+    <div className="h-[calc(100vh-64px)] bg-gradient-to-b from-slate-50 to-white flex flex-col justify-between overflow-hidden">
+      {/* Header */}
+      <FlashcardStudyHeader
+        id={set.id}
+        title={set.title}
+        isOwner={isOwner}
+        handleRestart={handleRestart}
+        currentIndex={currentIndex}
+        cardStates={cardStates}
+      />
 
       {/* Main flashcard area */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-3 overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-2 overflow-hidden">
         {trackProgress && (
-          <div className="flex items-center justify-between w-full max-w-2xl mb-3 px-1">
-            <div className="flex items-center gap-1.5 text-sm">
+          <div className="flex items-center justify-between w-full max-w-2xl mb-2 px-1 shrink-0">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm">
               <span className="text-red-400 font-semibold">{incorrect} Still learning</span>
             </div>
-            <div className="flex items-center gap-1.5 text-sm">
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm">
               <span className="text-emerald-500 font-semibold">Know {correct}</span>
             </div>
           </div>
@@ -278,6 +311,7 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
           <AnimatePresence mode="wait" custom={slideDirection}>
             <CardItem
               key={currentIndex}
+              isOwner={isOwner}
               card={currentCardState.card}
               isFlipped={isFlipped}
               isAnimating={isAnimating}
@@ -287,19 +321,13 @@ export default function FlashcardStudyClient({ set, initialCardProgress = {} }: 
                 if (!isAnimating) setIsFlipped((f) => !f);
               }}
               onVolumeClick={handleVolume}
+              onCardUpdate={handleCardUpdate}
             />
           </AnimatePresence>
         </div>
 
         {/* Keyboard hint bar */}
-        <div className="mt-2 bg-violet-50 rounded-xl px-4 py-2 flex items-center justify-center gap-2 text-xs text-violet-600">
-          <span>⌨️</span>
-          <kbd className="px-2 py-0.5 bg-white border border-violet-200 rounded-lg font-mono text-[10px] shadow-sm">Space</kbd>
-          <span>to flip •</span>
-          <kbd className="px-2 py-0.5 bg-white border border-violet-200 rounded-lg font-mono text-[10px] shadow-sm">←</kbd>
-          <kbd className="px-2 py-0.5 bg-white border border-violet-200 rounded-lg font-mono text-[10px] shadow-sm">→</kbd>
-          <span>to navigate</span>
-        </div>
+        <FlashcardKeyboard />
       </div>
 
       {/* Bottom control bar */}

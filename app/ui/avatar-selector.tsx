@@ -18,19 +18,13 @@ interface AvatarSelectorProps {
   avatarUrl: string;
   setAvatarUrl: (url: string) => void;
   nickname: string;
-  onUploadingChange?: (isUploading: boolean) => void;
 }
 
-export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname, onUploadingChange }: AvatarSelectorProps) {
+export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname }: AvatarSelectorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-
-  const handleUploadingChange = (uploading: boolean) => {
-    setIsUploading(uploading);
-    if (onUploadingChange) onUploadingChange(uploading);
-  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,7 +33,6 @@ export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname, onUploadingC
     const blobUrl = URL.createObjectURL(file);
     setPreviewUrl(blobUrl);
     setUploadError(null);
-    handleUploadingChange(true);
 
     try {
       const formData = new FormData();
@@ -60,7 +53,6 @@ export function AvatarSelector({ avatarUrl, setAvatarUrl, nickname, onUploadingC
       toast.error(errorMsg);
       setPreviewUrl(null);
     } finally {
-      handleUploadingChange(false);
       URL.revokeObjectURL(blobUrl);
     }
   };

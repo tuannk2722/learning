@@ -10,14 +10,12 @@ import {
 import { eq, and, inArray, notInArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
-import { redirect } from 'next/navigation';
 import type {
   FlashcardSetInput,
   FlashcardActionResult,
   CardProgressUpdate,
 } from '../definitions/flashcards';
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
 
 async function requireAuth() {
   const session = await auth();
@@ -36,10 +34,10 @@ export async function createFlashcardSet(
     const userId = await requireAuth();
 
     if (!data.title.trim()) {
-      return { success: false, message: 'Tiêu đề không được để trống.' };
+      return { success: false, message: 'Title cannot be empty.' };
     }
     if (!data.cards.some((c) => c.front.trim() || c.back.trim())) {
-      return { success: false, message: 'Cần ít nhất 1 thẻ có nội dung.' };
+      return { success: false, message: 'At least 1 card with content is required.' };
     }
 
     const [newSet] = await db
@@ -49,7 +47,6 @@ export async function createFlashcardSet(
         title: data.title.trim(),
         description: data.description.trim() || null,
         is_public: data.isPublic,
-        theme_color: data.themeColor,
         tags: data.tags.filter(Boolean),
       })
       .returning({ id: flashcard_sets.id });
@@ -71,10 +68,10 @@ export async function createFlashcardSet(
     }
 
     revalidatePath('/dashboard/flashcards');
-    return { success: true, message: 'Tạo thành công!', setId: newSet.id };
+    return { success: true, message: 'Successfully created!', setId: newSet.id };
   } catch (err) {
     console.error('[createFlashcardSet]', err);
-    return { success: false, message: 'Có lỗi xảy ra, vui lòng thử lại.' };
+    return { success: false, message: 'An error occurred, please try again.' };
   }
 }
 
@@ -94,12 +91,12 @@ export async function updateFlashcardSet(
       .where(eq(flashcard_sets.id, setId))
       .limit(1);
 
-    if (!existing) return { success: false, message: 'Không tìm thấy set.' };
+    if (!existing) return { success: false, message: 'Not found set.' };
     if (existing.owner_id !== userId)
-      return { success: false, message: 'Bạn không có quyền chỉnh sửa set này.' };
+      return { success: false, message: 'You don\'t have permission to edit this set.' };
 
     if (!data.title.trim()) {
-      return { success: false, message: 'Tiêu đề không được để trống.' };
+      return { success: false, message: 'Title cannot be empty.' };
     }
 
     // Update metadata
@@ -109,7 +106,6 @@ export async function updateFlashcardSet(
         title: data.title.trim(),
         description: data.description.trim() || null,
         is_public: data.isPublic,
-        theme_color: data.themeColor,
         tags: data.tags.filter(Boolean),
         updated_at: new Date(),
       })
@@ -166,10 +162,10 @@ export async function updateFlashcardSet(
     revalidatePath('/dashboard/flashcards');
     revalidatePath(`/dashboard/flashcards/${setId}`);
     revalidatePath(`/dashboard/flashcards/${setId}/edit`);
-    return { success: true, message: 'Cập nhật thành công!', setId };
+    return { success: true, message: 'Updated successfully!', setId };
   } catch (err) {
     console.error('[updateFlashcardSet]', err);
-    return { success: false, message: 'Có lỗi xảy ra, vui lòng thử lại.' };
+    return { success: false, message: 'An error occurred, please try again.' };
   }
 }
 
@@ -187,18 +183,18 @@ export async function deleteFlashcardSet(
       .where(eq(flashcard_sets.id, setId))
       .limit(1);
 
-    if (!existing) return { success: false, message: 'Không tìm thấy set.' };
+    if (!existing) return { success: false, message: 'Not found set.' };
     if (existing.owner_id !== userId)
-      return { success: false, message: 'Bạn không có quyền xoá set này.' };
+      return { success: false, message: 'You don\'t have permission to delete this set.' };
 
     // Cascade sẽ xoá items, access_log, card_progress
     await db.delete(flashcard_sets).where(eq(flashcard_sets.id, setId));
 
     revalidatePath('/dashboard/flashcards');
-    return { success: true, message: 'Đã xoá bộ thẻ.' };
+    return { success: true, message: 'Set deleted successfully!' };
   } catch (err) {
     console.error('[deleteFlashcardSet]', err);
-    return { success: false, message: 'Có lỗi xảy ra, vui lòng thử lại.' };
+    return { success: false, message: 'An error occurred, please try again.' };
   }
 }
 
@@ -323,6 +319,61 @@ export async function resetSetProgress(setId: string): Promise<void> {
     revalidatePath(`/dashboard/flashcards/${setId}`);
   } catch (err) {
     console.error('[resetSetProgress]', err);
+  }
+}
+
+/**
+ * Cập nhật nội dung (front & back) của 1 thẻ duy nhất trong bộ flashcard
+ */
+export async function updateSingleCard(
+  cardId: string,
+  data: { front: string; back: string }
+): Promise<FlashcardActionResult> {
+  try {
+    const userId = await requireAuth();
+
+    // Tìm thẻ và kiểm tra quyền sở hữu của user đối với bộ thẻ chứa thẻ này
+    const [cardItem] = await db
+      .select({
+        id: flashcard_items.id,
+        set_id: flashcard_items.set_id,
+        owner_id: flashcard_sets.owner_id,
+      })
+      .from(flashcard_items)
+      .innerJoin(flashcard_sets, eq(flashcard_items.set_id, flashcard_sets.id))
+      .where(eq(flashcard_items.id, cardId))
+      .limit(1);
+
+    if (!cardItem) {
+      return { success: false, message: 'Card not found.' };
+    }
+
+    if (cardItem.owner_id !== userId) {
+      return { success: false, message: 'You don\'t have permission to edit this card.' };
+    }
+
+    const frontTrim = data.front.trim();
+    const backTrim = data.back.trim();
+
+    if (!frontTrim && !backTrim) {
+      return { success: false, message: 'Card content cannot be empty.' };
+    }
+
+    await db
+      .update(flashcard_items)
+      .set({
+        front: frontTrim,
+        back: backTrim,
+      })
+      .where(eq(flashcard_items.id, cardId));
+
+    revalidatePath(`/dashboard/flashcards/${cardItem.set_id}`);
+    revalidatePath(`/dashboard/flashcards`);
+
+    return { success: true, message: 'Update card successfully!' };
+  } catch (err) {
+    console.error('[updateSingleCard]', err);
+    return { success: false, message: 'An error occurred while updating the card.' };
   }
 }
 
