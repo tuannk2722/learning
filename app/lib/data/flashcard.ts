@@ -191,6 +191,8 @@ export async function getFlashcardSetById(
       description: flashcard_sets.description,
       is_public: flashcard_sets.is_public,
       tags: flashcard_sets.tags,
+      front_lang: flashcard_sets.front_lang,
+      back_lang: flashcard_sets.back_lang,
     })
     .from(flashcard_sets)
     .where(eq(flashcard_sets.id, setId))
@@ -253,6 +255,8 @@ export async function getFlashcardSetById(
     description: setRow.description,
     isPublic: setRow.is_public,
     tags: setRow.tags ?? [],
+    frontLang: setRow.front_lang ?? 'en-US',
+    backLang: setRow.back_lang ?? 'en-US',
     cards: items.map(
       (item): FlashcardItemDTO => ({
         id: item.id,

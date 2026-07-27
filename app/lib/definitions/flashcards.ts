@@ -38,6 +38,8 @@ export interface FlashcardSetForStudy {
   isPublic: boolean;
   tags: string[];
   cards: FlashcardItemDTO[];
+  frontLang: string;
+  backLang: string;
 }
 
 /** Map cardId → status, truyền xuống từ server cho session gần nhất */
@@ -58,6 +60,8 @@ export interface FlashcardSetInput {
   isPublic: boolean;
   tags: string[];
   cards: FlashcardCardInput[];
+  frontLang?: string;
+  backLang?: string;
 }
 
 export interface FlashcardCardInput {

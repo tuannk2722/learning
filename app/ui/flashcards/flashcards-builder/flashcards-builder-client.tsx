@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus } from "lucide-react";
+import { Plus, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import type { FlashcardSetForStudy } from "@/app/lib/definitions/flashcards";
@@ -12,6 +12,7 @@ import { BuilderToolbar } from "./builder-toolbar";
 import { BuilderSearchBar } from "./builder-search-bar";
 import { BuilderCardItem, type EditableCard } from "./builder-card-item";
 import FlashcardBuilderHeader from "./builder-header";
+import { LanguageSelector } from "./language-selector";
 import { toast } from "sonner";
 
 function generateId() {
@@ -54,6 +55,10 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
   const [showSearch, setShowSearch] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Language state (set-level)
+  const [frontLang, setFrontLang] = useState<string>(existingSet?.frontLang ?? 'en-US');
+  const [backLang, setBackLang] = useState<string>(existingSet?.backLang ?? 'en-US');
 
   // Filtered cards for search
   const filteredCards = showSearch && searchQuery
@@ -111,6 +116,8 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
       description,
       isPublic,
       tags,
+      frontLang,
+      backLang,
       cards: cards.map((c, idx) => ({
         id: c.id.length > 20 ? c.id : undefined, // UUID check
         front: c.front,
@@ -191,6 +198,24 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
           value={searchQuery}
           onChange={setSearchQuery}
         />
+
+        {/* Language Selection Header (Outside Cards) */}
+        <div className="mb-4 p-4 bg-white rounded-2xl border-2 border-gray-100 shadow-xs flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
+            <Globe className="w-4 h-4 text-violet-500" />
+            <span>Card Audio Languages</span>
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-500">Term:</span>
+              <LanguageSelector side="TERM" value={frontLang} onChange={setFrontLang} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-gray-500">Definition:</span>
+              <LanguageSelector side="DEFINITION" value={backLang} onChange={setBackLang} />
+            </div>
+          </div>
+        </div>
 
         {/* Cards List */}
         <div className="space-y-3">
