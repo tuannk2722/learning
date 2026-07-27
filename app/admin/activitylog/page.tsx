@@ -1,8 +1,8 @@
-﻿import ActivityLogHeader from "@/app/ui/admin/activity-log/activity-log-header";
+import ActivityLogHeader from "@/app/ui/admin/activity-log/activity-log-header";
 import ActivityLogStats from "@/app/ui/admin/activity-log/activity-log-stats";
 import ActivityLogFilters from "@/app/ui/admin/activity-log/activity-log-filters";
 import ActivityLogTimeline from "@/app/ui/admin/activity-log/activity-log-timeline";
-import ActivityLogPagination from "@/app/ui/admin/activity-log/activity-log-pagination";
+import { Pagination } from "@/app/ui/pagination";
 import { getActivityLogs, getActivityLogStats } from "@/app/lib/data/activity-logs";
 
 interface SearchParams {
@@ -51,7 +51,7 @@ export default async function ActivityLogPage({ searchParams }: PageProps) {
 
           <ActivityLogTimeline logs={logs} />
 
-          <ActivityLogPagination
+          <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
           />

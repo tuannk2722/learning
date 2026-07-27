@@ -22,6 +22,7 @@ export default function FlashcardFilter() {
       } else {
         params.delete("q");
       }
+      params.delete("page");
       const queryString = params.toString();
       const url = queryString ? `${pathname}?${queryString}` : pathname;
 
