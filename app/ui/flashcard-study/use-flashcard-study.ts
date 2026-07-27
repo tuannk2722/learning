@@ -13,6 +13,7 @@ import {
   resetSetProgress,
   upsertStudySession,
 } from "@/app/lib/actions/flashcard";
+import { useSpeech } from "./use-speech";
 
 
 export type AnswerStatus = "correct" | "incorrect" | null;
@@ -99,6 +100,12 @@ export function useFlashcardStudy({
   const [pendingResult, setPendingResult] = useState<AnswerStatus>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isFocusRound, setIsFocusRound] = useState(false);
+
+  // ── TTS ────────────────────────────────────────────────────────────────────
+  const { speakFront, speakBack } = useSpeech(
+    set.frontLang ?? 'en-US',
+    set.backLang ?? 'en-US'
+  );
 
   // ── Derived ────────────────────────────────────────────────────────────────
   const currentCardState = cardStates[currentIndex];
@@ -365,10 +372,23 @@ export function useFlashcardStudy({
     []
   );
 
-  /** Ngăn sự kiện click trên volume button lan ra card */
-  const handleVolume = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
+  /**
+   * Xử lý click nút volume:
+   * - Ngăn event lan ra card (không flip)
+   * - Đọc mặt hiện tại: front nếu chưa flip, back nếu đã flip
+   */
+  const handleVolume = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!currentCardState) return;
+      if (isFlipped) {
+        speakBack(currentCardState.card.back);
+      } else {
+        speakFront(currentCardState.card.front);
+      }
+    },
+    [currentCardState, isFlipped, speakFront, speakBack]
+  );
 
   // ── Public API ─────────────────────────────────────────────────────────────
   return {

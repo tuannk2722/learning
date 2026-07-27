@@ -50,6 +50,8 @@ export async function createFlashcardSet(
         description: data.description.trim() || null,
         is_public: data.isPublic,
         tags: data.tags.filter(Boolean),
+        front_lang: data.frontLang ?? 'en-US',
+        back_lang: data.backLang ?? 'en-US',
       })
       .returning({ id: flashcard_sets.id });
 
@@ -109,6 +111,8 @@ export async function updateFlashcardSet(
         description: data.description.trim() || null,
         is_public: data.isPublic,
         tags: data.tags.filter(Boolean),
+        front_lang: data.frontLang ?? 'en-US',
+        back_lang: data.backLang ?? 'en-US',
         updated_at: new Date(),
       })
       .where(eq(flashcard_sets.id, setId));

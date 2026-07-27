@@ -225,6 +225,8 @@ export const flashcard_sets = pgTable('flashcard_sets', {
   description: text('description'),
   is_public: boolean('is_public').default(true).notNull(),
   tags: text('tags').array().default(sql`'{}'::text[]`),
+  front_lang: varchar('front_lang', { length: 10 }).default('en-US'),
+  back_lang: varchar('back_lang', { length: 10 }).default('en-US'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 }, (t) => ({
