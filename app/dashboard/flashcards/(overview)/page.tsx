@@ -6,23 +6,30 @@ import FlashcardFilter from '@/app/ui/flashcards/flashcards-overview/flashcard-f
 import FlashcardHeader from '@/app/ui/flashcards/flashcards-overview/flashcard-header';
 import { FlashcardSetCard } from '@/app/ui/flashcards/flashcards-overview/flashcard-set-card';
 import { FlashcardSetListRow } from '@/app/ui/flashcards/flashcards-overview/flashcard-set-list-row';
+import { Pagination } from '@/app/ui/pagination';
 import { Earth, Folder } from 'lucide-react';
 import type { FlashcardSetDTO } from '@/app/lib/definitions/flashcards';
 
 export type { FlashcardSetDTO };
 
 interface PageProps {
-  searchParams: Promise<{ q?: string; }>;
+  searchParams: Promise<{ q?: string; page?: string }>;
 }
 
 export default async function FlashcardsPage({ searchParams }: PageProps) {
   const session = await auth();
   if (!session?.user?.id) redirect('/login');
 
-  const { q } = await searchParams;
+  const { q, page } = await searchParams;
+  const currentPage = Math.max(1, Number(page) || 1);
   const userId = session.user.id;
 
-  const { recentSets, publicSets } = await getFlashcardSets(userId, q || '');
+  const { recentSets, publicSets, totalRecentPages } = await getFlashcardSets(
+    userId,
+    q || '',
+    currentPage,
+    5
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
@@ -59,6 +66,14 @@ export default async function FlashcardsPage({ searchParams }: PageProps) {
                     currentUserId={userId}
                   />
                 ))}
+              </div>
+
+              {/* Pagination cho Recent Sets */}
+              <div className="flex items-center justify-end mr-10">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalRecentPages}
+                />
               </div>
             </>
           )}

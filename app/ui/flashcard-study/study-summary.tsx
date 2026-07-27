@@ -104,7 +104,7 @@ export function StudySummary({
                 onClick={onFocusStillLearning}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-violet-500/25 transition-all"
               >
-                Focus on {incorrect} Still learning cards
+                Focus on {incorrect} still learning cards
               </button>
             )}
             <button

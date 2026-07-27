@@ -8,14 +8,14 @@ export function FlashcardStudyHeader({
   isOwner,
   handleRestart,
   currentIndex,
-  cardStates
+  totalCards
 }: {
   id: string;
   title: string;
   isOwner: boolean;
   handleRestart: () => void;
   currentIndex: number;
-  cardStates: any[];
+  totalCards: number;
 }) {
   return (
     <>
@@ -23,7 +23,7 @@ export function FlashcardStudyHeader({
       < div className="w-full h-1 bg-gray-100 shrink-0" >
         <motion.div
           className="h-full bg-gradient-to-r from-violet-500 to-purple-500"
-          animate={{ width: `${((currentIndex + 1) / cardStates.length) * 100}%` }}
+          animate={{ width: `${((currentIndex + 1) / totalCards) * 100}%` }}
           transition={{ duration: 0.3 }}
         />
       </div >

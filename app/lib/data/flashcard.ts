@@ -24,14 +24,20 @@ function normalize(s: string): string {
 
 // ─── Query: Danh sách sets cho trang Overview ─────────────────────────────────
 
+// ─── Query: Danh sách sets cho trang Overview ─────────────────────────────────
+
 interface GetFlashcardSetsResult {
   recentSets: FlashcardSetDTO[];
   publicSets: FlashcardSetDTO[];
+  totalRecentPages: number;
+  totalRecentSets: number;
 }
 
 export async function getFlashcardSets(
   userId: string,
-  q: string = ''
+  q: string = '',
+  page: number = 1,
+  limit: number = 5
 ): Promise<GetFlashcardSetsResult> {
   const normalQ = normalize(q);
 
@@ -134,6 +140,12 @@ export async function getFlashcardSets(
     return bTime - aTime;
   });
 
+  const totalRecentSets = filteredRecent.length;
+  const totalRecentPages = Math.max(1, Math.ceil(totalRecentSets / limit));
+  const validPage = Math.max(1, Math.min(page, totalRecentPages));
+  const startIndex = (validPage - 1) * limit;
+  const paginatedRecent = filteredRecent.slice(startIndex, startIndex + limit);
+
   const filteredPublic = filterRows(publicRaw as SetRow[]);
 
   // 6. Map sang DTO — synchronous, không cần thêm DB query
@@ -153,8 +165,10 @@ export async function getFlashcardSets(
     }));
 
   return {
-    recentSets: toDTO(filteredRecent, recentAccessMap),
+    recentSets: toDTO(paginatedRecent, recentAccessMap),
     publicSets: toDTO(filteredPublic),
+    totalRecentPages,
+    totalRecentSets,
   };
 }
 
