@@ -2,7 +2,7 @@
 
 import { motion } from "motion/react";
 import { Trash2, Image as ImageIcon, X, Loader2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { uploadFlashcardImage } from "@/app/lib/actions/upload";
 
 export interface EditableCard {
@@ -10,6 +10,10 @@ export interface EditableCard {
   front: string;
   back: string;
   imageUrl: string;
+}
+
+export interface BuilderCardItemHandle {
+  focusTerm: () => void;
 }
 
 interface BuilderCardItemProps {
@@ -20,22 +24,33 @@ interface BuilderCardItemProps {
   onDelete: (id: string) => void;
 }
 
-export function BuilderCardItem({
+export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItemProps>(function BuilderCardItem({
   card,
   index,
   canDelete,
   onUpdate,
   onDelete,
-}: BuilderCardItemProps) {
+}, ref) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const backTextareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  useImperativeHandle(ref, () => ({
+    focusTerm: () => {
+      textareaRef.current?.focus();
+    },
+  }));
+
+  const autoResize = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
+    autoResize(textareaRef.current);
+    autoResize(backTextareaRef.current);
   }, [card.front, card.back]);
 
   const handleImageClick = () => {
@@ -130,7 +145,8 @@ export function BuilderCardItem({
               value={card.front}
               onChange={(e) => onUpdate(card.id, "front", e.target.value)}
               placeholder="E.g: Photosynthesis"
-              className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors"
+              rows={1}
+              className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors whitespace-pre-wrap"
             />
             <label className="text-xs font-semibold text-gray-600 uppercase tracking-widest mt-1 block">
               Term
@@ -141,10 +157,12 @@ export function BuilderCardItem({
           <div className="flex gap-4">
             <div className="flex-1 relative">
               <textarea
+                ref={backTextareaRef}
                 value={card.back}
                 onChange={(e) => onUpdate(card.id, "back", e.target.value)}
                 placeholder="E.g: abc"
-                className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors"
+                rows={1}
+                className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors whitespace-pre-wrap"
               />
               <label className="text-xs font-semibold text-gray-600 uppercase tracking-widest mt-1 block">
                 Definition
@@ -193,4 +211,4 @@ export function BuilderCardItem({
       </div>
     </motion.div>
   );
-}
+});

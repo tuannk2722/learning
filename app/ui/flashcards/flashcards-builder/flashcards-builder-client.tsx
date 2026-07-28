@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -10,7 +10,7 @@ import { createFlashcardSet, updateFlashcardSet } from "@/app/lib/actions/flashc
 import { BuilderSetInfo } from "./builder-set-info";
 import { BuilderToolbar } from "./builder-toolbar";
 import { BuilderSearchBar } from "./builder-search-bar";
-import { BuilderCardItem, type EditableCard } from "./builder-card-item";
+import { BuilderCardItem, type BuilderCardItemHandle, type EditableCard } from "./builder-card-item";
 import FlashcardBuilderHeader from "./builder-header";
 import { LanguageSelector } from "./language-selector";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ interface Props {
 export default function FlashcardBuilderClient({ existingSet }: Props) {
   const router = useRouter();
   const isEditing = !!existingSet;
-  // const [openModal, setOpenModal] = useState(false);
+  const cardRefsMap = useRef<Map<string, BuilderCardItemHandle>>(new Map());
 
   // Set metadata state
   const [title, setTitle] = useState(existingSet?.title ?? "");
@@ -71,10 +71,15 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
 
   // Card operations
   const addCard = () => {
-    setCards((prev) => [...prev, makeEmptyCard()]);
+    const newCard = makeEmptyCard();
+    setCards((prev) => [...prev, newCard]);
     setTimeout(() => {
+      const handle = cardRefsMap.current.get(newCard.id);
+      if (handle) {
+        handle.focusTerm();
+      }
       document.getElementById("cards-bottom")?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
+    }, 100);
   };
 
   const updateCard = (id: string, field: keyof EditableCard, value: string) => {
@@ -225,6 +230,10 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
               return (
                 <BuilderCardItem
                   key={card.id}
+                  ref={(el) => {
+                    if (el) cardRefsMap.current.set(card.id, el);
+                    else cardRefsMap.current.delete(card.id);
+                  }}
                   card={card}
                   index={index}
                   canDelete={cards.length > 1}

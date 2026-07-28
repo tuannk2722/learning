@@ -43,7 +43,10 @@ export function CourseRow({ course, index }: CourseRowProps) {
           <div className="text-sm font-medium text-gray-700">{course.total_lessons} lessons</div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold bg-gray-200`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-bold ${course.level === 'Beginner' ? 'bg-gray-100 text-gray-700' :
+            course.level === 'Intermediate' ? 'bg-blue-100 text-blue-700' :
+              'bg-red-100 text-red-700'
+            }`}>
             {course.level}
           </span>
         </td>
@@ -59,16 +62,16 @@ export function CourseRow({ course, index }: CourseRowProps) {
         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
           <div className="flex items-center gap-2">
             <Link href={`/dashboard/courses/${course.id}`} target="_blank">
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-2 hover:bg-slate-100 rounded-lg group">
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-2 hover:bg-slate-100 rounded-lg group" title="View">
                 <Eye className="w-4 h-4 text-gray-600 group-hover:text-gray-900" />
               </motion.button>
             </Link>
             <Link href={`/admin/courses/${course.id}`}>
-              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-2 hover:bg-blue-50 rounded-lg group">
+              <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-2 hover:bg-blue-50 rounded-lg group" title="Edit">
                 <Edit2 className="w-4 h-4 text-blue-600 group-hover:text-blue-700" />
               </motion.button>
             </Link>
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-2 hover:bg-red-50 rounded-lg group"
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="p-2 hover:bg-red-50 rounded-lg group" title="Delete"
               onClick={() => setShowConfirm(true)}
             >
               <Trash2 className="w-4 h-4 text-red-600 group-hover:text-red-700" />

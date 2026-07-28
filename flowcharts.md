@@ -356,3 +356,103 @@ flowchart TD
         FetchLogs --> Display["Display: stat counters, log list dạng timeline, pagination"]
     end
 ```
+
+
+Flashcards — Overview & Danh sách
+
+```mermaid
+flowchart TD
+    Start([User truy cập /dashboard/flashcards]) --> AuthCheck{Đã đăng nhập?}
+    AuthCheck -- Chưa --> RedirectLogin[Redirect sang /login]
+    AuthCheck -- Rồi --> FetchSets["Truy vấn danh sách FlashcardSets getFlashcardSets"]
+
+    FetchSets --> RenderPage["Hiển thị trang Overview Flashcards"]
+    RenderPage --> FilterBar["Thanh tìm kiếm & lọc FlashcardFilter (với Suspense)"]
+    RenderPage --> RecentSection["Danh sách bộ thẻ gần đây (Recent Sets)"]
+    RenderPage --> PublicSection["Danh sách bộ thẻ cộng đồng (Public Sets)"]
+
+    FilterBar -->|Nhập từ khóa q| UpdateURL["Cập nhật URL searchParams & lọc dữ liệu"]
+    RecentSection -->|Click bộ thẻ / Study| NavStudy["Chuyển hướng sang /dashboard/flashcards/:id"]
+    PublicSection -->|Click bộ thẻ / Study| NavStudy
+    RenderPage -->|Click Create Set| NavCreate["Chuyển hướng sang /dashboard/flashcards/create"]
+```
+
+Flashcards — Tạo mới & Chỉnh sửa (Flashcard Builder)
+
+```mermaid
+flowchart TD
+    StartBuilder([Mở trang Builder: /create hoặc /:id/edit]) --> LoadData{Có existingSet?}
+    LoadData -- Có (Edit Mode) --> FillForm["Đổ dữ liệu bộ thẻ & danh sách card hiện tại vào state"]
+    LoadData -- Không (Create Mode) --> InitEmpty["Khởi tạo 3 thẻ trống tiêu chuẩn"]
+
+    FillForm --> BuilderUI["Hiển thị giao diện FlashcardBuilderClient"]
+    InitEmpty --> BuilderUI
+
+    subgraph ACTIONS["Thao tác người dùng"]
+        BuilderUI --> EditMeta["Sửa Tiêu đề, Mô tả, Tags, Quyền riêng tư (Public/Private)"]
+        BuilderUI --> SelectLang["Chọn ngôn ngữ phát âm Audio (Term & Definition)"]
+        BuilderUI --> AddCard["Click 'Add new card' / Nút Toolbar"]
+        AddCard --> NewCardAction["Thêm card mới -> Auto-scroll & Auto-focus vào ô Term mới"]
+        BuilderUI --> EditContent["Nhập nội dung Term / Definition (Auto-resize ô nhập & giữ xuống dòng)"]
+        BuilderUI --> UploadImg["Upload ảnh minh họa cho thẻ (Validation format JPG/PNG/WEBP/GIF < 5MB)"]
+        BuilderUI --> SwapCols["Đổi vị trí hàng loạt giữa Term & Definition"]
+        BuilderUI --> DeleteCardItem["Xóa bớt thẻ (yêu cầu duy trì tối thiểu 1 thẻ)"]
+    end
+
+    ACTIONS --> ClickSave["Click 'Finish' / 'Save Changes'"]
+    ClickSave --> Validate{Kiểm tra dữ liệu?}
+    Validate -- Thiếu Title hoặc Tags --> ErrMeta[Toast lỗi: Vui lòng nhập Title và Tags]
+    Validate -- Ít hơn 3 thẻ có nội dung --> ErrCards[Toast lỗi: Cần ít nhất 3 thẻ đầy đủ thông tin]
+
+    Validate -- Hợp lệ --> SaveAction{Mode lưu?}
+    SaveAction -- Create --> CallCreate["Gọi Server Action createFlashcardSet"]
+    SaveAction -- Edit --> CallUpdate["Gọi Server Action updateFlashcardSet"]
+
+    CallCreate --> SaveResult{Thành công?}
+    CallUpdate --> SaveResult
+    SaveResult -- Thất bại --> ShowErr[Hiển thị thông báo lỗi trên trang]
+    SaveResult -- Thành công --> RedirectToStudy["Chuyển hướng sang trang Học /dashboard/flashcards/:setId"]
+```
+
+Flashcards — Luồng Học & Tiến độ Học tập (Flashcard Study)
+
+```mermaid
+flowchart TD
+    StartStudy([User mở trang Học: /dashboard/flashcards/:id]) --> FetchData["Lấy dữ liệu set, tiến độ cardProgress & phiên học studySession"]
+    FetchData --> AccessLog["Ghi log truy cập recordSetAccess (fire-and-forget)"]
+    FetchData --> RenderStudyUI["Hiển thị FlashcardStudyClient"]
+
+    RenderStudyUI --> ToggleMode{Chế độ Track Progress?}
+
+    subgraph TRACK_OFF["Track Progress = OFF (Tự do ôn tập)"]
+        NavCard["Chuyển card (Next/Prev / Mũi tên)"] --> SavePos["Lưu vị trí cardIndex vào studySession (Debounced 500ms)"]
+        FlipCard1["Lật thẻ (Click / Phím Space)"] --> Speak1["Phát âm TTS theo ngôn ngữ đã chọn"]
+        ShuffleCards["Xáo trộn danh sách (Shuffle)"] --> ResetPos[Về lại vị trí đầu]
+    end
+
+    subgraph TRACK_ON["Track Progress = ON (Theo dõi tiến độ)"]
+        RenderTrack["Hiển thị đếm số lượng: Still learning / Know"] --> UserAction{Người dùng đánh giá}
+
+        UserAction -- "Know / Phím Mũi tên Phải" --> MarkKnow["Đánh giá Correct -> Gọi updateCardProgress('know')"]
+        UserAction -- "Still learning / Phím Mũi tên Trái" --> MarkLearn["Đánh giá Incorrect -> Gọi updateCardProgress('still_learning')"]
+
+        MarkKnow --> AnimateFlip["Hiệu ứng bay/lật thẻ sang phải"] --> CheckNextCard{Còn thẻ tiếp theo?}
+        MarkLearn --> AnimateFlipLeft["Hiệu ứng bay/lật thẻ sang trái"] --> CheckNextCard
+
+        UserAction -- "Undo" --> UndoAction["Khôi phục trạng thái thẻ trước đó & cập nhật DB"]
+    end
+
+    ToggleMode -- OFF --> TRACK_OFF
+    ToggleMode -- ON --> TRACK_ON
+
+    CheckNextCard -- Còn thẻ --> NextCard[Chuyển sang thẻ chưa thuộc tiếp theo]
+    CheckNextCard -- Hết thẻ --> FinishSession["Kết thúc phiên học -> Hiển thị màn hình StudySummary"]
+
+    FinishSession --> CheckAllCorrect{Thuộc 100% tất cả thẻ?}
+    CheckAllCorrect -- Có --> ResetAll["Tự động reset tiến độ set về 0 để chuẩn bị vòng học mới"]
+    CheckAllCorrect -- Không --> SaveBulk["Lưu trạng thái hàng loạt qua bulkUpdateCardProgress"]
+
+    FinishSession --> SummaryOptions{Lựa chọn sau khi xem tổng kết}
+    SummaryOptions -- "Restart" --> RestartSet["Học lại từ đầu"]
+    SummaryOptions -- "Focus Still Learning" --> FocusRound["Vòng ôn tập chuyên sâu các thẻ chưa thuộc"]
+```
