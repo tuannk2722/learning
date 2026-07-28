@@ -20,6 +20,35 @@ interface CardItemProps {
   onCardUpdate?: (updatedCard: { id: string; front: string; back: string }) => void;
 }
 
+function getFrontFontSize(text: string): string {
+  const len = text.length;
+  const lineCount = text.split('\n').length;
+
+  if (len <= 15 && lineCount === 1) return "text-3xl sm:text-4xl font-bold";
+  if (len <= 40 && lineCount <= 2) return "text-2xl sm:text-3xl font-semibold";
+  if (len <= 100 && lineCount <= 4) return "text-xl sm:text-2xl font-semibold";
+  if (len <= 200 && lineCount <= 6) return "text-lg sm:text-xl font-medium";
+  return "text-base font-medium";
+}
+
+function getBackFontSize(text: string, hasImage: boolean): string {
+  const len = text.length;
+  const lineCount = text.split('\n').length;
+
+  if (hasImage) {
+    if (len <= 25 && lineCount <= 2) return "text-xl sm:text-2xl font-semibold";
+    if (len <= 80 && lineCount <= 4) return "text-lg sm:text-xl font-medium";
+    if (len <= 180 && lineCount <= 6) return "text-base sm:text-lg font-medium";
+    return "text-sm font-normal";
+  }
+
+  if (len <= 20 && lineCount === 1) return "text-2xl sm:text-3xl font-semibold";
+  if (len <= 60 && lineCount <= 3) return "text-xl sm:text-2xl font-semibold";
+  if (len <= 140 && lineCount <= 5) return "text-lg sm:text-xl font-medium";
+  if (len <= 280 && lineCount <= 8) return "text-base sm:text-lg font-medium";
+  return "text-sm sm:text-base font-normal";
+}
+
 export const CardItem = forwardRef<HTMLDivElement, CardItemProps>(({
   isOwner,
   card,
@@ -115,11 +144,8 @@ export const CardItem = forwardRef<HTMLDivElement, CardItemProps>(({
             </div>
 
             {/* Content */}
-            <div className="flex-grow flex flex-col items-center justify-center py-4">
-              <div className={`text-gray-900 leading-snug text-center ${card.front.length <= 4 ? "text-4xl"
-                : card.front.length <= 10 ? "text-3xl"
-                  : "text-2xl"
-                }`}>
+            <div className="flex-grow flex flex-col items-center justify-center py-4 overflow-y-auto max-h-full">
+              <div className={`text-gray-900 leading-relaxed text-center whitespace-pre-wrap ${getFrontFontSize(card.front)}`}>
                 {card.front ? card.front : "..."}
               </div>
             </div>
@@ -175,13 +201,13 @@ export const CardItem = forwardRef<HTMLDivElement, CardItemProps>(({
             </div>
 
             {/* Content */}
-            <div className="flex-grow flex items-center justify-center py-4 overflow-hidden">
+            <div className="flex-grow flex items-center justify-center py-4 overflow-y-auto max-h-full">
               {(() => {
                 const imgUrl = card.imageUrl || (card as any).image_url;
                 if (imgUrl) {
                   return (
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 w-full h-full px-4">
-                      <div className="flex-1 text-center text-gray-900 leading-snug text-3xl">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full h-full px-4">
+                      <div className={`flex-1 text-center text-gray-900 leading-relaxed whitespace-pre-wrap ${getBackFontSize(card.back, true)}`}>
                         {card.back ? card.back : "..."}
                       </div>
                       <div className="flex-shrink-0 w-64 h-52 sm:w-64 sm:h-52 relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center p-1.5 shadow-sm">
@@ -195,10 +221,7 @@ export const CardItem = forwardRef<HTMLDivElement, CardItemProps>(({
                   );
                 }
                 return (
-                  <div className={`text-gray-900 leading-snug text-center ${card.back.length <= 4 ? "text-3xl"
-                    : card.back.length <= 10 ? "text-2xl"
-                      : "text-xl"
-                    }`}>
+                  <div className={`text-gray-900 leading-relaxed text-center whitespace-pre-wrap ${getBackFontSize(card.back, false)}`}>
                     {card.back ? card.back : "..."}
                   </div>
                 );

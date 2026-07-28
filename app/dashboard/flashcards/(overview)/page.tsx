@@ -9,6 +9,11 @@ import { FlashcardSetListRow } from '@/app/ui/flashcards/flashcards-overview/fla
 import { Pagination } from '@/app/ui/pagination';
 import { Earth, Folder } from 'lucide-react';
 import type { FlashcardSetDTO } from '@/app/lib/definitions/flashcards';
+import {
+  FlashcardFilterSkeleton,
+  FlashcardRecentSectionSkeleton,
+  FlashcardPublicSectionSkeleton,
+} from '@/app/ui/skeleton/flashcard';
 
 export type { FlashcardSetDTO };
 
@@ -38,8 +43,8 @@ export default async function FlashcardsPage({ searchParams }: PageProps) {
           {/* Header */}
           <FlashcardHeader />
 
-          {/* Filter Bar */}
-          <Suspense>
+          {/* Filter Bar — needs useSearchParams → wrap in Suspense */}
+          <Suspense fallback={<FlashcardFilterSkeleton />}>
             <FlashcardFilter />
           </Suspense>
 
@@ -50,52 +55,56 @@ export default async function FlashcardsPage({ searchParams }: PageProps) {
           )}
 
           {/* Recent Section */}
-          {recentSets.length > 0 && (
-            <>
-              <h2 className="text-xl mb-4 flex items-center gap-2 font-semibold">
-                <Folder className="w-5 h-5" />
-                Recent
-              </h2>
+          <Suspense fallback={<FlashcardRecentSectionSkeleton />}>
+            {recentSets.length > 0 && (
+              <>
+                <h2 className="text-xl mb-4 flex items-center gap-2 font-semibold">
+                  <Folder className="w-5 h-5" />
+                  Recent
+                </h2>
 
-              <div className="space-y-3">
-                {recentSets.map((set, i) => (
-                  <FlashcardSetListRow
-                    key={set.id}
-                    set={set}
-                    index={i}
-                    currentUserId={userId}
+                <div className="space-y-3">
+                  {recentSets.map((set, i) => (
+                    <FlashcardSetListRow
+                      key={set.id}
+                      set={set}
+                      index={i}
+                      currentUserId={userId}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination cho Recent Sets */}
+                <div className="flex items-center justify-end mr-10">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalRecentPages}
                   />
-                ))}
-              </div>
-
-              {/* Pagination cho Recent Sets */}
-              <div className="flex items-center justify-end mr-10">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalRecentPages}
-                />
-              </div>
-            </>
-          )}
+                </div>
+              </>
+            )}
+          </Suspense>
 
           {/* Public Section */}
-          {publicSets.length > 0 && (
-            <>
-              <h2 className="text-xl mt-10 mb-4 flex items-center gap-2 font-semibold">
-                <Earth className="w-5 h-5" />
-                Students also studying
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                {publicSets.map((set, i) => (
-                  <FlashcardSetCard
-                    key={set.id}
-                    set={set}
-                    index={i}
-                  />
-                ))}
-              </div>
-            </>
-          )}
+          <Suspense fallback={<FlashcardPublicSectionSkeleton />}>
+            {publicSets.length > 0 && (
+              <>
+                <h2 className="text-xl mt-10 mb-4 flex items-center gap-2 font-semibold">
+                  <Earth className="w-5 h-5" />
+                  Students also studying
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                  {publicSets.map((set, i) => (
+                    <FlashcardSetCard
+                      key={set.id}
+                      set={set}
+                      index={i}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </Suspense>
         </div>
       </div>
     </div>
