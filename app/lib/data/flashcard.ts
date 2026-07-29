@@ -239,7 +239,7 @@ export async function getFlashcardSetById(
 
   const cardProgress: CardProgressMap = {};
   for (const row of progressRows) {
-    cardProgress[row.card_id] = row.status as 'know' | 'still_learning';
+    cardProgress[row.card_id] = row.status as 'correct' | 'incorrect';
   }
 
   const studySession: StudySessionMeta | null = sessionRow[0]

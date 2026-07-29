@@ -1,6 +1,6 @@
 
-/** Status của một card trong một session học */
-export type CardProgressStatus = 'know' | 'still_learning' | null;
+/** Status của một card trong một session học — đồng nhất với AnswerStatus trên FE */
+export type CardProgressStatus = 'correct' | 'incorrect' | null;
 
 // ─── Core DTOs ─────────────────────────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export interface FlashcardSetForStudy {
   backLang: string;
 }
 
-/** Map cardId → status, truyền xuống từ server cho session gần nhất */
+/** Map cardId → 'correct' | 'incorrect', truyền xuống từ server cho session gần nhất */
 export type CardProgressMap = Record<string, CardProgressStatus>;
 
 /** Metadata phiên học — lưu trạng thái toggle và vị trí card */

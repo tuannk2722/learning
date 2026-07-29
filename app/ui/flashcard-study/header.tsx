@@ -99,6 +99,7 @@ export function FlashcardStudyHeader({
           <AnimatePresence>
             {isOpen && (
               <motion.div
+                key="header-dropdown-menu"
                 initial={{ opacity: 0, scale: 0.95, y: -4 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -4 }}

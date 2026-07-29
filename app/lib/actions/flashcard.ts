@@ -15,6 +15,7 @@ import type {
   FlashcardSetInput,
   FlashcardActionResult,
   CardProgressUpdate,
+  CardProgressStatus,
   StudySessionMeta,
 } from '../definitions/flashcards';
 
@@ -228,7 +229,7 @@ export async function recordSetAccess(setId: string): Promise<void> {
 export async function updateCardProgress(
   setId: string,
   cardId: string,
-  status: 'know' | 'still_learning' | null
+  status: CardProgressStatus
 ): Promise<void> {
   try {
     const userId = await requireAuth();
@@ -257,7 +258,7 @@ export async function updateCardProgress(
 
 /**
  * Bulk update nhiều cards cùng lúc (gọi khi kết thúc session).
- * Cũng xoá progress của các cards không còn trong session (reset từ still_learning → not studied).
+ * Cũng xoá progress của các cards không còn trong session (reset từ incorrect → not studied).
  */
 export async function bulkUpdateCardProgress(
   setId: string,
