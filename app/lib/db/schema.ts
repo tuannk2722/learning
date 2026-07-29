@@ -257,13 +257,13 @@ export const flashcard_access_log = pgTable('flashcard_access_log', {
 }));
 
 // 20. BẢNG FLASHCARD_CARD_PROGRESS (status mỗi card per user)
-// Chỉ lưu khi user đã bấm know / still_learning (không lưu null)
+// Chỉ lưu khi user đã bấm correct / incorrect (không lưu null)
 // PK(user_id, card_id) — mỗi user chỉ có 1 status per card (của session gần nhất)
 export const flashcard_card_progress = pgTable('flashcard_card_progress', {
   user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   set_id: uuid('set_id').notNull().references(() => flashcard_sets.id, { onDelete: 'cascade' }),
   card_id: uuid('card_id').notNull().references(() => flashcard_items.id, { onDelete: 'cascade' }),
-  status: varchar('status', { length: 20 }), // 'know' | 'still_learning' or null
+  status: varchar('status', { length: 20 }), // 'correct' | 'incorrect' or null
   updated_at: timestamp('updated_at').defaultNow(),
 }, (t) => ({
   pk: primaryKey({ columns: [t.user_id, t.card_id] }),

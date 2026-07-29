@@ -3,7 +3,6 @@ import type {
   FlashcardSetForStudy,
   FlashcardItemDTO,
   CardProgressMap,
-  CardProgressStatus,
   CardProgressUpdate,
   StudySessionMeta,
 } from "@/app/lib/definitions/flashcards";
@@ -31,41 +30,24 @@ export interface UseFlashcardStudyProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Tính initialCardStates: chỉ restore statuses khi session đang track progress */
 function buildInitialCardStates(
   set: FlashcardSetForStudy,
   initialCardProgress: CardProgressMap,
   savedTrackProgress: boolean
 ): CardState[] {
-  return (set?.cards ?? []).map((card) => {
-    const dbStatus = savedTrackProgress ? initialCardProgress[card.id] : null;
-    const status: AnswerStatus =
-      dbStatus === "know" ? "correct" : dbStatus === "still_learning" ? "incorrect" : null;
-    return { card, status };
-  });
+  return (set?.cards ?? []).map((card) => ({
+    card,
+    status: savedTrackProgress ? (initialCardProgress[card.id] ?? null) : null,
+  }));
 }
 
-/** Tính currentIndex ban đầu dựa theo mode track progress */
 function resolveInitialIndex(
   set: FlashcardSetForStudy,
-  initialCardProgress: CardProgressMap,
   initialStudySession: StudySessionMeta | null
 ): number {
-  const savedTrackProgress = initialStudySession?.trackProgress ?? false;
-
-  if (savedTrackProgress) {
-    // trackProgress ON: nhảy đến card still_learning đầu tiên
-    const cards = set?.cards ?? [];
-    const firstStillLearningIdx = cards.findIndex(
-      (card) => initialCardProgress[card.id] === "still_learning"
-    );
-    return firstStillLearningIdx >= 0 ? firstStillLearningIdx : 0;
-  } else {
-    // trackProgress OFF: khôi phục vị trí đã lưu
-    const savedIdx = initialStudySession?.lastCardIndex ?? 0;
-    const maxIdx = Math.max(0, (set?.cards?.length ?? 1) - 1);
-    return Math.min(savedIdx, maxIdx);
-  }
+  const savedIdx = initialStudySession?.lastCardIndex ?? 0;
+  const maxIdx = Math.max(0, (set?.cards?.length ?? 1) - 1);
+  return Math.min(savedIdx, maxIdx);
 }
 
 /** Tìm card chưa trả lời tiếp theo (status === null), bỏ qua các card đã "correct" */
@@ -91,7 +73,7 @@ export function useFlashcardStudy({
   );
   const [trackProgress, setTrackProgress] = useState<boolean>(savedTrackProgress);
   const [currentIndex, setCurrentIndex] = useState<number>(() =>
-    resolveInitialIndex(set, initialCardProgress, initialStudySession)
+    resolveInitialIndex(set, initialStudySession)
   );
   const [isFlipped, setIsFlipped] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
@@ -132,11 +114,10 @@ export function useFlashcardStudy({
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, []);
 
-  // Lưu lastCardIndex khi index thay đổi và trackProgress = OFF
+  // Lưu lastCardIndex mỗi khi index thay đổi — cả 2 chế độ trackProgress ON/OFF
+  // Đảm bảo user luôn quay lại đúng card khi thoát giữa chừng
   useEffect(() => {
-    if (!trackProgress) {
-      saveSessionDebounced(false, currentIndex);
-    }
+    saveSessionDebounced(trackProgress, currentIndex);
   }, [currentIndex, trackProgress, saveSessionDebounced]);
 
   // ── Core navigation ────────────────────────────────────────────────────────
@@ -156,7 +137,7 @@ export function useFlashcardStudy({
             .filter((cs) => cs.status !== null)
             .map((cs) => ({
               cardId: cs.card.id,
-              status: cs.status === "correct" ? "know" : ("still_learning" as CardProgressStatus),
+              status: cs.status,
             }));
           void bulkUpdateCardProgress(set.id, updates);
         }
@@ -196,9 +177,7 @@ export function useFlashcardStudy({
         setPendingResult(status);
 
         const cardId = currentCardState.card.id;
-        const progressStatus: CardProgressStatus =
-          status === "correct" ? "know" : "still_learning";
-        void updateCardProgress(set.id, cardId, progressStatus);
+        void updateCardProgress(set.id, cardId, status);
 
         setTimeout(() => {
           const nextCardStates = cardStates.map((cs, i) =>
@@ -336,26 +315,26 @@ export function useFlashcardStudy({
     setIsFocusRound(false);
   }, [set, trackProgress]);
 
-  /** Ôn lại các cards "still learning" – giữ kết quả "know" từ session hiện tại */
+
   const handleFocusStillLearning = useCallback(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    const hasStillLearning = cardStates.some((cs) => cs.status === "incorrect");
-    if (!hasStillLearning) return;
+    const hasIncorrect = cardStates.some((cs) => cs.status === "incorrect");
+    if (!hasIncorrect) return;
 
-    // Reset chỉ các card "incorrect", giữ nguyên "correct"
+    // Reset cards 'incorrect' → null để đánh giá lại, giữ nguyên 'correct'
     const newCardStates = cardStates.map((cs) =>
       cs.status === "incorrect" ? { ...cs, status: null as AnswerStatus } : cs
     );
     setCardStates(newCardStates);
 
-    // Nhảy đến card chưa trả lời đầu tiên
+    // Nhảy đến card null đầu tiên trong toàn bộ set
     const firstNull = newCardStates.findIndex((cs) => cs.status === null);
     setCurrentIndex(firstNull >= 0 ? firstNull : 0);
-    setIsFlipped(false);
+    setIsFocusRound(true);
     setShowSummary(false);
+    setIsFlipped(false);
     setPendingResult(null);
     setIsAnimating(false);
-    setIsFocusRound(true);
   }, [cardStates]);
 
   /** Update nội dung card sau khi chỉnh sửa inline */
@@ -372,11 +351,6 @@ export function useFlashcardStudy({
     []
   );
 
-  /**
-   * Xử lý click nút volume:
-   * - Ngăn event lan ra card (không flip)
-   * - Đọc mặt hiện tại: front nếu chưa flip, back nếu đã flip
-   */
   const handleVolume = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
