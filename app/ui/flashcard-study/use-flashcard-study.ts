@@ -14,6 +14,7 @@ import {
   logCompleteFlashcardSession,
 } from "@/app/lib/actions/flashcard";
 import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
+import { showQuestToasts } from "@/app/ui/quests/quest-toast";
 import { useSpeech } from "./use-speech";
 
 
@@ -129,10 +130,17 @@ export function useFlashcardStudy({
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       setShowSummary(true);
 
-      const allCorrect = trackProgress && updatedStates.every((cs) => cs.status === "correct");
-      const res = await logCompleteFlashcardSession(set.id, { allCorrect });
+      const totalCards = updatedStates.length;
+      const correctCount = updatedStates.filter((cs) => cs.status === "correct").length;
+      const accuracy = totalCards > 0 ? correctCount / totalCards : 0;
+      const allCorrect = trackProgress && correctCount === totalCards;
+
+      const res = await logCompleteFlashcardSession(set.id, { allCorrect, accuracy });
       if (res?.unlockedAchievements && res.unlockedAchievements.length > 0) {
         showAchievementToasts(res.unlockedAchievements);
+      }
+      if (res?.questUpdates && res.questUpdates.length > 0) {
+        showQuestToasts(res.questUpdates);
       }
 
       if (trackProgress) {

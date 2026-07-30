@@ -10,7 +10,6 @@ import {
   quiz_attempts,
   lessons,
   flashcard_sets,
-  flashcard_card_progress,
   activity_logs,
 } from "../db/schema";
 import { eq, notInArray, and, sql } from "drizzle-orm";

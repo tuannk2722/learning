@@ -73,12 +73,14 @@ export interface FlashcardCardInput {
 }
 
 import type { UnlockedAchievement } from './definitions';
+import type { QuestUpdateInfo } from './quests';
 
 export interface FlashcardActionResult {
   success: boolean;
   message: string;
   setId?: string;
   unlockedAchievements?: UnlockedAchievement[];
+  questUpdates?: QuestUpdateInfo[];
 }
 
 export interface CardProgressUpdate {

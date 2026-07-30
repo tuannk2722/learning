@@ -13,6 +13,8 @@ import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { logActivity } from './activity-log';
 import { evaluateAchievements } from './achievements';
+import { updateQuestProgress } from './quests';
+import type { QuestUpdateInfo } from '../definitions/quests';
 import type {
   FlashcardSetInput,
   FlashcardActionResult,
@@ -84,8 +86,11 @@ export async function createFlashcardSet(
     // Kiểm tra và mở khóa achievements liên quan flashcard
     const { unlocked: unlockedAchievements } = await evaluateAchievements(userId);
 
+    // Cập nhật tiến độ Daily Quest "Create Flashcard Set"
+    const { questUpdates } = await updateQuestProgress('CREATE_FLASHCARD_SET', 1, userId);
+
     revalidatePath('/dashboard/flashcards');
-    return { success: true, message: 'Successfully created!', setId: newSet.id, unlockedAchievements };
+    return { success: true, message: 'Successfully created!', setId: newSet.id, unlockedAchievements, questUpdates };
   } catch (err) {
     console.error('[createFlashcardSet]', err);
     return { success: false, message: 'An error occurred, please try again.' };
@@ -454,12 +459,12 @@ import type { UnlockedAchievement } from '../definitions/definitions';
 
 /**
  * Ghi log hoàn thành 1 phiên học flashcard
- * Nếu allCorrect = true → trigger achievement check cho Perfect Session
+ * Nếu accuracy >= 80% hoặc allCorrect → trigger achievement & quest check
  */
 export async function logCompleteFlashcardSession(
   setId: string,
-  options?: { allCorrect?: boolean }
-): Promise<{ unlockedAchievements?: UnlockedAchievement[] }> {
+  options?: { allCorrect?: boolean; accuracy?: number }
+): Promise<{ unlockedAchievements?: UnlockedAchievement[]; questUpdates?: QuestUpdateInfo[] }> {
   try {
     const userId = await requireAuth();
     const [setRow] = await db
@@ -478,9 +483,19 @@ export async function logCompleteFlashcardSession(
 
     // Kiểm tra và mở khóa achievements liên quan flashcard session
     const { unlocked: unlockedAchievements } = await evaluateAchievements(userId);
-    return { unlockedAchievements };
+
+    const questUpdates: QuestUpdateInfo[] = [];
+
+    // Cập nhật quest phiên học 80%+
+    const isHighScore = options?.allCorrect || (options?.accuracy !== undefined && options.accuracy >= 0.8);
+    if (isHighScore) {
+      const { questUpdates: qRes } = await updateQuestProgress('FLASHCARD_STUDY_SESSION', 1, userId);
+      questUpdates.push(...qRes);
+    }
+
+    return { unlockedAchievements, questUpdates };
   } catch (err) {
     console.error('[logCompleteFlashcardSession]', err);
-    return { unlockedAchievements: [] };
+    return { unlockedAchievements: [], questUpdates: [] };
   }
 }
