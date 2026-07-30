@@ -11,6 +11,7 @@ import {
 import { eq, and, inArray, notInArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
+import { logActivity } from './activity-log';
 import type {
   FlashcardSetInput,
   FlashcardActionResult,
@@ -71,6 +72,13 @@ export async function createFlashcardSet(
         }))
       );
     }
+
+    void logActivity({
+      userId,
+      action: 'CREATE_FLASHCARD_SET',
+      entityType: 'flashcard_set',
+      entityName: data.title.trim(),
+    });
 
     revalidatePath('/dashboard/flashcards');
     return { success: true, message: 'Successfully created!', setId: newSet.id };
@@ -166,6 +174,13 @@ export async function updateFlashcardSet(
       }
     }
 
+    void logActivity({
+      userId,
+      action: 'UPDATE_FLASHCARD_SET',
+      entityType: 'flashcard_set',
+      entityName: data.title.trim(),
+    });
+
     revalidatePath('/dashboard/flashcards');
     revalidatePath(`/dashboard/flashcards/${setId}`);
     revalidatePath(`/dashboard/flashcards/${setId}/edit`);
@@ -185,7 +200,7 @@ export async function deleteFlashcardSet(
     const userId = await requireAuth();
 
     const [existing] = await db
-      .select({ owner_id: flashcard_sets.owner_id })
+      .select({ owner_id: flashcard_sets.owner_id, title: flashcard_sets.title })
       .from(flashcard_sets)
       .where(eq(flashcard_sets.id, setId))
       .limit(1);
@@ -196,6 +211,13 @@ export async function deleteFlashcardSet(
 
     // Cascade sẽ xoá items, access_log, card_progress
     await db.delete(flashcard_sets).where(eq(flashcard_sets.id, setId));
+
+    void logActivity({
+      userId,
+      action: 'DELETE_FLASHCARD_SET',
+      entityType: 'flashcard_set',
+      entityName: existing.title,
+    });
 
     revalidatePath('/dashboard/flashcards');
     return { success: true, message: 'Set deleted successfully!' };
@@ -210,11 +232,19 @@ export async function deleteFlashcardSet(
 export async function recordSetAccess(setId: string): Promise<void> {
   try {
     const userId = await requireAuth();
-    await db.insert(flashcard_access_log).values({
-      user_id: userId,
-      set_id: setId,
-      accessed_at: new Date(),
-    });
+    await db
+      .insert(flashcard_access_log)
+      .values({
+        user_id: userId,
+        set_id: setId,
+        accessed_at: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [flashcard_access_log.user_id, flashcard_access_log.set_id],
+        set: {
+          accessed_at: new Date(),
+        },
+      });
   } catch {
     // fire-and-forget — không ném lỗi ra ngoài
   }
@@ -413,5 +443,28 @@ export async function upsertStudySession(
       });
   } catch (err) {
     console.error('[upsertStudySession]', err);
+  }
+}
+
+/**
+ * Ghi log hoàn thành 1 phiên học flashcard
+ */
+export async function logCompleteFlashcardSession(setId: string): Promise<void> {
+  try {
+    const userId = await requireAuth();
+    const [setRow] = await db
+      .select({ title: flashcard_sets.title })
+      .from(flashcard_sets)
+      .where(eq(flashcard_sets.id, setId))
+      .limit(1);
+
+    void logActivity({
+      userId,
+      action: 'COMPLETE_FLASHCARD_SESSION',
+      entityType: 'flashcard_set',
+      entityName: setRow?.title ?? null,
+    });
+  } catch (err) {
+    console.error('[logCompleteFlashcardSession]', err);
   }
 }

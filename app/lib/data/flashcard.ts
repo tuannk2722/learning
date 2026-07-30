@@ -45,12 +45,11 @@ export async function getFlashcardSets(
   const recentAccessRows = await db
     .select({
       set_id: flashcard_access_log.set_id,
-      last_accessed: sql<Date>`MAX(${flashcard_access_log.accessed_at})`.as('last_accessed'),
+      last_accessed: flashcard_access_log.accessed_at,
     })
     .from(flashcard_access_log)
     .where(eq(flashcard_access_log.user_id, userId))
-    .groupBy(flashcard_access_log.set_id)
-    .orderBy(sql`MAX(${flashcard_access_log.accessed_at}) DESC`);
+    .orderBy(desc(flashcard_access_log.accessed_at));
 
   const recentSetIds = recentAccessRows.map((r) => r.set_id);
   const recentAccessMap = new Map(

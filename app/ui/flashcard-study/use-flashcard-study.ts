@@ -11,6 +11,7 @@ import {
   bulkUpdateCardProgress,
   resetSetProgress,
   upsertStudySession,
+  logCompleteFlashcardSession,
 } from "@/app/lib/actions/flashcard";
 import { useSpeech } from "./use-speech";
 
@@ -126,6 +127,9 @@ export function useFlashcardStudy({
     (updatedStates: CardState[]) => {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       setShowSummary(true);
+
+      void logCompleteFlashcardSession(set.id);
+
       if (trackProgress) {
         const allCorrect = updatedStates.every((cs) => cs.status === "correct");
         if (allCorrect) {
