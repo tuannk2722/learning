@@ -24,8 +24,6 @@ function normalize(s: string): string {
 
 // ─── Query: Danh sách sets cho trang Overview ─────────────────────────────────
 
-// ─── Query: Danh sách sets cho trang Overview ─────────────────────────────────
-
 interface GetFlashcardSetsResult {
   recentSets: FlashcardSetDTO[];
   publicSets: FlashcardSetDTO[];
@@ -45,12 +43,11 @@ export async function getFlashcardSets(
   const recentAccessRows = await db
     .select({
       set_id: flashcard_access_log.set_id,
-      last_accessed: sql<Date>`MAX(${flashcard_access_log.accessed_at})`.as('last_accessed'),
+      last_accessed: flashcard_access_log.accessed_at,
     })
     .from(flashcard_access_log)
     .where(eq(flashcard_access_log.user_id, userId))
-    .groupBy(flashcard_access_log.set_id)
-    .orderBy(sql`MAX(${flashcard_access_log.accessed_at}) DESC`);
+    .orderBy(desc(flashcard_access_log.accessed_at));
 
   const recentSetIds = recentAccessRows.map((r) => r.set_id);
   const recentAccessMap = new Map(
@@ -103,11 +100,11 @@ export async function getFlashcardSets(
   const [recentRaw, publicRaw] = await Promise.all([
     recentSetIds.length > 0
       ? db
-          .select(selectShape)
-          .from(flashcard_sets)
-          .innerJoin(users, eq(flashcard_sets.owner_id, users.id))
-          .leftJoin(cardCountSq, eq(flashcard_sets.id, cardCountSq.set_id))
-          .where(inArray(flashcard_sets.id, recentSetIds))
+        .select(selectShape)
+        .from(flashcard_sets)
+        .innerJoin(users, eq(flashcard_sets.owner_id, users.id))
+        .leftJoin(cardCountSq, eq(flashcard_sets.id, cardCountSq.set_id))
+        .where(inArray(flashcard_sets.id, recentSetIds))
       : Promise.resolve([] as SetRow[]),
     db
       .select(selectShape)
@@ -244,9 +241,9 @@ export async function getFlashcardSetById(
 
   const studySession: StudySessionMeta | null = sessionRow[0]
     ? {
-        trackProgress: sessionRow[0].track_progress,
-        lastCardIndex: sessionRow[0].last_card_index,
-      }
+      trackProgress: sessionRow[0].track_progress,
+      lastCardIndex: sessionRow[0].last_card_index,
+    }
     : null;
 
   const set: FlashcardSetForStudy = {

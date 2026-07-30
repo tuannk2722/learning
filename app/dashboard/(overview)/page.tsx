@@ -1,5 +1,5 @@
 import { StatsOverview } from "@/app/ui/dashboard/stats-overview";
-import { DailyQuests } from "@/app/ui/dashboard/daily-quests";
+import { DailyQuests } from "@/app/ui/quests/daily-quests";
 import { ContinueCourses } from "@/app/ui/dashboard/continue-courses";
 import { AchievementsCard } from "@/app/ui/dashboard/achievements";
 import { LeaderboardPreview } from "@/app/ui/dashboard/leaderboard-preview";

@@ -11,6 +11,10 @@ import {
 import { eq, and, inArray, notInArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
+import { logActivity } from './activity-log';
+import { evaluateAchievements } from './achievements';
+import { updateQuestProgress } from './quests';
+import type { QuestUpdateInfo } from '../definitions/quests';
 import type {
   FlashcardSetInput,
   FlashcardActionResult,
@@ -72,8 +76,21 @@ export async function createFlashcardSet(
       );
     }
 
+    await logActivity({
+      userId,
+      action: 'CREATE_FLASHCARD_SET',
+      entityType: 'flashcard_set',
+      entityName: data.title.trim(),
+    });
+
+    // Kiểm tra và mở khóa achievements liên quan flashcard
+    const { unlocked: unlockedAchievements } = await evaluateAchievements(userId);
+
+    // Cập nhật tiến độ Daily Quest "Create Flashcard Set"
+    const { questUpdates } = await updateQuestProgress('CREATE_FLASHCARD_SET', 1, userId);
+
     revalidatePath('/dashboard/flashcards');
-    return { success: true, message: 'Successfully created!', setId: newSet.id };
+    return { success: true, message: 'Successfully created!', setId: newSet.id, unlockedAchievements, questUpdates };
   } catch (err) {
     console.error('[createFlashcardSet]', err);
     return { success: false, message: 'An error occurred, please try again.' };
@@ -166,6 +183,13 @@ export async function updateFlashcardSet(
       }
     }
 
+    void logActivity({
+      userId,
+      action: 'UPDATE_FLASHCARD_SET',
+      entityType: 'flashcard_set',
+      entityName: data.title.trim(),
+    });
+
     revalidatePath('/dashboard/flashcards');
     revalidatePath(`/dashboard/flashcards/${setId}`);
     revalidatePath(`/dashboard/flashcards/${setId}/edit`);
@@ -185,7 +209,7 @@ export async function deleteFlashcardSet(
     const userId = await requireAuth();
 
     const [existing] = await db
-      .select({ owner_id: flashcard_sets.owner_id })
+      .select({ owner_id: flashcard_sets.owner_id, title: flashcard_sets.title })
       .from(flashcard_sets)
       .where(eq(flashcard_sets.id, setId))
       .limit(1);
@@ -196,6 +220,13 @@ export async function deleteFlashcardSet(
 
     // Cascade sẽ xoá items, access_log, card_progress
     await db.delete(flashcard_sets).where(eq(flashcard_sets.id, setId));
+
+    void logActivity({
+      userId,
+      action: 'DELETE_FLASHCARD_SET',
+      entityType: 'flashcard_set',
+      entityName: existing.title,
+    });
 
     revalidatePath('/dashboard/flashcards');
     return { success: true, message: 'Set deleted successfully!' };
@@ -210,11 +241,19 @@ export async function deleteFlashcardSet(
 export async function recordSetAccess(setId: string): Promise<void> {
   try {
     const userId = await requireAuth();
-    await db.insert(flashcard_access_log).values({
-      user_id: userId,
-      set_id: setId,
-      accessed_at: new Date(),
-    });
+    await db
+      .insert(flashcard_access_log)
+      .values({
+        user_id: userId,
+        set_id: setId,
+        accessed_at: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [flashcard_access_log.user_id, flashcard_access_log.set_id],
+        set: {
+          accessed_at: new Date(),
+        },
+      });
   } catch {
     // fire-and-forget — không ném lỗi ra ngoài
   }
@@ -413,5 +452,50 @@ export async function upsertStudySession(
       });
   } catch (err) {
     console.error('[upsertStudySession]', err);
+  }
+}
+
+import type { UnlockedAchievement } from '../definitions/definitions';
+
+/**
+ * Ghi log hoàn thành 1 phiên học flashcard
+ * Nếu accuracy >= 80% hoặc allCorrect → trigger achievement & quest check
+ */
+export async function logCompleteFlashcardSession(
+  setId: string,
+  options?: { allCorrect?: boolean; accuracy?: number }
+): Promise<{ unlockedAchievements?: UnlockedAchievement[]; questUpdates?: QuestUpdateInfo[] }> {
+  try {
+    const userId = await requireAuth();
+    const [setRow] = await db
+      .select({ title: flashcard_sets.title })
+      .from(flashcard_sets)
+      .where(eq(flashcard_sets.id, setId))
+      .limit(1);
+
+    await logActivity({
+      userId,
+      action: 'COMPLETE_FLASHCARD_SESSION',
+      entityType: 'flashcard_set',
+      entityName: setRow?.title ?? null,
+      metadata: options?.allCorrect ? { allCorrect: true } : undefined,
+    });
+
+    // Kiểm tra và mở khóa achievements liên quan flashcard session
+    const { unlocked: unlockedAchievements } = await evaluateAchievements(userId);
+
+    const questUpdates: QuestUpdateInfo[] = [];
+
+    // Cập nhật quest phiên học 80%+
+    const isHighScore = options?.allCorrect || (options?.accuracy !== undefined && options.accuracy >= 0.8);
+    if (isHighScore) {
+      const { questUpdates: qRes } = await updateQuestProgress('FLASHCARD_STUDY_SESSION', 1, userId);
+      questUpdates.push(...qRes);
+    }
+
+    return { unlockedAchievements, questUpdates };
+  } catch (err) {
+    console.error('[logCompleteFlashcardSession]', err);
+    return { unlockedAchievements: [], questUpdates: [] };
   }
 }

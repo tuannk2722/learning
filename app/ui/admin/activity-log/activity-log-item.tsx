@@ -1,6 +1,6 @@
 import {
   BookOpen, Trophy, Target, LogIn, UserPlus,
-  Settings, Star, CheckCircle, Trash2, Eye, EyeOff, PenLine,
+  Settings, Star, CheckCircle, Trash2, Eye, EyeOff, PenLine, Layers,
 } from "lucide-react";
 import type { ActivityAction } from "@/app/lib/definitions/activity-log";
 import { ACTION_LABELS, ACTION_COLORS } from "@/app/lib/definitions/activity-log";
@@ -17,6 +17,10 @@ const ACTION_ICONS: Record<ActivityAction, React.ElementType> = {
   COMPLETE_QUIZ: Star,
   UNLOCK_ACHIEVEMENT: Trophy,
   COMPLETE_QUEST: Target,
+  CREATE_FLASHCARD_SET: Layers,
+  UPDATE_FLASHCARD_SET: PenLine,
+  DELETE_FLASHCARD_SET: Trash2,
+  COMPLETE_FLASHCARD_SESSION: Trophy,
   CREATE_COURSE: PenLine,
   UPDATE_COURSE: PenLine,
   PUBLISH_COURSE: Eye,

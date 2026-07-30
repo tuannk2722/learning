@@ -248,12 +248,11 @@ export const flashcard_items = pgTable('flashcard_items', {
 
 // 19. BẢNG FLASHCARD_ACCESS_LOG (dùng cho "Recent")
 export const flashcard_access_log = pgTable('flashcard_access_log', {
-  id: serial('id').primaryKey(),
   user_id: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   set_id: uuid('set_id').notNull().references(() => flashcard_sets.id, { onDelete: 'cascade' }),
   accessed_at: timestamp('accessed_at').defaultNow().notNull(),
 }, (t) => ({
-  user_set_idx: index('flashcard_access_log_user_set_idx').on(t.user_id, t.set_id),
+  pk: primaryKey({ columns: [t.user_id, t.set_id] }),
 }));
 
 // 20. BẢNG FLASHCARD_CARD_PROGRESS (status mỗi card per user)

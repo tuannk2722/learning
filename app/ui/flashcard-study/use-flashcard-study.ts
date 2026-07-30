@@ -11,7 +11,10 @@ import {
   bulkUpdateCardProgress,
   resetSetProgress,
   upsertStudySession,
+  logCompleteFlashcardSession,
 } from "@/app/lib/actions/flashcard";
+import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
+import { showQuestToasts } from "@/app/ui/quests/quest-toast";
 import { useSpeech } from "./use-speech";
 
 
@@ -123,11 +126,24 @@ export function useFlashcardStudy({
   // ── Core navigation ────────────────────────────────────────────────────────
 
   const finishSession = useCallback(
-    (updatedStates: CardState[]) => {
+    async (updatedStates: CardState[]) => {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       setShowSummary(true);
+
+      const totalCards = updatedStates.length;
+      const correctCount = updatedStates.filter((cs) => cs.status === "correct").length;
+      const accuracy = totalCards > 0 ? correctCount / totalCards : 0;
+      const allCorrect = trackProgress && correctCount === totalCards;
+
+      const res = await logCompleteFlashcardSession(set.id, { allCorrect, accuracy });
+      if (res?.unlockedAchievements && res.unlockedAchievements.length > 0) {
+        showAchievementToasts(res.unlockedAchievements);
+      }
+      if (res?.questUpdates && res.questUpdates.length > 0) {
+        showQuestToasts(res.questUpdates);
+      }
+
       if (trackProgress) {
-        const allCorrect = updatedStates.every((cs) => cs.status === "correct");
         if (allCorrect) {
           // Session hoàn thành: tất cả cards đã thuộc → reset cho session mới
           void resetSetProgress(set.id);

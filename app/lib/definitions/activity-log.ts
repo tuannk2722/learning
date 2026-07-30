@@ -1,4 +1,4 @@
-﻿export type ActivityAction =
+export type ActivityAction =
   // User actions
   | "USER_REGISTER"
   | "USER_LOGIN"
@@ -15,6 +15,11 @@
   | "UNLOCK_ACHIEVEMENT"
   // Quest actions
   | "COMPLETE_QUEST"
+  // Flashcard actions
+  | "CREATE_FLASHCARD_SET"
+  | "UPDATE_FLASHCARD_SET"
+  | "DELETE_FLASHCARD_SET"
+  | "COMPLETE_FLASHCARD_SESSION"
   // Admin actions
   | "CREATE_COURSE"
   | "UPDATE_COURSE"
@@ -30,6 +35,7 @@ export type ActivityEntityType =
   | "quiz"
   | "achievement"
   | "quest"
+  | "flashcard_set"
   | "user"
   | "system";
 
@@ -69,6 +75,10 @@ export const ACTION_LABELS: Record<ActivityAction, string> = {
   COMPLETE_QUIZ: "Complete quiz",
   UNLOCK_ACHIEVEMENT: "Unlock achievement",
   COMPLETE_QUEST: "Complete quest",
+  CREATE_FLASHCARD_SET: "Create flashcard set",
+  UPDATE_FLASHCARD_SET: "Update flashcard set",
+  DELETE_FLASHCARD_SET: "Delete flashcard set",
+  COMPLETE_FLASHCARD_SESSION: "Complete flashcard session",
   CREATE_COURSE: "Create course",
   UPDATE_COURSE: "Update course",
   PUBLISH_COURSE: "Publish course",
@@ -131,6 +141,26 @@ export const ACTION_COLORS: Record<
     bg: "bg-green-100",
     text: "text-green-700",
     badge: "bg-green-100 text-green-700",
+  },
+  CREATE_FLASHCARD_SET: {
+    bg: "bg-emerald-100",
+    text: "text-emerald-700",
+    badge: "bg-emerald-100 text-emerald-700",
+  },
+  UPDATE_FLASHCARD_SET: {
+    bg: "bg-amber-100",
+    text: "text-amber-700",
+    badge: "bg-amber-100 text-amber-700",
+  },
+  DELETE_FLASHCARD_SET: {
+    bg: "bg-rose-100",
+    text: "text-rose-700",
+    badge: "bg-rose-100 text-rose-700",
+  },
+  COMPLETE_FLASHCARD_SESSION: {
+    bg: "bg-indigo-100",
+    text: "text-indigo-700",
+    badge: "bg-indigo-100 text-indigo-700",
   },
   CREATE_COURSE: {
     bg: "bg-teal-100",

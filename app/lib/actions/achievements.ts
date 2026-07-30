@@ -8,7 +8,9 @@ import {
   user_lesson_progress,
   enrollments,
   quiz_attempts,
-  lessons
+  lessons,
+  flashcard_sets,
+  activity_logs,
 } from "../db/schema";
 import { eq, notInArray, and, sql } from "drizzle-orm";
 import { calculateLevel } from "../utils/xp";
@@ -86,6 +88,26 @@ export async function evaluateAchievements(userId: string): Promise<{ unlocked: 
       .where(and(eq(user_lesson_progress.user_id, userId), eq(user_lesson_progress.status, 'completed')));
     const studyHours = Number(hoursResult[0]?.total_minutes || 0) / 60;
 
+    // flashcard sets created by this user
+    const flashcardSetsResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(flashcard_sets)
+      .where(eq(flashcard_sets.owner_id, userId));
+    const flashcardSetsCreated = Number(flashcardSetsResult[0]?.count || 0);
+
+    // flashcard perfect sessions (allCorrect = true recorded in activity_logs)
+    const perfectSessionsResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(activity_logs)
+      .where(
+        and(
+          eq(activity_logs.user_id, userId),
+          eq(activity_logs.action, 'COMPLETE_FLASHCARD_SESSION'),
+          sql`(${activity_logs.metadata}->>'allCorrect')::boolean = true`
+        )
+      );
+    const flashcardPerfectSessions = Number(perfectSessionsResult[0]?.count || 0);
+
     const newlyUnlocked: UnlockedAchievement[] = [];
     let hasNewUnlocks = false;
 
@@ -123,6 +145,12 @@ export async function evaluateAchievements(userId: string): Promise<{ unlocked: 
           break;
         case 'hours':
           isMet = studyHours >= condition.value;
+          break;
+        case 'flashcard_sets_created':
+          isMet = flashcardSetsCreated >= condition.value;
+          break;
+        case 'flashcard_perfect_session':
+          isMet = flashcardPerfectSessions >= (condition.value ?? 1);
           break;
         case 'all':
           // Check if user has unlocked all other achievements

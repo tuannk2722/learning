@@ -1,4 +1,10 @@
-export type QuestType = 'COMPLETE_LESSONS' | 'EARN_XP' | 'PASS_QUIZ' | 'STUDY_TIME';
+export type QuestType =
+  | 'COMPLETE_LESSONS'
+  | 'EARN_XP'
+  | 'PASS_QUIZ'
+  | 'STUDY_TIME'
+  | 'CREATE_FLASHCARD_SET'
+  | 'FLASHCARD_STUDY_SESSION';
 
 export interface DailyQuest {
   id: number;
