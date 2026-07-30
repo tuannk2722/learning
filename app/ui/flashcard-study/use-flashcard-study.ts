@@ -13,6 +13,7 @@ import {
   upsertStudySession,
   logCompleteFlashcardSession,
 } from "@/app/lib/actions/flashcard";
+import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
 import { useSpeech } from "./use-speech";
 
 
@@ -124,14 +125,17 @@ export function useFlashcardStudy({
   // ── Core navigation ────────────────────────────────────────────────────────
 
   const finishSession = useCallback(
-    (updatedStates: CardState[]) => {
+    async (updatedStates: CardState[]) => {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       setShowSummary(true);
 
-      void logCompleteFlashcardSession(set.id);
+      const allCorrect = trackProgress && updatedStates.every((cs) => cs.status === "correct");
+      const res = await logCompleteFlashcardSession(set.id, { allCorrect });
+      if (res?.unlockedAchievements && res.unlockedAchievements.length > 0) {
+        showAchievementToasts(res.unlockedAchievements);
+      }
 
       if (trackProgress) {
-        const allCorrect = updatedStates.every((cs) => cs.status === "correct");
         if (allCorrect) {
           // Session hoàn thành: tất cả cards đã thuộc → reset cho session mới
           void resetSetProgress(set.id);

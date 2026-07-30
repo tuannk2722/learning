@@ -72,12 +72,13 @@ export interface FlashcardCardInput {
   orderIndex: number;
 }
 
-// ─── Action Results ────────────────────────────────────────────────────────────
+import type { UnlockedAchievement } from './definitions';
 
 export interface FlashcardActionResult {
   success: boolean;
   message: string;
   setId?: string;
+  unlockedAchievements?: UnlockedAchievement[];
 }
 
 export interface CardProgressUpdate {

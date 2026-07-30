@@ -12,6 +12,7 @@ import { eq, and, inArray, notInArray } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@/auth';
 import { logActivity } from './activity-log';
+import { evaluateAchievements } from './achievements';
 import type {
   FlashcardSetInput,
   FlashcardActionResult,
@@ -73,15 +74,18 @@ export async function createFlashcardSet(
       );
     }
 
-    void logActivity({
+    await logActivity({
       userId,
       action: 'CREATE_FLASHCARD_SET',
       entityType: 'flashcard_set',
       entityName: data.title.trim(),
     });
 
+    // Kiểm tra và mở khóa achievements liên quan flashcard
+    const { unlocked: unlockedAchievements } = await evaluateAchievements(userId);
+
     revalidatePath('/dashboard/flashcards');
-    return { success: true, message: 'Successfully created!', setId: newSet.id };
+    return { success: true, message: 'Successfully created!', setId: newSet.id, unlockedAchievements };
   } catch (err) {
     console.error('[createFlashcardSet]', err);
     return { success: false, message: 'An error occurred, please try again.' };
@@ -446,10 +450,16 @@ export async function upsertStudySession(
   }
 }
 
+import type { UnlockedAchievement } from '../definitions/definitions';
+
 /**
  * Ghi log hoàn thành 1 phiên học flashcard
+ * Nếu allCorrect = true → trigger achievement check cho Perfect Session
  */
-export async function logCompleteFlashcardSession(setId: string): Promise<void> {
+export async function logCompleteFlashcardSession(
+  setId: string,
+  options?: { allCorrect?: boolean }
+): Promise<{ unlockedAchievements?: UnlockedAchievement[] }> {
   try {
     const userId = await requireAuth();
     const [setRow] = await db
@@ -458,13 +468,19 @@ export async function logCompleteFlashcardSession(setId: string): Promise<void> 
       .where(eq(flashcard_sets.id, setId))
       .limit(1);
 
-    void logActivity({
+    await logActivity({
       userId,
       action: 'COMPLETE_FLASHCARD_SESSION',
       entityType: 'flashcard_set',
       entityName: setRow?.title ?? null,
+      metadata: options?.allCorrect ? { allCorrect: true } : undefined,
     });
+
+    // Kiểm tra và mở khóa achievements liên quan flashcard session
+    const { unlocked: unlockedAchievements } = await evaluateAchievements(userId);
+    return { unlockedAchievements };
   } catch (err) {
     console.error('[logCompleteFlashcardSession]', err);
+    return { unlockedAchievements: [] };
   }
 }

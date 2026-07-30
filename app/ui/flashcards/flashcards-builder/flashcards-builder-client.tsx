@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 
 import type { FlashcardSetForStudy } from "@/app/lib/definitions/flashcards";
 import { createFlashcardSet, updateFlashcardSet } from "@/app/lib/actions/flashcard";
+import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
 import { BuilderSetInfo } from "./builder-set-info";
 import { BuilderToolbar } from "./builder-toolbar";
 import { BuilderSearchBar } from "./builder-search-bar";
@@ -138,6 +139,9 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
         : await createFlashcardSet(payload);
 
       if (res.success) {
+        if (res.unlockedAchievements && res.unlockedAchievements.length > 0) {
+          showAchievementToasts(res.unlockedAchievements);
+        }
         router.push(res.setId ? `/dashboard/flashcards/${res.setId}` : "/dashboard/flashcards");
       } else {
         setIsSaving(false);
