@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from "motion/react";
-import { Crown, Flame, Star, Zap } from "lucide-react";
+import { Crown, Flame, Layers, Star, Zap } from "lucide-react";
 import { User } from "@/app/lib/definitions/user";
 import { calculateLevel, getRankName } from "@/app/lib/utils/xp";
 
@@ -9,9 +9,10 @@ interface StatsOverviewProps {
   userInfo: User;
   rankPosition: number;
   currentStreak: number;
+  totalFlashcardSetsStudied: number;
 };
 
-export function StatsOverview({ userInfo, rankPosition, currentStreak }: StatsOverviewProps) {
+export function StatsOverview({ userInfo, rankPosition, currentStreak, totalFlashcardSetsStudied }: StatsOverviewProps) {
   const { level, currentXpInLevel, nextLevelXp, progress } = calculateLevel(userInfo.total_xp || 0);
   const rank = getRankName(level);
 
@@ -90,11 +91,11 @@ export function StatsOverview({ userInfo, rankPosition, currentStreak }: StatsOv
       >
         <div className="flex items-center gap-4 mb-4">
           <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
-            <Star className="w-6 h-6 text-emerald-600" />
+            <Layers className="w-6 h-6 text-emerald-600" />
           </div>
           <div>
-            <div className="text-sm text-gray-600">Total XP Earned</div>
-            <div className="text-3xl font-bold text-gray-900">{(userInfo.total_xp || 0).toLocaleString('en-US')}</div>
+            <div className="text-sm text-gray-600">Flashcard Sets Studied</div>
+            <div className="text-3xl font-bold text-gray-900">{(totalFlashcardSetsStudied || 0)}</div>
           </div>
         </div>
         <div className="text-sm text-emerald-600 font-medium">⭐ Outstanding!</div>

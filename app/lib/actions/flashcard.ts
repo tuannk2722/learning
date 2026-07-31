@@ -477,7 +477,10 @@ export async function logCompleteFlashcardSession(
       action: 'COMPLETE_FLASHCARD_SESSION',
       entityType: 'flashcard_set',
       entityName: setRow?.title ?? null,
-      metadata: options?.allCorrect ? { allCorrect: true } : undefined,
+      metadata: {
+        allCorrect: options?.allCorrect,
+        accuracy: options?.accuracy,
+      },
     });
 
     // Kiểm tra và mở khóa achievements liên quan flashcard session

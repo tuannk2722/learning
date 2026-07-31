@@ -6,6 +6,7 @@ import {
   flashcard_card_progress,
   flashcard_study_sessions,
   users,
+  activity_logs,
 } from '../db/schema';
 import { eq, and, inArray, notInArray, sql, desc } from 'drizzle-orm';
 import { removeAccents } from '../utils/removeAccents';
@@ -167,6 +168,16 @@ export async function getFlashcardSets(
     totalRecentPages,
     totalRecentSets,
   };
+}
+
+export async function getTotalFlashcardSetsByUserId(userId: string) {
+  const total = await db.select({ count: sql<number>`COUNT(*)::int` })
+    .from(activity_logs)
+    .where(and(
+      eq(activity_logs.user_id, userId),
+      eq(activity_logs.action, 'COMPLETE_FLASHCARD_SESSION'),
+    ));
+  return total[0].count;
 }
 
 // ─── Query: Set chi tiết cho trang Study / Edit ───────────────────────────────

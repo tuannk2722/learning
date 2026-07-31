@@ -18,12 +18,14 @@ import { getOrAssignDailyQuests } from "@/app/lib/data/quests";
 import { getEffectiveStreak } from "@/app/lib/actions/streak";
 import { StatsOverviewSkeleton } from "@/app/ui/skeleton/skeletons";
 import { getEnrolledCourses } from "@/app/lib/data/courses";
+import { getTotalFlashcardSetsByUserId } from "@/app/lib/data/flashcard";
 
 export default async function DashboardHome() {
   const session = await auth();
   const user_id = session?.user?.id;
 
   const userInfo = await getUserById(user_id!);
+  const totalFlashcardSetsStudied = await getTotalFlashcardSetsByUserId(user_id!);
   const continueCourses = await getEnrolledCourses(user_id!);
   const leaderboardData = await getLeaderboardData(user_id);
   const rankPosition = await getRankByUserId(user_id!);
@@ -46,7 +48,7 @@ export default async function DashboardHome() {
 
           {/* Stats Overview */}
           <Suspense fallback={<StatsOverviewSkeleton />}>
-            <StatsOverview userInfo={userInfo!} rankPosition={rankPosition} currentStreak={currentStreak} />
+            <StatsOverview userInfo={userInfo!} rankPosition={rankPosition} currentStreak={currentStreak} totalFlashcardSetsStudied={totalFlashcardSetsStudied} />
           </Suspense>
 
           {/* Main Grid */}
