@@ -3,9 +3,12 @@ import {
   quiz_attempts, user_lesson_progress, lessons,
   user_daily_quests, daily_quest_definitions,
   user_achievements, achievements,
-  users, courses, enrollments, activity_logs
+  users, courses, enrollments, activity_logs,
+  flashcard_sets, flashcard_items, flashcard_card_progress,
+  flashcard_access_log
 } from "../db/schema";
-import { eq, and, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc, inArray } from "drizzle-orm";
+import { FlashcardCardStatus, FlashcardDailyReview, FlashcardSetMastery } from "../definitions/definitions";
 
 
 function generateLast7Days() {
@@ -83,7 +86,7 @@ async function fetchWeeklyXpSources(userId: string) {
 
 export async function getOverviewStats(userId: string) {
   try {
-    const [weeklyXpSources, lessonsResult, timeResult, scoreResult] = await Promise.all([
+    const [weeklyXpSources, lessonsResult, flashcardSetsResult, scoreResult] = await Promise.all([
       fetchWeeklyXpSources(userId),
       db.select({ count: sql<number>`count(*)` })
         .from(user_lesson_progress)
@@ -91,13 +94,9 @@ export async function getOverviewStats(userId: string) {
           eq(user_lesson_progress.user_id, userId),
           eq(user_lesson_progress.status, 'completed')
         )),
-      db.select({ minutes: sql<number>`sum(${lessons.duration_minutes})` })
-        .from(user_lesson_progress)
-        .innerJoin(lessons, eq(user_lesson_progress.lesson_id, lessons.id))
-        .where(and(
-          eq(user_lesson_progress.user_id, userId),
-          eq(user_lesson_progress.status, 'completed')
-        )),
+      db.select({ count: sql<number>`count(*)` })
+        .from(flashcard_sets)
+        .where(eq(flashcard_sets.owner_id, userId)),
       db.select({ avg: sql<number>`avg(cast(${quiz_attempts.score} as float) / ${quiz_attempts.total} * 100)` })
         .from(quiz_attempts)
         .where(eq(quiz_attempts.user_id, userId))
@@ -111,15 +110,14 @@ export async function getOverviewStats(userId: string) {
       sumXp(weeklyXpSources.achievement);
 
     const lessonsCount = Number(lessonsResult[0]?.count) || 0;
-    const totalMinutes = Number(timeResult[0]?.minutes) || 0;
-    const studyHours = (totalMinutes / 60).toFixed(1);
+    const flashcardSetsCount = Number(flashcardSetsResult[0]?.count) || 0;
     const avgScore = Math.round(Number(scoreResult[0]?.avg) || 0);
 
     return [
       { label: 'This week', value: `${weeklyXp} XP`, icon: 'zap', color: 'blue' },
       { label: 'Lessons Learned', value: `${lessonsCount} lessons`, icon: 'book-open', color: 'green' },
-      { label: 'Study Time', value: `${studyHours}h`, icon: 'clock', color: 'purple' },
-      { label: 'Average Score', value: `${avgScore}%`, icon: 'target', color: 'orange' },
+      { label: 'Flashcard Sets', value: `${flashcardSetsCount} sets`, icon: 'layers', color: 'purple' },
+      { label: 'Average quizzes score', value: `${avgScore}%`, icon: 'target', color: 'orange' },
     ];
   } catch (error) {
     console.error('Failed to fetch overview stats:', error);
@@ -336,4 +334,146 @@ export async function getAdminDashboardData() {
   }));
 
   return { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements, enrollmentTrends };
+}
+
+
+export type FlashcardAnalyticsData = {
+  dailyReviews: FlashcardDailyReview[];
+  cardStatus: FlashcardCardStatus[];
+  setMastery: FlashcardSetMastery[];
+  totalCards: number;
+};
+
+export async function getFlashcardAnalytics(userId: string): Promise<FlashcardAnalyticsData> {
+  try {
+    // 0. Xác định 4 set gần đây nhất có card_progress
+    const recentSetsRaw = await db
+      .select({
+        setId: flashcard_card_progress.set_id,
+        lastStudiedAt: sql<string>`max(${flashcard_card_progress.updated_at})`,
+      })
+      .from(flashcard_card_progress)
+      .where(eq(flashcard_card_progress.user_id, userId))
+      .groupBy(flashcard_card_progress.set_id)
+      .orderBy(sql`max(${flashcard_card_progress.updated_at}) desc`)
+      .limit(4);
+
+    const recentSetIds = recentSetsRaw.map((s) => s.setId);
+
+    const [dailyProgress, userSets, recentSetProgress, allProgressStatus] = await Promise.all([
+      // 1. Daily flashcard set studied over last 7 days
+      db
+        .select({
+          date: sql<string>`DATE(${activity_logs.created_at})`,
+          count: sql<number>`count(*)`,
+        })
+        .from(activity_logs)
+        .where(
+          and(
+            eq(activity_logs.user_id, userId),
+            eq(activity_logs.action, 'COMPLETE_FLASHCARD_SESSION'),
+            sql`${activity_logs.created_at} >= CURRENT_DATE - INTERVAL '6 days'`
+          )
+        )
+        .groupBy(sql`DATE(${activity_logs.created_at})`)
+        .orderBy(sql`DATE(${activity_logs.created_at})`),
+
+      // 2. Title của 4 sets gần đây nhất (dùng cho setMastery)
+      recentSetIds.length === 0
+        ? Promise.resolve([])
+        : db
+          .select({
+            id: flashcard_sets.id,
+            title: flashcard_sets.title,
+          })
+          .from(flashcard_sets)
+          .where(
+            and(
+              eq(flashcard_sets.owner_id, userId),
+              inArray(flashcard_sets.id, recentSetIds)
+            )
+          ),
+
+      // 3. Status breakdown theo từng set — CHỈ trong 4 set gần nhất (dùng cho setMastery)
+      recentSetIds.length === 0
+        ? Promise.resolve([])
+        : db
+          .select({
+            setId: flashcard_card_progress.set_id,
+            status: flashcard_card_progress.status,
+            count: sql<number>`count(*)`,
+          })
+          .from(flashcard_card_progress)
+          .where(
+            and(
+              eq(flashcard_card_progress.user_id, userId),
+              inArray(flashcard_card_progress.set_id, recentSetIds)
+            )
+          )
+          .groupBy(flashcard_card_progress.set_id, flashcard_card_progress.status),
+
+      // 4. Status breakdown TOÀN BỘ progress của user (dùng cho cardStatus, không giới hạn set)
+      db
+        .select({
+          status: flashcard_card_progress.status,
+          count: sql<number>`count(*)`,
+        })
+        .from(flashcard_card_progress)
+        .where(eq(flashcard_card_progress.user_id, userId))
+        .groupBy(flashcard_card_progress.status),
+    ]);
+
+    // Map daily reviews
+    const dailyReviews: FlashcardDailyReview[] = generateLast7Days().map(({ dayName, dateString }) => {
+      const totalCount = Number(
+        dailyProgress.find((r) => r.date === dateString)?.count || 0
+      );
+      return { day: dayName, total: totalCount };
+    });
+
+    // Map set mastery — total & mastered lấy từ cùng nguồn (recentSetProgress), cùng set, cùng 4 set gần nhất
+    const setMastery: FlashcardSetMastery[] = userSets.map((s) => {
+      const statusesForSet = recentSetProgress.filter((p) => p.setId === s.id);
+      const total = statusesForSet.reduce((sum, p) => sum + Number(p.count), 0);
+      const masteredCount = Number(
+        statusesForSet.find((p) => p.status === 'correct')?.count || 0
+      );
+      const pct = total > 0 ? Math.round((masteredCount / total) * 100) : 0;
+      return {
+        name: s.title.length > 20 ? s.title.slice(0, 20) + "…" : s.title,
+        mastered: masteredCount,
+        total,
+        pct,
+      };
+    });
+
+    // Card status breakdown — TOÀN BỘ progress của user, không giới hạn set
+    const totalMastered = Number(
+      allProgressStatus.find((p) => p.status === 'correct')?.count || 0
+    );
+    const totalStillLearning = Number(
+      allProgressStatus.find((p) => p.status === 'incorrect')?.count || 0
+    );
+    const totalCards = totalMastered + totalStillLearning;
+
+    const cardStatus: FlashcardCardStatus[] = [
+      { name: "Known", value: totalMastered, color: "#10b981" },
+      { name: "Still learning", value: totalStillLearning, color: "#f87171" },
+    ];
+
+    return {
+      dailyReviews,
+      cardStatus,
+      setMastery,
+      totalCards,
+    };
+  } catch (error) {
+    console.error("Failed to fetch flashcard analytics:", error);
+    return {
+      dailyReviews: [],
+      cardStatus: [],
+      setMastery: [],
+      totalCards: 0,
+    };
+  }
 }

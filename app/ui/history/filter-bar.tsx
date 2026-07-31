@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, BookOpen, Brain, Award } from 'lucide-react';
+import { CheckCircle2, BookOpen, Brain, Award, Layers } from 'lucide-react';
 import { HistoryEvent, ActivityType } from '@/app/lib/definitions/definitions';
 import { HistoryTimeline } from './timeline';
 
@@ -9,6 +9,7 @@ const filters = [
   { key: 'all', label: 'All', icon: CheckCircle2, color: 'text-gray-600', bg: 'bg-gray-100' },
   { key: 'lesson', label: 'Lessons', icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50' },
   { key: 'quiz', label: 'Quizzes', icon: Brain, color: 'text-purple-600', bg: 'bg-purple-50' },
+  { key: 'flashcard', label: 'Flashcards', icon: Layers, color: 'text-orange-600', bg: 'bg-orange-50' },
   { key: 'achievement', label: 'Achievements', icon: Award, color: 'text-yellow-600', bg: 'bg-yellow-50' },
 ];
 
@@ -23,6 +24,7 @@ export function HistoryFilterBar({ events }: { events: HistoryEvent[] }) {
     all: events.length,
     lesson: events.filter(e => e.type === 'lesson').length,
     quiz: events.filter(e => e.type === 'quiz').length,
+    flashcard: events.filter(e => e.type === 'flashcard').length,
     achievement: events.filter(e => e.type === 'achievement').length,
   };
 

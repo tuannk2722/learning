@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { motion } from "motion/react";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import type { FlashcardSetForStudy } from "@/app/lib/definitions/flashcards";
 
@@ -12,6 +12,7 @@ interface StudySummaryProps {
   correct: number;
   incorrect: number;
   total: number;
+  isSummaryLoading?: boolean;
   onRestart: () => void;
   onFocusStillLearning?: () => void;
 }
@@ -22,6 +23,7 @@ export function StudySummary({
   correct,
   incorrect,
   total,
+  isSummaryLoading = false,
   onRestart,
   onFocusStillLearning,
 }: StudySummaryProps) {
@@ -44,8 +46,16 @@ export function StudySummary({
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8 w-full max-w-md text-center"
+          className="bg-white rounded-3xl border border-gray-100 shadow-xl p-8 w-full max-w-md text-center relative overflow-hidden"
         >
+          {/* Saving progress indicator */}
+          {isSummaryLoading && (
+            <div className="mb-4 inline-flex items-center gap-2 px-3 py-1 bg-violet-50 text-violet-600 rounded-full text-xs font-medium">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Saving progress...</span>
+            </div>
+          )}
+
           {/* Result icon */}
           <div className="w-20 h-20 rounded-3xl mx-auto mb-6 flex items-center justify-center bg-blue-100">
             <CheckCircle2 className="w-10 h-10 text-blue-600" />
@@ -101,23 +111,28 @@ export function StudySummary({
             {trackProgress && incorrect > 0 && onFocusStillLearning && (
               <button
                 type="button"
+                disabled={isSummaryLoading}
                 onClick={onFocusStillLearning}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-violet-500/25 transition-all"
+                className={`flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-2xl font-medium transition-all ${isSummaryLoading ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-lg hover:shadow-violet-500/25'
+                  }`}
               >
-                Focus on {incorrect} still learning cards
+                <span>Focus on {incorrect} still learning cards</span>
               </button>
             )}
             <button
               type="button"
+              disabled={isSummaryLoading}
               onClick={onRestart}
-              className="flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-600 rounded-2xl font-medium hover:bg-gray-50 transition-colors"
+              className={`flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-600 rounded-2xl font-medium transition-colors ${isSummaryLoading ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-50'
+                }`}
             >
-              Restart Flashcards
+              <span>Restart Flashcards</span>
             </button>
             <Link
               href="/dashboard/flashcards"
               scroll={true}
-              className="flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-600 rounded-2xl font-medium hover:bg-gray-50 transition-colors"
+              className={`flex items-center justify-center gap-2 px-6 py-3 border border-gray-200 text-gray-600 rounded-2xl font-medium transition-colors ${isSummaryLoading ? 'pointer-events-none opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'
+                }`}
             >
               Back to Sets
             </Link>

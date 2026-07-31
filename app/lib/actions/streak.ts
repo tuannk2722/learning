@@ -31,7 +31,7 @@ export async function getEffectiveStreak(currentStreak: number | null, lastStudy
 }
 
 /**
- * Cập nhật streak của user sau khi hoàn thành một activity (lesson / quiz / quest).
+ * Cập nhật streak của user sau khi hoàn thành một activity (lesson / quiz / quest / flashcard).
  * Hàm này an toàn để gọi nhiều lần trong ngày — chỉ tính streak 1 lần mỗi ngày.
  *
  * @param userId - UUID của user cần cập nhật

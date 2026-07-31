@@ -1,11 +1,11 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 import { HistoryEvent } from "../definitions/definitions";
 
 export async function getActivityHistory(userId: string): Promise<HistoryEvent[]> {
   try {
-    const [lessons, quizzes, achievements] = await Promise.all([
+    const [lessons, quizzes, achievements, flashcardLogs] = await Promise.all([
       // 1. Completed Lessons
       db
         .select({
@@ -55,6 +55,27 @@ export async function getActivityHistory(userId: string): Promise<HistoryEvent[]
         .from(schema.user_achievements)
         .innerJoin(schema.achievements, eq(schema.user_achievements.achievement_id, schema.achievements.id))
         .where(eq(schema.user_achievements.user_id, userId)),
+
+      // 4. Flashcard Activities (from activity_logs)
+      db
+        .select({
+          id: schema.activity_logs.id,
+          action: schema.activity_logs.action,
+          entityName: schema.activity_logs.entity_name,
+          createdAt: schema.activity_logs.created_at,
+        })
+        .from(schema.activity_logs)
+        .where(
+          and(
+            eq(schema.activity_logs.user_id, userId),
+            inArray(schema.activity_logs.action, [
+              'CREATE_FLASHCARD_SET',
+              'UPDATE_FLASHCARD_SET',
+              'DELETE_FLASHCARD_SET',
+              'COMPLETE_FLASHCARD_SESSION',
+            ])
+          )
+        ),
     ]);
 
     // Map to HistoryEvent format
@@ -85,8 +106,30 @@ export async function getActivityHistory(userId: string): Promise<HistoryEvent[]
       completedAt: a.unlocked_at || new Date(),
     }));
 
+    const flashcardEvents: HistoryEvent[] = flashcardLogs.map((f) => {
+      let title = "Flashcard Activity";
+      if (f.action === "CREATE_FLASHCARD_SET") {
+        title = `Created Flashcard Set: ${f.entityName ?? "Untitled Set"}`;
+      } else if (f.action === "UPDATE_FLASHCARD_SET") {
+        title = `Updated Flashcard Set: ${f.entityName ?? "Untitled Set"}`;
+      } else if (f.action === "DELETE_FLASHCARD_SET") {
+        title = `Deleted Flashcard Set: ${f.entityName ?? "Untitled Set"}`;
+      } else if (f.action === "COMPLETE_FLASHCARD_SESSION") {
+        title = `Completed Flashcard Session: ${f.entityName ?? "Untitled Set"}`;
+      }
+
+      return {
+        id: `flashcard-${f.id}`,
+        type: 'flashcard',
+        title,
+        course: "Flashcards",
+        xp: 0,
+        completedAt: f.createdAt ? new Date(f.createdAt) : new Date(),
+      };
+    });
+
     // Combine and sort by date descending
-    return [...lessonEvents, ...quizEvents, ...achievementEvents].sort(
+    return [...lessonEvents, ...quizEvents, ...achievementEvents, ...flashcardEvents].sort(
       (a, b) => b.completedAt.getTime() - a.completedAt.getTime()
     );
   } catch (error) {

@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'motion/react';
-import { BookOpen, Award, Brain } from 'lucide-react';
+import { BookOpen, Award, Brain, Layers } from 'lucide-react';
 import { HistoryEvent } from '@/app/lib/definitions/definitions';
 
 const CONFIG = {
@@ -13,6 +13,11 @@ const CONFIG = {
     icon: Brain,
     bgColor: 'bg-purple-100',
     iconColor: 'text-purple-600',
+  },
+  flashcard: {
+    icon: Layers,
+    bgColor: 'bg-orange-100',
+    iconColor: 'text-orange-600',
   },
   achievement: {
     icon: Award,

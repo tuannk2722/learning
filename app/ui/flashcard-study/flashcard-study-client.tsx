@@ -33,6 +33,7 @@ export default function FlashcardStudyClient({
         correct={study.correct}
         incorrect={study.incorrect}
         total={study.cardStates.length}
+        isSummaryLoading={study.isSummaryLoading}
         onRestart={study.handleRestart}
         onFocusStillLearning={study.handleFocusStillLearning}
       />

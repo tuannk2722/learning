@@ -52,7 +52,29 @@ export type StreakResult = {
   isNewRecord: boolean;
 }
 
-export type ActivityType = 'lesson' | 'quiz' | 'achievement';
+
+// ─── ANALYTICS ──────────────────────────────────────────────────────
+
+export type ActivityType = 'lesson' | 'quiz' | 'achievement' | 'flashcard';
+
+export type FlashcardDailyReview = {
+  day: string;
+  total: number;
+};
+
+export type FlashcardCardStatus = {
+  name: string;
+  value: number;
+  color: string;
+};
+
+export type FlashcardSetMastery = {
+  name: string;
+  mastered: number;
+  total: number;
+  pct: number;
+};
+
 
 export type HistoryEvent = {
   id: string;
