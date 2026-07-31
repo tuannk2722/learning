@@ -14,7 +14,7 @@ export function EnrollmentTrends({ data }: { data: EnrollmentTrendItem[] }) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6"
+      className="col-span-2 bg-white rounded-3xl border-2 border-gray-100 shadow-lg p-8"
     >
       <div className="flex items-center justify-between mb-6">
         <div>

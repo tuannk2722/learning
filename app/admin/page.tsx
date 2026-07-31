@@ -5,6 +5,8 @@ import TopCourses from '@/app/ui/admin/dashboard/top-courses';
 import RecentBadges from '@/app/ui/admin/dashboard/recent-achievemnts';
 import { getAdminDashboardData } from '@/app/lib/data/analytics';
 import { EnrollmentTrends } from '../ui/admin/dashboard/enrollment-trends';
+import { TopFlashcardSet } from '../ui/admin/dashboard/top-flashcard-set';
+import { TopFlashcardCreation } from '../ui/admin/dashboard/flashcard-creation';
 
 export default async function AdminDashboard() {
   const { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements, enrollmentTrends } =
@@ -31,9 +33,14 @@ export default async function AdminDashboard() {
           </div>
 
           {/* Bottom Row */}
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-3 gap-6 mb-8">
             <EnrollmentTrends data={enrollmentTrends} />
             <RecentBadges data={topAchievements} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <TopFlashcardSet />
+            <TopFlashcardCreation />
           </div>
 
           <TopCourses data={topCourses} />

@@ -190,8 +190,9 @@ export async function getAdminDashboardData() {
   const [
     totalUsersResult,
     publishedCoursesResult,
-    badgesAwardedResult,
+    flashcardSetsResult,
     lessonsCompletedResult,
+    badgesAwardedResult,
     dauResult,
     weeklyLessonsResult,
     topCoursesResult,
@@ -208,16 +209,21 @@ export async function getAdminDashboardData() {
       .from(courses)
       .where(eq(courses.status, 'published')),
 
-    // 3. Tổng số lần unlock achievement
+    // 3. Tổng số flashcard sets đã tạo
     db.select({ count: sql<number>`cast(count(*) as int)` })
-      .from(user_achievements),
+      .from(flashcard_sets),
 
     // 4. Tổng số lessons đã hoàn thành
     db.select({ count: sql<number>`cast(count(*) as int)` })
       .from(user_lesson_progress)
       .where(eq(user_lesson_progress.status, 'completed')),
 
-    // 5. DAU chart: đếm user login theo ngày từ activity_logs
+    // 5. Tổng số lần unlock achievement
+    db.select({ count: sql<number>`cast(count(*) as int)` })
+      .from(user_achievements),
+
+
+    // 6. DAU chart: đếm user login theo ngày từ activity_logs
     db.select({
       date: sql<string>`DATE(${activity_logs.created_at})`,
       users: sql<number>`cast(count(distinct ${activity_logs.user_id}) as int)`,
@@ -229,7 +235,7 @@ export async function getAdminDashboardData() {
       ))
       .groupBy(sql`DATE(${activity_logs.created_at})`),
 
-    // 6. Lessons Completed chart: số lesson hoàn thành theo ngày
+    // 7. Lessons Completed chart: số lesson hoàn thành theo ngày
     db.select({
       date: sql<string>`DATE(${user_lesson_progress.completed_at})`,
       count: sql<number>`cast(count(*) as int)`,
@@ -241,7 +247,7 @@ export async function getAdminDashboardData() {
       ))
       .groupBy(sql`DATE(${user_lesson_progress.completed_at})`),
 
-    // 7. Top Courses: tổng enrollments + completion rate
+    // 8. Top Courses: tổng enrollments + completion rate
     db.select({
       id: courses.id,
       name: courses.name,
@@ -255,7 +261,7 @@ export async function getAdminDashboardData() {
       .groupBy(courses.id, courses.name)
       .orderBy(desc(sql`count(${enrollments.user_id})`)),
 
-    // 8. Recent Achievements: achievement được unlock nhiều nhất
+    // 9. Recent Achievements: achievement được unlock nhiều nhất
     db.select({
       name: achievements.title,
       description: achievements.description,
@@ -269,7 +275,7 @@ export async function getAdminDashboardData() {
       .orderBy(desc(sql`count(${user_achievements.user_id})`))
       .limit(3),
 
-    // 9. Enrollment Trends: thống kê enrollments, completions, drop-offs theo tháng (6 tháng gần nhất)
+    // 10. Enrollment Trends: thống kê enrollments, completions, drop-offs theo tháng (6 tháng gần nhất)
     db.select({
       month: sql<string>`to_char(${enrollments.enrolled_at}, 'Mon')`,
       monthIndex: sql<number>`cast(extract(month from ${enrollments.enrolled_at}) as int)`,
@@ -292,12 +298,14 @@ export async function getAdminDashboardData() {
 
   const totalUsers = totalUsersResult[0]?.count ?? 0;
   const publishedCourses = publishedCoursesResult[0]?.count ?? 0;
-  const badgesAwarded = badgesAwardedResult[0]?.count ?? 0;
+  const flashcardSets = flashcardSetsResult[0]?.count ?? 0;
   const lessonsCompleted = lessonsCompletedResult[0]?.count ?? 0;
+  const badgesAwarded = badgesAwardedResult[0]?.count ?? 0;
 
   const stats = [
     { label: 'Total Users', value: totalUsers.toLocaleString(), icon: 'users', color: 'text-blue-600', bg: 'bg-blue-100' },
     { label: 'Courses Published', value: publishedCourses.toLocaleString(), icon: 'book-open', color: 'text-purple-600', bg: 'bg-purple-100' },
+    { label: 'Flashcard Sets', value: flashcardSets.toLocaleString(), icon: 'layers', color: 'text-indigo-600', bg: 'bg-indigo-100' },
     { label: 'Achievements Awarded', value: badgesAwarded.toLocaleString(), icon: 'trophy', color: 'text-yellow-600', bg: 'bg-yellow-100' },
     { label: 'Lessons Completed', value: lessonsCompleted.toLocaleString(), icon: 'target', color: 'text-indigo-600', bg: 'bg-indigo-100' },
   ];
