@@ -20,7 +20,7 @@ export function QuizHistorySection({ attempts }: Props) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-3xl p-10 border border-gray-100 shadow-sm text-center"
+        className="bg-white rounded-3xl p-8 border-2 border-violet-100 shadow-lg text-center"
       >
         <ClipboardList className="w-12 h-12 text-gray-300 mx-auto mb-4" />
         <h3 className="text-lg font-bold text-gray-400">No quiz attempts yet</h3>
@@ -48,7 +48,7 @@ export function QuizHistorySection({ attempts }: Props) {
         </span>
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border-2 border-violet-100 shadow-lg overflow-hidden">
         {/* Table Header */}
         <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50 border-b border-gray-100 text-xs font-bold uppercase tracking-wider text-gray-400">
           <div className="col-span-4">Quiz</div>

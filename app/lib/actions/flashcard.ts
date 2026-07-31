@@ -22,6 +22,7 @@ import type {
   CardProgressStatus,
   StudySessionMeta,
 } from '../definitions/flashcards';
+import type { UnlockedAchievement } from '../definitions/definitions';
 
 
 async function requireAuth() {
@@ -454,8 +455,6 @@ export async function upsertStudySession(
     console.error('[upsertStudySession]', err);
   }
 }
-
-import type { UnlockedAchievement } from '../definitions/definitions';
 
 /**
  * Ghi log hoàn thành 1 phiên học flashcard

@@ -81,6 +81,7 @@ export function useFlashcardStudy({
   const [isFlipped, setIsFlipped] = useState(false);
   const [isShuffled, setIsShuffled] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const [slideDirection, setSlideDirection] = useState(1);
   const [pendingResult, setPendingResult] = useState<AnswerStatus>(null);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -129,38 +130,50 @@ export function useFlashcardStudy({
     async (updatedStates: CardState[]) => {
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       setShowSummary(true);
+      setIsSummaryLoading(true);
 
-      const totalCards = updatedStates.length;
-      const correctCount = updatedStates.filter((cs) => cs.status === "correct").length;
-      const accuracy = totalCards > 0 ? correctCount / totalCards : 0;
-      const allCorrect = trackProgress && correctCount === totalCards;
+      try {
+        const totalCards = updatedStates.length;
+        const correctCount = updatedStates.filter((cs) => cs.status === "correct").length;
+        const accuracy = totalCards > 0 ? correctCount / totalCards : 0;
+        const allCorrect = trackProgress && correctCount === totalCards;
 
-      const res = await logCompleteFlashcardSession(set.id, { allCorrect, accuracy });
-      if (res?.unlockedAchievements && res.unlockedAchievements.length > 0) {
-        showAchievementToasts(res.unlockedAchievements);
-      }
-      if (res?.questUpdates && res.questUpdates.length > 0) {
-        showQuestToasts(res.questUpdates);
-      }
+        const tasks: Promise<unknown>[] = [];
 
-      if (trackProgress) {
-        if (allCorrect) {
-          // Session hoàn thành: tất cả cards đã thuộc → reset cho session mới
-          void resetSetProgress(set.id);
-          void upsertStudySession(set.id, { trackProgress: true, lastCardIndex: 0 });
+        tasks.push(
+          logCompleteFlashcardSession(set.id, { allCorrect, accuracy }).then((res) => {
+            if (res?.unlockedAchievements && res.unlockedAchievements.length > 0) {
+              showAchievementToasts(res.unlockedAchievements);
+            }
+            if (res?.questUpdates && res.questUpdates.length > 0) {
+              showQuestToasts(res.questUpdates);
+            }
+          })
+        );
+
+        if (trackProgress) {
+          if (allCorrect) {
+            tasks.push(resetSetProgress(set.id));
+            tasks.push(upsertStudySession(set.id, { trackProgress: true, lastCardIndex: 0 }));
+          } else {
+            const updates: CardProgressUpdate[] = updatedStates
+              .filter((cs) => cs.status !== null)
+              .map((cs) => ({
+                cardId: cs.card.id,
+                status: cs.status,
+              }));
+            tasks.push(bulkUpdateCardProgress(set.id, updates));
+          }
         } else {
-          const updates: CardProgressUpdate[] = updatedStates
-            .filter((cs) => cs.status !== null)
-            .map((cs) => ({
-              cardId: cs.card.id,
-              status: cs.status,
-            }));
-          void bulkUpdateCardProgress(set.id, updates);
+          tasks.push(resetSetProgress(set.id));
+          tasks.push(upsertStudySession(set.id, { trackProgress: false, lastCardIndex: 0 }));
         }
-      } else {
-        // trackProgress OFF: kết thúc session hoàn toàn
-        void resetSetProgress(set.id);
-        void upsertStudySession(set.id, { trackProgress: false, lastCardIndex: 0 });
+
+        await Promise.all(tasks);
+      } catch (err) {
+        console.error("Error completing flashcard session:", err);
+      } finally {
+        setIsSummaryLoading(false);
       }
     },
     [set.id, trackProgress]
@@ -319,6 +332,7 @@ export function useFlashcardStudy({
 
   /** Restart toàn bộ set từ đầu */
   const handleRestart = useCallback(() => {
+    if (isSummaryLoading) return;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     if (trackProgress) void resetSetProgress(set.id);
     void upsertStudySession(set.id, { trackProgress, lastCardIndex: 0 });
@@ -329,10 +343,11 @@ export function useFlashcardStudy({
     setPendingResult(null);
     setIsAnimating(false);
     setIsFocusRound(false);
-  }, [set, trackProgress]);
+  }, [set, trackProgress, isSummaryLoading]);
 
 
   const handleFocusStillLearning = useCallback(() => {
+    if (isSummaryLoading) return;
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     const hasIncorrect = cardStates.some((cs) => cs.status === "incorrect");
     if (!hasIncorrect) return;
@@ -351,7 +366,7 @@ export function useFlashcardStudy({
     setIsFlipped(false);
     setPendingResult(null);
     setIsAnimating(false);
-  }, [cardStates]);
+  }, [cardStates, isSummaryLoading]);
 
   /** Update nội dung card sau khi chỉnh sửa inline */
   const handleCardUpdate = useCallback(
@@ -389,6 +404,7 @@ export function useFlashcardStudy({
     isFlipped,
     isShuffled,
     showSummary,
+    isSummaryLoading,
     slideDirection,
     pendingResult,
     isAnimating,

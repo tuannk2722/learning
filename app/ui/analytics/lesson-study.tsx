@@ -4,7 +4,7 @@ import { Calendar } from "lucide-react";
 import { motion } from "motion/react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-export function AnalyticsWeeklyActivity({ weeklyActivity }: { weeklyActivity: { day: string, hours: number, lessons: number }[] }) {
+export function AnalyticsLessonStudy({ weeklyActivity }: { weeklyActivity: { day: string, hours: number, lessons: number }[] }) {
 
   return (
     <motion.div
@@ -15,7 +15,7 @@ export function AnalyticsWeeklyActivity({ weeklyActivity }: { weeklyActivity: { 
     >
       <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
         <Calendar className="w-6 h-6 text-violet-600" />
-        Weekly Activity
+        Lesson Study
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={weeklyActivity}>
