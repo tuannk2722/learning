@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Star, Users } from 'lucide-react';
+import { Star, Users, Sparkles } from 'lucide-react';
 import { DynamicIcon } from '../dynamic-icon';
 import Link from 'next/link';
 import { CourseListing } from '@/app/lib/definitions/courses';
@@ -21,19 +21,32 @@ export const CourseCardAvailable = ({ course, index }: Props) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 + index * 0.1 }}
       whileHover={{ y: -4 }}
-      className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col h-full"
+      className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col h-full relative"
     >
-      <div className={`w-14 h-14 rounded-xl ${colorClasses.bg} flex items-center justify-center mb-4`}>
-        <DynamicIcon name={course.icon_name} className={`w-7 h-7 ${colorClasses.text}`} />
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-14 h-14 rounded-xl ${colorClasses.bg} flex items-center justify-center`}>
+          <DynamicIcon name={course.icon_name} className={`w-7 h-7 ${colorClasses.text}`} />
+        </div>
+        {course.is_recommended && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200/80 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+            Recommended
+          </span>
+        )}
       </div>
 
       <h3 className="text-lg font-medium mb-2">{course.name}</h3>
       <p className="text-sm text-muted-foreground mb-4 flex-grow">{course.description}</p>
 
-      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-4">
-        <span className="bg-violet-50 text-violet-700 px-2 py-1 rounded-md font-medium">{course.category_name}</span>
+      <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mb-4">
+        {course.category_name
+          ? course.category_name.split(',').map((cat) => cat.trim()).filter(Boolean).map((cat, i) => (
+              <span key={i} className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded-md font-medium">{cat}</span>
+            ))
+          : <span className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded-md font-medium">General</span>
+        }
         <span>•</span>
-        <span className="bg-gray-100 px-2 py-1 rounded text-gray-700">{course.level}</span>
+        <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-700">{course.level}</span>
         <span>•</span>
         <span>{course.total_lessons || 0} lessons</span>
       </div>

@@ -29,8 +29,13 @@ export default function CourseCardEnrolled({ enrolledCourses }: { enrolledCourse
             <div className="flex-1">
               <h3 className="text-lg font-medium mb-1">{course.name}</h3>
               <p className="text-sm text-muted-foreground mb-2 line-clamp-1">{course.description}</p>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded font-medium">{course.category_name}</span>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                {course.category_name
+                  ? course.category_name.split(',').map((cat) => cat.trim()).filter(Boolean).map((cat, i) => (
+                      <span key={i} className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded font-medium">{cat}</span>
+                    ))
+                  : <span className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded font-medium">General</span>
+                }
               </div>
             </div>
           </div>

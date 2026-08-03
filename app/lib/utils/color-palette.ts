@@ -115,3 +115,44 @@ export function getColorClasses(colorName: string | undefined | null): ColorEntr
     COLOR_PALETTE.find((c) => c.name === 'indigo')!
   );
 }
+
+
+// Maps a DB color *name* (e.g. "blue", "yellow") to the hex value used
+// throughout the dashboard. Uses Tailwind's 500 shade so it visually matches
+// the rest of the UI. Add more keys here as new theme colors appear in the DB.
+export const THEME_COLOR_HEX: Record<string, string> = {
+  indigo: '#6366f1',
+  violet: '#8b5cf6',
+  purple: '#a855f7',
+  blue: '#3b82f6',
+  sky: '#0ea5e9',
+  cyan: '#06b6d4',
+  teal: '#14b8a6',
+  emerald: '#10b981',
+  green: '#22c55e',
+  lime: '#84cc16',
+  yellow: '#f59e0b',
+  amber: '#f59e0b',
+  orange: '#f97316',
+  red: '#ef4444',
+  rose: '#f43f5e',
+  pink: '#ec4899',
+  fuchsia: '#d946ef',
+  slate: '#64748b',
+  gray: '#6b7280',
+  grey: '#6b7280',
+  black: '#111827', // matches COLOR_PALETTE's bg-gray-900
+};
+
+// Deterministic fallback for any color name not in the map above, so an
+// unexpected value from the DB still renders a stable (not random-per-render)
+// color instead of falling through to a default gray for everything.
+export const FALLBACK_PALETTE = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#14b8a6', '#f97316', '#a855f7'];
+export function hexForThemeColor(themeColor: string | undefined, index: number): string {
+  if (!themeColor) return FALLBACK_PALETTE[index % FALLBACK_PALETTE.length];
+  const key = themeColor.trim().toLowerCase();
+  if (THEME_COLOR_HEX[key]) return THEME_COLOR_HEX[key];
+  // themeColor might already be a hex string (e.g. "#6366f1") — pass it through.
+  if (key.startsWith('#')) return themeColor;
+  return FALLBACK_PALETTE[index % FALLBACK_PALETTE.length];
+}

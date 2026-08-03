@@ -1,7 +1,7 @@
 import { StatsOverview } from "@/app/ui/dashboard/stats-overview";
 import { DailyQuests } from "@/app/ui/quests/daily-quests";
 import { ContinueCourses } from "@/app/ui/dashboard/continue-courses";
-import { AchievementsCard } from "@/app/ui/dashboard/achievements";
+import { RecentAchievements } from "@/app/ui/dashboard/recent-achievements";
 import { LeaderboardPreview } from "@/app/ui/dashboard/leaderboard-preview";
 import { HeaderDashboard } from "@/app/ui/dashboard/header";
 import { Suspense } from "react";
@@ -68,7 +68,7 @@ export default async function DashboardHome() {
             <div className="space-y-8">
               {/* Recent Achievements */}
               <Suspense fallback={<AchievementsCardSkeleton />}>
-                <AchievementsCard recentAchievements={recentAchievements} />
+                <RecentAchievements recentAchievements={recentAchievements} />
               </Suspense>
 
               {/* Leaderboard Preview */}

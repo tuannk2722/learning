@@ -44,7 +44,7 @@ export interface ActivityLog {
   user_id: string | null;
   action: ActivityAction;
   entity_type: string | null;
-  entity_id: number | null;
+  entity_id: string | null;
   entity_name: string | null;
   metadata: Record<string, unknown> | null;
   created_at: Date | null;

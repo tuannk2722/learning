@@ -117,3 +117,33 @@ export type CompleteSessionResponse = {
   streakResult?: StreakResult;
   unlockedAchievements?: UnlockedAchievement[];
 };
+
+// ─── ADMIN DASHBOARD ──────────────────────────────────────────────────────
+
+export type SetCreationTrendItem = {
+  week: string;
+  sets: number;
+};
+
+export type SetsByTagItem = {
+  tag: string;
+  count: number;
+  pct: number;
+  fill: string;
+};
+
+export type FlashcardCreationData = {
+  setCreationTrend: SetCreationTrendItem[];
+  setsByTag: SetsByTagItem[];
+};
+
+export type TopActiveDeckDTO = {
+  id: string;
+  title: string;
+  subject: string;
+  tags: string[];
+  activeUsers: number;
+  sessions: number;
+  avgMastery: number;
+  gradient: string;
+};

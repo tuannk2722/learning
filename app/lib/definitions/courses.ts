@@ -5,7 +5,8 @@ export interface Category {
 
 export interface Course {
   id: number;
-  category_id: number;
+  categories: string[];
+  category?: string;
   name: string;
   description: string;
   level: string;
@@ -23,9 +24,11 @@ export interface Course {
 export interface CourseListing extends Course {
   total_lessons: number;
   category_name: string;
+  categories: string[];
   enrolled_count: number;
   progress_percent?: number;
   current_lesson?: string;
+  is_recommended?: boolean;
 }
 
 // Type đầy đủ cho trang chi tiết (Course Detail)

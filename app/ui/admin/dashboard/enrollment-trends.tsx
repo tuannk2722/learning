@@ -1,6 +1,6 @@
 'use client';
 
-import { Area, AreaChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion } from "motion/react";
 
 type EnrollmentTrendItem = {
@@ -14,7 +14,7 @@ export function EnrollmentTrends({ data }: { data: EnrollmentTrendItem[] }) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="col-span-2 bg-white rounded-3xl border-2 border-gray-100 shadow-lg p-8"
+      className="bg-white rounded-3xl border-2 border-gray-100 shadow-lg p-8"
     >
       <div className="flex items-center justify-between mb-6">
         <div>

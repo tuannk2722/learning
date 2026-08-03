@@ -36,7 +36,11 @@ export function CourseRow({ course, index }: CourseRowProps) {
         <td className="px-6 py-4 whitespace-nowrap">
           <div>
             <div className="font-bold text-gray-900">{course.name}</div>
-            <div className="text-sm text-gray-500 font-medium">{course.category_name}</div>
+            <div className="text-sm text-gray-500 font-medium truncate max-w-xs">
+              {course.category_name
+                ? course.category_name.split(',').map((c) => c.trim()).filter(Boolean).join(', ')
+                : 'General'}
+            </div>
           </div>
         </td>
         <td className="px-6 py-4 whitespace-nowrap">

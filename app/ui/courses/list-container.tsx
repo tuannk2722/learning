@@ -22,7 +22,11 @@ export function CourseListContainer({ initialCourses, categories }: CourseListCo
     const matchesSearch = removeAccents(course.name).includes(removeAccents(searchQuery)) ||
       removeAccents(course.description).includes(removeAccents(searchQuery));
 
-    const matchesCategory = selectedCategory === "All" || course.category_name === selectedCategory;
+    const courseCategories = course.category_name
+      ? course.category_name.split(',').map((c) => c.trim())
+      : [];
+    const matchesCategory =
+      selectedCategory === "All" || courseCategories.includes(selectedCategory.trim());
     const matchesLevel = selectedLevel === "All" || course.level === selectedLevel;
 
     return matchesSearch && matchesCategory && matchesLevel;

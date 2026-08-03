@@ -4,8 +4,7 @@ import {
   user_daily_quests, daily_quest_definitions,
   user_achievements, achievements,
   users, courses, enrollments, activity_logs,
-  flashcard_sets, flashcard_items, flashcard_card_progress,
-  flashcard_access_log
+  flashcard_sets, flashcard_card_progress
 } from "../db/schema";
 import { eq, and, sql, desc, inArray } from "drizzle-orm";
 import { FlashcardCardStatus, FlashcardDailyReview, FlashcardSetMastery } from "../definitions/definitions";
@@ -222,15 +221,14 @@ export async function getAdminDashboardData() {
     db.select({ count: sql<number>`cast(count(*) as int)` })
       .from(user_achievements),
 
-
-    // 6. DAU chart: đếm user login theo ngày từ activity_logs
+    // 6. DAU chart: đếm số lượng active users theo ngày từ activity_logs (mỗi user có ít nhất 1 bản ghi activity log)
     db.select({
       date: sql<string>`DATE(${activity_logs.created_at})`,
       users: sql<number>`cast(count(distinct ${activity_logs.user_id}) as int)`,
     })
       .from(activity_logs)
       .where(and(
-        eq(activity_logs.action, 'USER_LOGIN'),
+        sql`${activity_logs.user_id} IS NOT NULL`,
         sql`${activity_logs.created_at} >= CURRENT_DATE - INTERVAL '6 days'`
       ))
       .groupBy(sql`DATE(${activity_logs.created_at})`),
@@ -261,10 +259,9 @@ export async function getAdminDashboardData() {
       .groupBy(courses.id, courses.name)
       .orderBy(desc(sql`count(${enrollments.user_id})`)),
 
-    // 9. Recent Achievements: achievement được unlock nhiều nhất
+    // 9. Recent Achievements: 10 achievement được unlock nhiều nhất
     db.select({
       name: achievements.title,
-      description: achievements.description,
       iconName: achievements.icon_name,
       themeColor: achievements.theme_color,
       awarded: sql<number>`cast(count(${user_achievements.user_id}) as int)`,
@@ -273,7 +270,7 @@ export async function getAdminDashboardData() {
       .innerJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
       .groupBy(achievements.id, achievements.title)
       .orderBy(desc(sql`count(${user_achievements.user_id})`))
-      .limit(3),
+      .limit(10),
 
     // 10. Enrollment Trends: thống kê enrollments, completions, drop-offs theo tháng (6 tháng gần nhất)
     db.select({
@@ -329,7 +326,6 @@ export async function getAdminDashboardData() {
 
   const topAchievements = topAchievementsResult.map(b => ({
     name: b.name,
-    description: b.description ?? '',
     iconName: b.iconName ?? 'Trophy',
     themeColor: b.themeColor ?? 'gray',
     awarded: b.awarded,

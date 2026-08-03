@@ -9,7 +9,7 @@ interface LogActivityParams {
   userId?: string | null;
   action: ActivityAction;
   entityType?: ActivityEntityType;
-  entityId?: number;
+  entityId?: string;
   entityName?: string;
   metadata?: Record<string, unknown>;
 }

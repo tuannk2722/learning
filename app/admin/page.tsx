@@ -7,10 +7,13 @@ import { getAdminDashboardData } from '@/app/lib/data/analytics';
 import { EnrollmentTrends } from '../ui/admin/dashboard/enrollment-trends';
 import { TopFlashcardSet } from '../ui/admin/dashboard/top-flashcard-set';
 import { TopFlashcardCreation } from '../ui/admin/dashboard/flashcard-creation';
+import { getTopFlashcardSets, getFlashcardCreationData } from '../lib/data/flashcard';
 
 export default async function AdminDashboard() {
   const { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements, enrollmentTrends } =
     await getAdminDashboardData();
+  const topFlashcardSets = await getTopFlashcardSets();
+  const flashcardCreationData = await getFlashcardCreationData();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
@@ -33,14 +36,14 @@ export default async function AdminDashboard() {
           </div>
 
           {/* Bottom Row */}
-          <div className="grid grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
             <EnrollmentTrends data={enrollmentTrends} />
             <RecentBadges data={topAchievements} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <TopFlashcardSet />
-            <TopFlashcardCreation />
+            <TopFlashcardSet data={topFlashcardSets} />
+            <TopFlashcardCreation data={flashcardCreationData} />
           </div>
 
           <TopCourses data={topCourses} />

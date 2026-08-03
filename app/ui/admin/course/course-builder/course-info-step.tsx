@@ -73,12 +73,13 @@ export default function CourseInfoStep({
                 <input
                   id="courseCategory"
                   type='text'
-                  placeholder='e.g., AI'
+                  placeholder='e.g., AI, Web Development, Python'
                   value={courseData.category_name || ''}
                   onChange={(e) => updateCourseData(prev => ({ ...prev, category_name: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
+                <p className="text-xs text-gray-500 mt-1">Separate multiple categories with commas</p>
               </div>
 
               <div>

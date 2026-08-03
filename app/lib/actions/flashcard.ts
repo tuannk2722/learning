@@ -81,6 +81,7 @@ export async function createFlashcardSet(
       userId,
       action: 'CREATE_FLASHCARD_SET',
       entityType: 'flashcard_set',
+      entityId: newSet.id,
       entityName: data.title.trim(),
     });
 
@@ -476,6 +477,7 @@ export async function logCompleteFlashcardSession(
       userId,
       action: 'COMPLETE_FLASHCARD_SESSION',
       entityType: 'flashcard_set',
+      entityId: setId,
       entityName: setRow?.title ?? null,
       metadata: {
         allCorrect: options?.allCorrect,

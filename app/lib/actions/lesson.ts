@@ -141,7 +141,7 @@ export async function completeLesson(
       userId,
       action: 'COMPLETE_LESSON',
       entityType: 'lesson',
-      entityId: Number(lessonId),
+      entityId: lessonId.toString(),
       entityName: lessonInfo[0]?.title ?? undefined,
       metadata: { xpEarned },
     });
@@ -199,7 +199,7 @@ export async function publishLesson(lessonId: number): Promise<{ success: boolea
       userId: session.user.id,
       action: 'PUBLISH_LESSON',
       entityType: 'lesson',
-      entityId: lessonId,
+      entityId: lessonId.toString(),
       entityName: lessonInfo[0]?.title ?? undefined,
     });
 
@@ -229,7 +229,7 @@ export async function unpublishLesson(lessonId: number): Promise<{ success: bool
       userId: session.user.id,
       action: 'UNPUBLISH_LESSON',
       entityType: 'lesson',
-      entityId: lessonId,
+      entityId: lessonId.toString(),
       entityName: lessonInfo2[0]?.title ?? undefined,
     });
 
