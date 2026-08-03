@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Star, Users } from 'lucide-react';
+import { Star, Users, Sparkles } from 'lucide-react';
 import { DynamicIcon } from '../dynamic-icon';
 import Link from 'next/link';
 import { CourseListing } from '@/app/lib/definitions/courses';
@@ -21,10 +21,18 @@ export const CourseCardAvailable = ({ course, index }: Props) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 + index * 0.1 }}
       whileHover={{ y: -4 }}
-      className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col h-full"
+      className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col h-full relative"
     >
-      <div className={`w-14 h-14 rounded-xl ${colorClasses.bg} flex items-center justify-center mb-4`}>
-        <DynamicIcon name={course.icon_name} className={`w-7 h-7 ${colorClasses.text}`} />
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-14 h-14 rounded-xl ${colorClasses.bg} flex items-center justify-center`}>
+          <DynamicIcon name={course.icon_name} className={`w-7 h-7 ${colorClasses.text}`} />
+        </div>
+        {course.is_recommended && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200/80 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+            Recommended
+          </span>
+        )}
       </div>
 
       <h3 className="text-lg font-medium mb-2">{course.name}</h3>

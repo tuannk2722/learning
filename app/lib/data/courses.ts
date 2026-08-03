@@ -369,3 +369,143 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
     throw new Error('Failed to fetch course for builder.');
   }
 }
+
+// ─── Recommendation System ─────────────────────────────────────────────────────
+
+/**
+ * Tổng hợp tất cả tags/categories mà user đã quan tâm:
+ * - Từ các khoá học đã enroll (courses.categories)
+ * - Từ các flashcard sets đã access (flashcard_sets.tags)
+ * Trả về mảng unique tags đã được de-dup.
+ */
+export async function getUserInterestTags(userId: string): Promise<string[]> {
+  try {
+    const [courseTagsRow, flashcardTagsRow] = await Promise.all([
+      // Tags từ enrolled courses
+      db.execute<{ tags: string[] }>(sql`
+        SELECT ARRAY_AGG(DISTINCT TRIM(cat)) FILTER (WHERE TRIM(cat) <> '') AS tags
+        FROM ${schema.enrollments}
+        JOIN ${schema.courses} ON ${schema.enrollments.course_id} = ${schema.courses.id}
+        , UNNEST(${schema.courses.categories}) AS cat
+        WHERE ${schema.enrollments.user_id} = ${userId}
+      `),
+      // Tags từ accessed flashcard sets
+      db.execute<{ tags: string[] }>(sql`
+        SELECT ARRAY_AGG(DISTINCT TRIM(tag)) FILTER (WHERE TRIM(tag) <> '') AS tags
+        FROM ${schema.flashcard_access_log}
+        JOIN ${schema.flashcard_sets} ON ${schema.flashcard_access_log.set_id} = ${schema.flashcard_sets.id}
+        , UNNEST(${schema.flashcard_sets.tags}) AS tag
+        WHERE ${schema.flashcard_access_log.user_id} = ${userId}
+      `),
+    ]);
+
+    const toArr = (rows: any) => {
+      const r = Array.isArray(rows) ? rows[0] : (rows as any).rows?.[0];
+      return (r?.tags as string[] | null) ?? [];
+    };
+
+    const merged = [...toArr(courseTagsRow), ...toArr(flashcardTagsRow)];
+    // De-dup case-insensitive
+    const seen = new Set<string>();
+    return merged.filter((t) => {
+      const key = t.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  } catch (error) {
+    console.error('getUserInterestTags error:', error);
+    return [];
+  }
+}
+
+/**
+ * Gợi ý các khoá học phù hợp với sở thích của user.
+ * - Nếu user có interestTags: ưu tiên khoá học có tags trùng nhiều nhất (overlap score).
+ * - Fallback: sort theo enrolled_count cao nhất (khoá học phổ biến).
+ */
+export async function getRecommendedCourses(
+  userId: string,
+  interestTags: string[],
+  limit = 6,
+): Promise<CourseListing[]> {
+  try {
+    if (interestTags.length === 0) {
+      // Fallback: top popular courses not yet enrolled
+      const userEnrollments = db
+        .select({ course_id: schema.enrollments.course_id })
+        .from(schema.enrollments)
+        .where(eq(schema.enrollments.user_id, userId));
+
+      const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
+      const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
+
+      const data = await db
+        .select({
+          ...getTableColumns(schema.courses),
+          category_name: sql<string>`array_to_string(${schema.courses.categories}, ', ')`,
+          total_lessons: totalLessons,
+          total_duration: sql<number>`coalesce(${lessonStats.total_duration}, 0)`,
+          enrolled_count: enrolledCount,
+        })
+        .from(schema.courses)
+        .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
+        .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
+        .where(and(
+          notInArray(schema.courses.id, userEnrollments),
+          eq(schema.courses.status, 'published'),
+        ))
+        .orderBy(desc(enrolledCount))
+        .limit(limit);
+
+      return data as any as CourseListing[];
+    }
+
+    // Tag-based: score = số tags trùng với interestTags
+    const userEnrollments = db
+      .select({ course_id: schema.enrollments.course_id })
+      .from(schema.enrollments)
+      .where(eq(schema.enrollments.user_id, userId));
+
+    const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
+    const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
+    const tagsParam = `{${interestTags.map((t) => `"${t.replace(/"/g, '\\"')}"`).join(',')}}`;
+
+    const data = await db
+      .select({
+        ...getTableColumns(schema.courses),
+        category_name: sql<string>`array_to_string(${schema.courses.categories}, ', ')`,
+        total_lessons: totalLessons,
+        total_duration: sql<number>`coalesce(${lessonStats.total_duration}, 0)`,
+        enrolled_count: enrolledCount,
+        recommendation_score: sql<number>`
+          CARDINALITY(
+            ARRAY(
+              SELECT UNNEST(${schema.courses.categories})
+              INTERSECT
+              SELECT UNNEST(${sql.raw(`'${tagsParam}'::text[]`)})
+            )
+          )
+        `.as('recommendation_score'),
+      })
+      .from(schema.courses)
+      .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
+      .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
+      .where(and(
+        notInArray(schema.courses.id, userEnrollments),
+        eq(schema.courses.status, 'published'),
+        sql`${schema.courses.categories} && ${sql.raw(`'${tagsParam}'::text[]`)}`,
+      ))
+      .orderBy(
+        desc(sql`recommendation_score`),
+        desc(enrolledCount),
+      )
+      .limit(limit);
+
+    return data as any as CourseListing[];
+  } catch (error) {
+    console.error('getRecommendedCourses error:', error);
+    return [];
+  }
+}
+

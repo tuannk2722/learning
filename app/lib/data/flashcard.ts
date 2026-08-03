@@ -114,7 +114,8 @@ export async function getFlashcardSets(
       .innerJoin(users, eq(flashcard_sets.owner_id, users.id))
       .leftJoin(cardCountSq, eq(flashcard_sets.id, cardCountSq.set_id))
       .where(and(...publicWhereConditions))
-      .orderBy(desc(flashcard_sets.created_at)),
+      .orderBy(desc(flashcard_sets.created_at))
+      .limit(10),
   ]);
 
   // 4. Filter theo q in-memory (vì cần removeAccents tiếng Việt, DB không hỗ trợ natively)
@@ -419,3 +420,124 @@ export async function getFlashcardCreationData(): Promise<FlashcardCreationData>
     setsByTag,
   };
 }
+
+// ─── Recommendation System ─────────────────────────────────────────────────────
+
+/**
+ * Gợi ý các flashcard sets phù hợp với sở thích của user.
+ * - Nếu có interestTags: ưu tiên sets có tags trùng nhiều nhất.
+ * - Fallback: trả về các public sets mới nhất chưa access.
+ */
+export async function getRecommendedFlashcardSets(
+  userId: string,
+  interestTags: string[],
+  limit = 8,
+): Promise<FlashcardSetDTO[]> {
+  try {
+    const cardCountSq = db
+      .select({
+        set_id: flashcard_items.set_id,
+        count: sql<number>`COUNT(*)::int`.as('count'),
+      })
+      .from(flashcard_items)
+      .groupBy(flashcard_items.set_id)
+      .as('card_counts');
+
+    const accessedIds = await db
+      .select({ set_id: flashcard_access_log.set_id })
+      .from(flashcard_access_log)
+      .where(eq(flashcard_access_log.user_id, userId));
+    const accessedSetIds = accessedIds.map((r) => r.set_id);
+
+    type SetRow = {
+      id: string;
+      owner_id: string;
+      title: string;
+      description: string | null;
+      is_public: boolean;
+      tags: string[] | null;
+      created_at: Date | null;
+      owner_name: string;
+      owner_avatar: string | null;
+      card_count: number;
+    };
+
+    const baseWhere = accessedSetIds.length > 0
+      ? and(eq(flashcard_sets.is_public, true), notInArray(flashcard_sets.id, accessedSetIds) as any)
+      : eq(flashcard_sets.is_public, true);
+
+    if (interestTags.length === 0) {
+      const rows = await db
+        .select({
+          id: flashcard_sets.id,
+          owner_id: flashcard_sets.owner_id,
+          title: flashcard_sets.title,
+          description: flashcard_sets.description,
+          is_public: flashcard_sets.is_public,
+          tags: flashcard_sets.tags,
+          created_at: flashcard_sets.created_at,
+          owner_name: users.name,
+          owner_avatar: users.avatar_url,
+          card_count: sql<number>`COALESCE(${cardCountSq.count}, 0)`.as('card_count'),
+        })
+        .from(flashcard_sets)
+        .innerJoin(users, eq(flashcard_sets.owner_id, users.id))
+        .leftJoin(cardCountSq, eq(flashcard_sets.id, cardCountSq.set_id))
+        .where(baseWhere)
+        .orderBy(desc(flashcard_sets.created_at))
+        .limit(limit) as SetRow[];
+
+      return rows.map((s) => ({
+        id: s.id, title: s.title, description: s.description,
+        isPublic: s.is_public, tags: s.tags ?? [], cardCount: s.card_count,
+        createdAt: s.created_at!, lastAccessed: null,
+        ownerId: s.owner_id, ownerName: s.owner_name, ownerAvatar: s.owner_avatar,
+      }));
+    }
+
+    const tagsParam = `{${interestTags.map((t) => `"${t.replace(/"/g, '\\"')}"`).join(',')}}`;
+
+    const rows = await db
+      .select({
+        id: flashcard_sets.id,
+        owner_id: flashcard_sets.owner_id,
+        title: flashcard_sets.title,
+        description: flashcard_sets.description,
+        is_public: flashcard_sets.is_public,
+        tags: flashcard_sets.tags,
+        created_at: flashcard_sets.created_at,
+        owner_name: users.name,
+        owner_avatar: users.avatar_url,
+        card_count: sql<number>`COALESCE(${cardCountSq.count}, 0)`.as('card_count'),
+        recommendation_score: sql<number>`
+          CARDINALITY(
+            ARRAY(
+              SELECT UNNEST(${flashcard_sets.tags})
+              INTERSECT
+              SELECT UNNEST(${sql.raw(`'${tagsParam}'::text[]`)})
+            )
+          )
+        `.as('recommendation_score'),
+      })
+      .from(flashcard_sets)
+      .innerJoin(users, eq(flashcard_sets.owner_id, users.id))
+      .leftJoin(cardCountSq, eq(flashcard_sets.id, cardCountSq.set_id))
+      .where(and(
+        baseWhere as any,
+        sql`${flashcard_sets.tags} && ${sql.raw(`'${tagsParam}'::text[]`)}`,
+      ))
+      .orderBy(desc(sql`recommendation_score`), desc(flashcard_sets.created_at))
+      .limit(limit) as (SetRow & { recommendation_score: number })[];
+
+    return rows.map((s) => ({
+      id: s.id, title: s.title, description: s.description,
+      isPublic: s.is_public, tags: s.tags ?? [], cardCount: s.card_count,
+      createdAt: s.created_at!, lastAccessed: null,
+      ownerId: s.owner_id, ownerName: s.owner_name, ownerAvatar: s.owner_avatar,
+    }));
+  } catch (error) {
+    console.error('getRecommendedFlashcardSets error:', error);
+    return [];
+  }
+}
+

@@ -1,11 +1,13 @@
 import { Suspense } from 'react';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { getFlashcardSets } from '@/app/lib/data/flashcard';
+import { getFlashcardSets, getRecommendedFlashcardSets } from '@/app/lib/data/flashcard';
+import { getUserInterestTags } from '@/app/lib/data/courses';
 import FlashcardFilter from '@/app/ui/flashcards/flashcards-overview/flashcard-filter';
 import FlashcardHeader from '@/app/ui/flashcards/flashcards-overview/flashcard-header';
 import { FlashcardSetCard } from '@/app/ui/flashcards/flashcards-overview/flashcard-set-card';
 import { FlashcardSetListRow } from '@/app/ui/flashcards/flashcards-overview/flashcard-set-list-row';
+import { RecommendedFlashcardSets } from '@/app/ui/flashcards/flashcards-overview/recommended-flashcard-sets';
 import { Pagination } from '@/app/ui/pagination';
 import { Earth, Folder } from 'lucide-react';
 import type { FlashcardSetDTO } from '@/app/lib/definitions/flashcards';
@@ -29,12 +31,14 @@ export default async function FlashcardsPage({ searchParams }: PageProps) {
   const currentPage = Math.max(1, Number(page) || 1);
   const userId = session.user.id;
 
-  const { recentSets, publicSets, totalRecentPages } = await getFlashcardSets(
-    userId,
-    q || '',
-    currentPage,
-    5
-  );
+  const [{ recentSets, publicSets, totalRecentPages }, interestTags] = await Promise.all([
+    getFlashcardSets(userId, q || '', currentPage, 5),
+    getUserInterestTags(userId),
+  ]);
+
+  const recommendedSets = await getRecommendedFlashcardSets(userId, interestTags, 8);
+  const recommendedSetIds = new Set(!q ? recommendedSets.map((s) => s.id) : []);
+  const filteredPublicSets = publicSets.filter((s) => !recommendedSetIds.has(s.id));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
@@ -85,16 +89,24 @@ export default async function FlashcardsPage({ searchParams }: PageProps) {
             )}
           </Suspense>
 
+          {/* Recommended Flashcard Sets */}
+          {!q && recommendedSets.length > 0 && (
+            <RecommendedFlashcardSets
+              sets={recommendedSets}
+              interestTags={interestTags}
+            />
+          )}
+
           {/* Public Section */}
           <Suspense fallback={<FlashcardPublicSectionSkeleton />}>
-            {publicSets.length > 0 && (
+            {filteredPublicSets.length > 0 && (
               <>
                 <h2 className="text-xl mt-10 mb-4 flex items-center gap-2 font-semibold">
                   <Earth className="w-5 h-5" />
                   Students also studying
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                  {publicSets.map((set, i) => (
+                  {filteredPublicSets.map((set, i) => (
                     <FlashcardSetCard
                       key={set.id}
                       set={set}

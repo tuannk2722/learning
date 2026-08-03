@@ -28,6 +28,7 @@ export interface CourseListing extends Course {
   enrolled_count: number;
   progress_percent?: number;
   current_lesson?: string;
+  is_recommended?: boolean;
 }
 
 // Type đầy đủ cho trang chi tiết (Course Detail)
