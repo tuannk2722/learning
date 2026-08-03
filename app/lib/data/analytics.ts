@@ -222,7 +222,6 @@ export async function getAdminDashboardData() {
     db.select({ count: sql<number>`cast(count(*) as int)` })
       .from(user_achievements),
 
-
     // 6. DAU chart: đếm user login theo ngày từ activity_logs
     db.select({
       date: sql<string>`DATE(${activity_logs.created_at})`,
@@ -261,10 +260,9 @@ export async function getAdminDashboardData() {
       .groupBy(courses.id, courses.name)
       .orderBy(desc(sql`count(${enrollments.user_id})`)),
 
-    // 9. Recent Achievements: achievement được unlock nhiều nhất
+    // 9. Recent Achievements: 10 achievement được unlock nhiều nhất
     db.select({
       name: achievements.title,
-      description: achievements.description,
       iconName: achievements.icon_name,
       themeColor: achievements.theme_color,
       awarded: sql<number>`cast(count(${user_achievements.user_id}) as int)`,
@@ -273,7 +271,7 @@ export async function getAdminDashboardData() {
       .innerJoin(achievements, eq(user_achievements.achievement_id, achievements.id))
       .groupBy(achievements.id, achievements.title)
       .orderBy(desc(sql`count(${user_achievements.user_id})`))
-      .limit(3),
+      .limit(10),
 
     // 10. Enrollment Trends: thống kê enrollments, completions, drop-offs theo tháng (6 tháng gần nhất)
     db.select({
@@ -329,7 +327,6 @@ export async function getAdminDashboardData() {
 
   const topAchievements = topAchievementsResult.map(b => ({
     name: b.name,
-    description: b.description ?? '',
     iconName: b.iconName ?? 'Trophy',
     themeColor: b.themeColor ?? 'gray',
     awarded: b.awarded,

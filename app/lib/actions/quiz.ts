@@ -166,7 +166,7 @@ export async function submitQuiz(
         userId,
         action: 'COMPLETE_QUIZ',
         entityType: 'quiz',
-        entityId: quiz.id,
+        entityId: quiz.id.toString(),
         entityName: quiz.title,
         metadata: { score, total, passed, xpEarned, percentage },
       });

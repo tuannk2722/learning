@@ -8,7 +8,7 @@ import {
   users,
   activity_logs,
 } from '../db/schema';
-import { eq, and, inArray, notInArray, sql, desc } from 'drizzle-orm';
+import { eq, and, inArray, notInArray, sql, desc, gte } from 'drizzle-orm';
 import { removeAccents } from '../utils/removeAccents';
 import type {
   FlashcardSetDTO,
@@ -17,6 +17,7 @@ import type {
   CardProgressMap,
   StudySessionMeta,
 } from '../definitions/flashcards';
+import { FlashcardCreationData, SetCreationTrendItem, SetsByTagItem, TopActiveDeckDTO } from '../definitions/definitions';
 
 /** Chuẩn hoá string để so sánh: bỏ dấu + lowercase */
 function normalize(s: string): string {
@@ -285,4 +286,136 @@ export async function getFlashcardSetForEdit(setId: string, userId: string) {
   const result = await getFlashcardSetById(setId, userId);
   if (!result || !result.isOwner) return null;
   return result.set;
+}
+
+
+// ─── Query: Top active decks cho dashboard admin ──────────────────────────────
+
+export type DeckRow = {
+  id: string;
+  title: string;
+  tags: string[] | null;
+  active_users: number;
+  sessions: number;
+  avg_mastery: number;
+};
+
+export const RANK_COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'];
+
+export async function getTopFlashcardSets(): Promise<TopActiveDeckDTO[]> {
+
+  // 1. Biểu thức accuracy cho từng dòng log: ưu tiên metadata.accuracy, fallback
+  // 1 (100%) khi allCorrect = true, còn lại NULL (AVG() của Postgres tự bỏ qua NULL)
+  const accuracyExpr = sql`
+    CASE
+      WHEN (${activity_logs.metadata}->>'accuracy') IS NOT NULL
+        THEN (${activity_logs.metadata}->>'accuracy')::numeric
+      WHEN (${activity_logs.metadata}->>'allCorrect') = 'true'
+        THEN 1
+      ELSE NULL
+    END
+  `;
+
+  // Select shape: gộp trực tiếp aggregate vào 1 query duy nhất, không cần
+  // round-trip riêng để đếm/tính trung bình
+  const selectShape = {
+    id: flashcard_sets.id,
+    title: flashcard_sets.title,
+    tags: flashcard_sets.tags,
+    active_users: sql<number>`COUNT(DISTINCT ${activity_logs.user_id})::int`.as('active_users'),
+    sessions: sql<number>`COUNT(${activity_logs.id})::int`.as('sessions'),
+    avg_mastery: sql<number>`ROUND(COALESCE(AVG(${accuracyExpr}), 0) * 100)::int`.as('avg_mastery'),
+  };
+
+  // 2. Join flashcard_sets <-> activity_logs qua entity_id
+  const rows = (await db
+    .select(selectShape)
+    .from(flashcard_sets)
+    .innerJoin(
+      activity_logs,
+      and(
+        eq(activity_logs.entity_type, 'flashcard_set'),
+        eq(activity_logs.action, 'COMPLETE_FLASHCARD_SESSION'),
+        eq(activity_logs.entity_id, sql`${flashcard_sets.id}::text`),
+        sql`${activity_logs.created_at} >= CURRENT_DATE - INTERVAL '6 days'`
+      )
+    )
+    .groupBy(flashcard_sets.id, flashcard_sets.title, flashcard_sets.tags)
+    .orderBy(desc(sql`COUNT(DISTINCT ${activity_logs.user_id})`))
+    .limit(5)) as DeckRow[];
+
+  // 3. Map sang DTO — synchronous, không cần thêm DB query
+  const toDTO = (r: DeckRow[]): TopActiveDeckDTO[] =>
+    r.map((deck, i) => ({
+      id: deck.id,
+      title: deck.title,
+      subject: deck.tags?.[0] ?? '',
+      tags: deck.tags ?? [],
+      activeUsers: deck.active_users,
+      sessions: deck.sessions,
+      avgMastery: deck.avg_mastery,
+      gradient: RANK_COLORS[i % RANK_COLORS.length],
+    }));
+
+  return toDTO(rows);
+}
+
+
+// ─── Query: Analytics tạo flashcard cho Admin Dashboard ──────────────
+
+export async function getFlashcardCreationData(): Promise<FlashcardCreationData> {
+  const now = new Date();
+  const fiftySixDaysAgo = new Date(now.getTime() - 8 * 7 * 24 * 60 * 60 * 1000);
+
+  // 1. Thống kê xu hướng tạo bộ thẻ theo 8 tuần từ database
+  const setsRows = await db
+    .select({ createdAt: flashcard_sets.created_at })
+    .from(flashcard_sets)
+    .where(gte(flashcard_sets.created_at, fiftySixDaysAgo));
+
+  const weeksCount = Array(8).fill(0);
+  for (const row of setsRows) {
+    if (!row.createdAt) continue;
+    const diffMs = now.getTime() - new Date(row.createdAt).getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    const weekIdx = Math.floor(diffDays / 7);
+    if (weekIdx >= 0 && weekIdx < 8) {
+      weeksCount[7 - weekIdx] += 1;
+    }
+  }
+
+  const setCreationTrend: SetCreationTrendItem[] = weeksCount.map((count, i) => ({
+    week: `W${i + 1}`,
+    sets: count,
+  }));
+
+  // 2. Thống kê số lượng bộ thẻ được tạo theo tags từ database
+  const tagRows = await db
+    .select({
+      tag: sql<string>`COALESCE(${flashcard_sets.tags}[1], 'General')`.as('tag'),
+      count: sql<number>`COUNT(${flashcard_sets.id})::int`.as('count'),
+    })
+    .from(flashcard_sets)
+    .groupBy(sql`COALESCE(${flashcard_sets.tags}[1], 'General')`)
+    .orderBy(desc(sql`COUNT(${flashcard_sets.id})`))
+    .limit(5);
+
+  const maxCount = Math.max(...tagRows.map((r) => Number(r.count) || 0), 1);
+
+  const setsByTag: SetsByTagItem[] = tagRows.map((row, i) => {
+    const count = Number(row.count) || 0;
+    const pct = Math.round((count / maxCount) * 100);
+
+    return {
+      tag: row.tag,
+      count,
+      pct,
+      fill: RANK_COLORS[i % RANK_COLORS.length],
+    };
+  });
+
+  return {
+    setCreationTrend,
+    setsByTag,
+  };
 }

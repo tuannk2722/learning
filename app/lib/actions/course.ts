@@ -85,7 +85,7 @@ export async function enrollInCourse(courseId: number): Promise<{
       userId,
       action: 'ENROLL_COURSE',
       entityType: 'course',
-      entityId: courseId,
+      entityId: courseId.toString(),
       entityName: courseInfo[0]?.name ?? undefined,
     });
 
@@ -152,7 +152,7 @@ export async function rateCourse(courseId: number, rating: number): Promise<{ su
       userId,
       action: 'RATE_COURSE',
       entityType: 'course',
-      entityId: courseId,
+      entityId: courseId.toString(),
       entityName: courseInfo[0]?.name ?? undefined,
     });
 
@@ -347,7 +347,7 @@ export async function saveCourseBuilder(
       userId: session.user.id,
       action: isNewCourse ? 'CREATE_COURSE' : 'UPDATE_COURSE',
       entityType: 'course',
-      entityId: courseId,
+      entityId: courseId.toString(),
       entityName: courseData.name,
       metadata: { published: false },
     });
@@ -415,7 +415,7 @@ export async function publishCourseBuilder(
       userId: session.user.id,
       action: isNewCourse ? 'CREATE_COURSE' : 'UPDATE_COURSE',
       entityType: 'course',
-      entityId: courseId,
+      entityId: courseId.toString(),
       entityName: courseData.name,
       metadata: { published: !publishError },
     });
@@ -440,7 +440,7 @@ export async function UnPublishCourse(courseId: number) {
       userId: session.user.id,
       action: 'UNPUBLISH_COURSE',
       entityType: 'course',
-      entityId: courseId,
+      entityId: courseId.toString(),
     });
 
     const refreshedCourse = await getCourseForBuilder(courseId.toString());
@@ -470,7 +470,7 @@ export async function DeleteCourse(courseId: number) {
       userId: session.user.id,
       action: 'DELETE_COURSE',
       entityType: 'course',
-      entityId: courseId,
+      entityId: courseId.toString(),
     });
 
     revalidatePath(`/admin/courses`);

@@ -7,7 +7,7 @@ import { motion } from "motion/react";
 import { DynamicIcon } from "../dynamic-icon";
 import Link from "next/link";
 
-export function AchievementsCard({ recentAchievements }: { recentAchievements: AchievementPreview[] }) {
+export function RecentAchievements({ recentAchievements }: { recentAchievements: AchievementPreview[] }) {
 
   return (
     <motion.div
@@ -21,7 +21,7 @@ export function AchievementsCard({ recentAchievements }: { recentAchievements: A
           <Award className="w-6 h-6 text-violet-600" />
           <h3 className="text-xl font-bold">Recent Achievements</h3>
         </div>
-        <Link title="View All Achievements" href="/dashboard/achievements" className="text-sm text-violet-600 hover:text-violet-700">
+        <Link title="View All Achievements" href="/dashboard/profile/achievements" className="text-sm text-violet-600 hover:text-violet-700">
           <LinkIcon />
         </Link>
       </div>

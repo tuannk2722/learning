@@ -185,7 +185,7 @@ export async function evaluateAchievements(userId: string): Promise<{ unlocked: 
           userId,
           action: 'UNLOCK_ACHIEVEMENT',
           entityType: 'achievement',
-          entityId: ach.id,
+          entityId: ach.id.toString(),
           entityName: ach.title,
           metadata: { reward_xp: ach.reward_xp, rarity: ach.rarity },
         });

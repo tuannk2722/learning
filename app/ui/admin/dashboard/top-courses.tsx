@@ -14,7 +14,7 @@ export default function TopCourses({ data }: { data: CourseData[] }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.25 }}
-      className="bg-white rounded-3xl p-8 border-2 border-gray-100 shadow-lg overflow-hidden"
+      className="bg-white rounded-3xl border-2 border-gray-100 shadow-lg overflow-hidden"
     >
       <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
         <h2 className="font-semibold text-gray-900">Top Performing Courses</h2>

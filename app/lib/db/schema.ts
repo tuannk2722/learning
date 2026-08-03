@@ -209,7 +209,7 @@ export const activity_logs = pgTable('activity_logs', {
   user_id: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
   action: varchar('action', { length: 100 }).notNull(),
   entity_type: varchar('entity_type', { length: 50 }),
-  entity_id: integer('entity_id'),
+  entity_id: text('entity_id'),
   entity_name: text('entity_name'),
   metadata: jsonb('metadata'),
   created_at: timestamp('created_at').defaultNow(),
