@@ -4,8 +4,7 @@ import {
   user_daily_quests, daily_quest_definitions,
   user_achievements, achievements,
   users, courses, enrollments, activity_logs,
-  flashcard_sets, flashcard_items, flashcard_card_progress,
-  flashcard_access_log
+  flashcard_sets, flashcard_card_progress
 } from "../db/schema";
 import { eq, and, sql, desc, inArray } from "drizzle-orm";
 import { FlashcardCardStatus, FlashcardDailyReview, FlashcardSetMastery } from "../definitions/definitions";
@@ -222,14 +221,14 @@ export async function getAdminDashboardData() {
     db.select({ count: sql<number>`cast(count(*) as int)` })
       .from(user_achievements),
 
-    // 6. DAU chart: đếm user login theo ngày từ activity_logs
+    // 6. DAU chart: đếm số lượng active users theo ngày từ activity_logs (mỗi user có ít nhất 1 bản ghi activity log)
     db.select({
       date: sql<string>`DATE(${activity_logs.created_at})`,
       users: sql<number>`cast(count(distinct ${activity_logs.user_id}) as int)`,
     })
       .from(activity_logs)
       .where(and(
-        eq(activity_logs.action, 'USER_LOGIN'),
+        sql`${activity_logs.user_id} IS NOT NULL`,
         sql`${activity_logs.created_at} >= CURRENT_DATE - INTERVAL '6 days'`
       ))
       .groupBy(sql`DATE(${activity_logs.created_at})`),

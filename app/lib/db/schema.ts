@@ -41,17 +41,10 @@ export const password_reset_tokens = pgTable('password_reset_tokens', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
-// 2. BẢNG CATEGORIES
-export const categories = pgTable('categories', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  slug: text('slug').notNull().unique(),
-});
-
-// 3. BẢNG COURSES
+// 2. BẢNG COURSES
 export const courses = pgTable('courses', {
   id: serial('id').primaryKey(),
-  category_id: integer('category_id').references(() => categories.id, { onDelete: 'set null' }),
+  categories: text('categories').array().default(sql`'{}'::text[]`),
   name: text('name').notNull(),
   description: text('description'),
   level: varchar('level', { length: 50 }),

@@ -1,8 +1,8 @@
 'use server';
 
 import { db } from "../db";
-import { enrollments, sections, lessons, user_lesson_progress, courses, categories, quizzes } from "../db/schema";
-import { eq, and, asc, sql, isNotNull, inArray, ilike } from "drizzle-orm";
+import { enrollments, sections, lessons, user_lesson_progress, courses, quizzes } from "../db/schema";
+import { eq, and, asc, sql, isNotNull, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { evaluateAchievements } from "./achievements";
@@ -172,34 +172,9 @@ async function _persistCourseData(
 ): Promise<{ courseId: number; isNewCourse: boolean }> {
   let targetCourseId = courseData.id;
   let isNewCourse = true;
-
-  // --- Upsert Category ---
-  let resolvedCategoryId: number | null = null;
-  const trimmedCategoryName = courseData.category_name?.trim();
-
-  if (trimmedCategoryName) {
-    const existingCategory = await db
-      .select({ id: categories.id })
-      .from(categories)
-      .where(ilike(categories.name, trimmedCategoryName))
-      .limit(1);
-
-    if (existingCategory.length > 0) {
-      resolvedCategoryId = existingCategory[0].id;
-    } else {
-      const baseSlug = trimmedCategoryName
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-]/g, '');
-      const uniqueSlug = `${baseSlug}-${Date.now()}`;
-
-      const [newCategory] = await db
-        .insert(categories)
-        .values({ name: trimmedCategoryName, slug: uniqueSlug })
-        .returning({ id: categories.id });
-      resolvedCategoryId = newCategory.id;
-    }
-  }
+  const categoriesArray = courseData.category_name
+    ? courseData.category_name.split(',').map((c) => c.trim()).filter(Boolean)
+    : [];
 
   await db.transaction(async (tx) => {
     // 1. Determine if course already exists in DB
@@ -217,7 +192,7 @@ async function _persistCourseData(
       const [insertedCourse] = await tx
         .insert(courses)
         .values({
-          category_id: resolvedCategoryId,
+          categories: categoriesArray,
           name: courseData.name,
           description: courseData.description,
           level: courseData.level,
@@ -231,7 +206,7 @@ async function _persistCourseData(
       await tx
         .update(courses)
         .set({
-          category_id: resolvedCategoryId,
+          categories: categoriesArray,
           name: courseData.name,
           description: courseData.description,
           level: courseData.level,

@@ -1,6 +1,6 @@
 import { db } from "../db";
 import * as schema from "../db/schema";
-import { eq, sql, desc, notInArray, getTableColumns, and, inArray, gt } from "drizzle-orm";
+import { eq, sql, desc, notInArray, getTableColumns, and, inArray, gt, isNotNull } from "drizzle-orm";
 import { CourseListing, CourseDetail, Category } from "../definitions/courses";
 import { CourseBuilderResult, CourseBuilderSection } from "../definitions/lessons";
 
@@ -30,25 +30,24 @@ const enrollmentStats = db
 
 export async function getTopCategory() {
   try {
-    const data = await db
-      .select({
-        id: schema.categories.id,
-        name: schema.categories.name,
-        total_courses: sql<number>`cast(count(${schema.courses.id}) as int)`.as('total_courses'),
-      })
-      .from(schema.categories)
-      .leftJoin(schema.courses, eq(schema.categories.id, schema.courses.category_id))
-      .groupBy(schema.categories.id)
-      .having(gt(
-        sql<number>`cast(count(case when ${schema.courses.status} = 'published' then 1 end) as int)`,
-        0
-      ))
-      .orderBy(desc(sql<number>`total_courses`))
-      .limit(10);
-    return data as any as Category[];
+    const data = await db.execute<{ id: number; name: string; total_courses: number }>(sql`
+      SELECT 
+        ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC)::int AS id,
+        TRIM(cat) AS name,
+        COUNT(*)::int AS total_courses
+      FROM ${schema.courses},
+      UNNEST(${schema.courses.categories}) AS cat
+      WHERE ${schema.courses.status} = 'published'
+        AND TRIM(cat) <> ''
+      GROUP BY TRIM(cat)
+      ORDER BY total_courses DESC
+      LIMIT 5
+    `);
+    const rows = Array.isArray(data) ? data : ((data as any).rows || []);
+    return rows as any as Category[];
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch all categories [DRIZZLE_FIX].');
+    return [];
   }
 }
 
@@ -61,13 +60,12 @@ export async function fetchAllCourses(options?: { status?: 'published' | 'draft'
     const query = db
       .select({
         ...getTableColumns(schema.courses),
-        category_name: schema.categories.name,
+        category_name: sql<string>`array_to_string(${schema.courses.categories}, ', ')`,
         total_lessons: totalLessons,
         total_duration: sql<number>`coalesce(${lessonStats.total_duration}, 0)`,
         enrolled_count: enrolledCount,
       })
       .from(schema.courses)
-      .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId));
 
@@ -90,7 +88,7 @@ export async function getEnrolledCourses(userId: string) {
     const data = await db
       .select({
         ...getTableColumns(schema.courses),
-        category_name: schema.categories.name,
+        category_name: sql<string>`array_to_string(${schema.courses.categories}, ', ')`,
         progress_percent: sql<number>`
           CASE
             WHEN (
@@ -131,7 +129,6 @@ export async function getEnrolledCourses(userId: string) {
       })
       .from(schema.courses)
       .innerJoin(schema.enrollments, eq(schema.courses.id, schema.enrollments.course_id))
-      .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .where(and(
         eq(schema.enrollments.user_id, userId),
         eq(schema.courses.status, 'published')
@@ -158,12 +155,11 @@ export async function getNotEnrolledCourses(userId: string) {
     const data = await db
       .select({
         ...getTableColumns(schema.courses),
-        category_name: schema.categories.name,
+        category_name: sql<string>`array_to_string(${schema.courses.categories}, ', ')`,
         total_lessons: totalLessons,
         enrolled_count: enrolledCount,
       })
       .from(schema.courses)
-      .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
       .where(and(
@@ -189,10 +185,9 @@ export async function getCourseById(courseId: number, userId?: string): Promise<
         progress_percent: sql<number>`0`,
         total_xp: sql<number>`coalesce(${lessonStats.total_xp}, 0)`,
         total_duration: sql<number>`coalesce(${lessonStats.total_duration}, 0)`,
-        category_name: schema.categories.name,
+        category_name: sql<string>`array_to_string(${schema.courses.categories}, ', ')`,
       })
       .from(schema.courses)
-      .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .leftJoin(lessonStats, eq(schema.courses.id, lessonStats.courseId))
       .leftJoin(enrollmentStats, eq(schema.courses.id, enrollmentStats.courseId))
       .where(eq(schema.courses.id, courseId))
@@ -310,14 +305,13 @@ export async function getCourseForBuilder(id: string): Promise<CourseBuilderResu
         id: schema.courses.id,
         name: schema.courses.name,
         description: schema.courses.description,
-        category_name: schema.categories.name,
+        category_name: sql<string>`array_to_string(${schema.courses.categories}, ', ')`,
         level: schema.courses.level,
         icon: schema.courses.icon_name,
         theme_color: schema.courses.theme_color,
         status: schema.courses.status,
       })
       .from(schema.courses)
-      .leftJoin(schema.categories, eq(schema.courses.category_id, schema.categories.id))
       .where(eq(schema.courses.id, courseId))
       .limit(1);
 

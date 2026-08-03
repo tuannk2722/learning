@@ -37,7 +37,7 @@ export default function TopAchievements({ data }: { data: AchievementData[] }) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.6 }}
-      className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm"
+      className="bg-white rounded-3xl p-6 border border-gray-200 shadow-lg"
     >
       <div className="flex items-start justify-between mb-5">
         <div>
