@@ -10,9 +10,10 @@ import { getColorClasses } from '@/app/lib/utils/color-palette';
 interface Props {
   course: CourseListing;
   index: number;
+  isGuest?: boolean;
 }
 
-export const CourseCardAvailable = ({ course, index }: Props) => {
+export const CourseCardAvailable = ({ course, index, isGuest = false }: Props) => {
   const colorClasses = getColorClasses(course.theme_color);
 
   return (
@@ -41,8 +42,8 @@ export const CourseCardAvailable = ({ course, index }: Props) => {
       <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mb-4">
         {course.category_name
           ? course.category_name.split(',').map((cat) => cat.trim()).filter(Boolean).map((cat, i) => (
-              <span key={i} className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded-md font-medium">{cat}</span>
-            ))
+            <span key={i} className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded-md font-medium">{cat}</span>
+          ))
           : <span className="bg-violet-50 text-violet-700 px-2 py-0.5 rounded-md font-medium">General</span>
         }
         <span>•</span>
@@ -67,10 +68,10 @@ export const CourseCardAvailable = ({ course, index }: Props) => {
         whileTap={{ scale: 0.98 }}
       >
         <Link
-          href={`/dashboard/courses/${course.id}/`}
+          href={isGuest ? `/courses/${course.id}` : `/dashboard/courses/${course.id}/`}
           className="w-full inline-flex items-center justify-center border-2 border-indigo-600 text-indigo-600 px-4 py-2.5 rounded-lg hover:bg-indigo-50 transition-colors"
         >
-          Enroll Now
+          Preview Now
         </Link>
       </motion.div>
     </motion.div>

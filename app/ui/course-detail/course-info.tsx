@@ -11,10 +11,12 @@ import { CourseRating } from "./course-rating";
 
 export function CourseInfo({
   course,
-  initialRating
+  initialRating,
+  isGuest = false,
 }: {
   course: CourseDetail,
-  initialRating?: number | null
+  initialRating?: number | null,
+  isGuest?: boolean,
 }) {
   const colorClasses = getColorClasses(course.theme_color);
   const totalLessons = course.total_lessons;
@@ -27,7 +29,7 @@ export function CourseInfo({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <Link href="/dashboard/courses" className="text-violet-600 hover:text-violet-700 flex items-center gap-1 mb-4 text-sm font-medium">
+        <Link href={isGuest ? "/courses" : "/dashboard/courses"} className="text-violet-600 hover:text-violet-700 flex items-center gap-1 mb-4 text-sm font-medium">
           ← Return to Courses
         </Link>
 

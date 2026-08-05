@@ -2,7 +2,7 @@ import { CourseListing } from "@/app/lib/definitions/courses";
 import { CourseCardAvailable } from "./available-course-card";
 
 
-export const CourseGrid = ({ courses }: { courses: CourseListing[] }) => {
+export const CourseGrid = ({ courses, isGuest = false }: { courses: CourseListing[]; isGuest?: boolean }) => {
   if (courses.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-100 mx-6">
@@ -15,7 +15,7 @@ export const CourseGrid = ({ courses }: { courses: CourseListing[] }) => {
     <section className="pb-20 px-6">
       <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
         {courses.map((course, index) => (
-          <CourseCardAvailable key={course.id} course={course} index={index} />
+          <CourseCardAvailable key={course.id} course={course} index={index} isGuest={isGuest} />
         ))}
       </div>
     </section>

@@ -6,11 +6,12 @@ import { motion } from "motion/react";
 import Link from "next/link";
 
 export function CurriculumSection({
-  curriculum, courseId, activeLessonId
+  curriculum, courseId, activeLessonId, isGuest = false
 }: {
   curriculum: CourseCurriculum;
   courseId: string;
   activeLessonId?: string;
+  isGuest?: boolean;
 }) {
 
   return (
@@ -34,27 +35,28 @@ export function CurriculumSection({
 
             <div className="divide-y divide-gray-200">
               {section.lessons.map((lesson, lessonIndex) => {
+                const isLocked = isGuest || lesson.locked;
                 const lessonHref = `/dashboard/courses/${courseId}/lesson/${lesson.id}`;
                 const isActive = activeLessonId ? lesson.id.toString() === activeLessonId : lesson.isCurrent;
 
                 return (
                   <Link
                     key={lesson.id}
-                    href={lesson.locked ? "#" : lessonHref}
-                    className={lesson.locked ? "pointer-events-none" : "block"}
+                    href={isLocked ? "#" : lessonHref}
+                    className={isLocked ? "pointer-events-none" : "block"}
                   >
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.4 + lessonIndex * 0.05 }}
-                      className={`px-6 py-4 flex items-center justify-between hover:bg-violet-50 transition-colors ${lesson.locked ? "opacity-60" : "cursor-pointer"
-                        } ${isActive ? "bg-violet-100 border-l-4 border-violet-600 pl-5" : "border-l-4 border-transparent pl-5"}`}
+                      className={`px-6 py-4 flex items-center justify-between hover:bg-violet-50 transition-colors ${isLocked ? "opacity-60" : "cursor-pointer"
+                        } ${isActive && !isGuest ? "bg-violet-100 border-l-4 border-violet-600 pl-5" : "border-l-4 border-transparent pl-5"}`}
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          {lesson.completed ? (
+                          {lesson.completed && !isGuest ? (
                             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                          ) : lesson.locked ? (
+                          ) : isLocked ? (
                             <Lock className="w-5 h-5 text-gray-400" />
                           ) : isActive ? (
                             <Play className="w-5 h-5 text-violet-600" />
@@ -78,7 +80,7 @@ export function CurriculumSection({
                           </div>
                         </div>
                       </div>
-                      {!lesson.locked && (
+                      {!isLocked && (
                         <ChevronRight className="w-5 h-5 text-gray-400" />
                       )}
                     </motion.div>

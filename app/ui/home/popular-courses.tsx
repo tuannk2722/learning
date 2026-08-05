@@ -6,7 +6,7 @@ import Link from "next/link"
 import { CourseCardAvailable } from "../courses/available-course-card"
 import { CourseListing } from "@/app/lib/definitions/courses";
 
-export function PopularCourses({ data }: { data: CourseListing[] }) {
+export function PopularCourses({ data, isGuest = false }: { data: CourseListing[]; isGuest?: boolean }) {
 
   return (
     < section id="courses" className="py-20 px-6 bg-gradient-to-b from-white to-violet-50" >
@@ -24,7 +24,7 @@ export function PopularCourses({ data }: { data: CourseListing[] }) {
 
         <div className="grid md:grid-cols-3 gap-8">
           {data.map((course, index) => (
-            <CourseCardAvailable key={course.id} course={course} index={index} />
+            <CourseCardAvailable key={course.id} course={course} index={index} isGuest={isGuest} />
           ))}
         </div>
 
