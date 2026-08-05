@@ -6,8 +6,9 @@ import {
   users, courses, enrollments, activity_logs,
   flashcard_sets, flashcard_card_progress
 } from "../db/schema";
-import { eq, and, sql, desc, inArray } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { FlashcardCardStatus, FlashcardDailyReview, FlashcardSetMastery } from "../definitions/definitions";
+import { getSetsMasteryByIds } from "./flashcard";
 
 
 function generateLast7Days() {
@@ -364,7 +365,7 @@ export async function getFlashcardAnalytics(userId: string): Promise<FlashcardAn
 
     const recentSetIds = recentSetsRaw.map((s) => s.setId);
 
-    const [dailyProgress, userSets, recentSetProgress, allProgressStatus] = await Promise.all([
+    const [dailyProgress, allProgressStatus, masteryList] = await Promise.all([
       // 1. Daily flashcard set studied over last 7 days
       db
         .select({
@@ -382,41 +383,7 @@ export async function getFlashcardAnalytics(userId: string): Promise<FlashcardAn
         .groupBy(sql`DATE(${activity_logs.created_at})`)
         .orderBy(sql`DATE(${activity_logs.created_at})`),
 
-      // 2. Title của 4 sets gần đây nhất (dùng cho setMastery)
-      recentSetIds.length === 0
-        ? Promise.resolve([])
-        : db
-          .select({
-            id: flashcard_sets.id,
-            title: flashcard_sets.title,
-          })
-          .from(flashcard_sets)
-          .where(
-            and(
-              eq(flashcard_sets.owner_id, userId),
-              inArray(flashcard_sets.id, recentSetIds)
-            )
-          ),
-
-      // 3. Status breakdown theo từng set — CHỈ trong 4 set gần nhất (dùng cho setMastery)
-      recentSetIds.length === 0
-        ? Promise.resolve([])
-        : db
-          .select({
-            setId: flashcard_card_progress.set_id,
-            status: flashcard_card_progress.status,
-            count: sql<number>`count(*)`,
-          })
-          .from(flashcard_card_progress)
-          .where(
-            and(
-              eq(flashcard_card_progress.user_id, userId),
-              inArray(flashcard_card_progress.set_id, recentSetIds)
-            )
-          )
-          .groupBy(flashcard_card_progress.set_id, flashcard_card_progress.status),
-
-      // 4. Status breakdown TOÀN BỘ progress của user (dùng cho cardStatus, không giới hạn set)
+      // 2. Status breakdown TOÀN BỘ progress của user (dùng cho cardStatus)
       db
         .select({
           status: flashcard_card_progress.status,
@@ -425,6 +392,11 @@ export async function getFlashcardAnalytics(userId: string): Promise<FlashcardAn
         .from(flashcard_card_progress)
         .where(eq(flashcard_card_progress.user_id, userId))
         .groupBy(flashcard_card_progress.status),
+
+      // 3. Mastery per set — dùng hàm chung (pct = correct/totalCards)
+      recentSetIds.length === 0
+        ? Promise.resolve([])
+        : getSetsMasteryByIds(userId, recentSetIds),
     ]);
 
     // Map daily reviews
@@ -435,23 +407,14 @@ export async function getFlashcardAnalytics(userId: string): Promise<FlashcardAn
       return { day: dayName, total: totalCount };
     });
 
-    // Map set mastery — total & mastered lấy từ cùng nguồn (recentSetProgress), cùng set, cùng 4 set gần nhất
-    const setMastery: FlashcardSetMastery[] = userSets.map((s) => {
-      const statusesForSet = recentSetProgress.filter((p) => p.setId === s.id);
-      const total = statusesForSet.reduce((sum, p) => sum + Number(p.count), 0);
-      const masteredCount = Number(
-        statusesForSet.find((p) => p.status === 'correct')?.count || 0
-      );
-      const pct = total > 0 ? Math.round((masteredCount / total) * 100) : 0;
-      return {
-        name: s.title.length > 20 ? s.title.slice(0, 20) + "…" : s.title,
-        mastered: masteredCount,
-        total,
-        pct,
-      };
-    });
+    // Map set mastery — dùng kết quả từ hàm chung (pct = correct/totalCards)
+    const setMastery: FlashcardSetMastery[] = masteryList.map((s) => ({
+      name: s.title.length > 20 ? s.title.slice(0, 20) + '\u2026' : s.title,
+      mastered: s.correctCards,
+      total: s.totalCards,
+      pct: s.pct,
+    }));
 
-    // Card status breakdown — TOÀN BỘ progress của user, không giới hạn set
     const totalMastered = Number(
       allProgressStatus.find((p) => p.status === 'correct')?.count || 0
     );

@@ -137,3 +137,12 @@ export async function getActivityHistory(userId: string): Promise<HistoryEvent[]
     return [];
   }
 }
+
+export async function getRecentActivities(
+  userId: string,
+  limit: number = 3
+): Promise<HistoryEvent[]> {
+  const events = await getActivityHistory(userId);
+  return events.slice(0, limit);
+}
+

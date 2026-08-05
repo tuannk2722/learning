@@ -205,12 +205,19 @@ export const CardItem = forwardRef<HTMLDivElement, CardItemProps>(({
               {(() => {
                 const imgUrl = card.imageUrl || (card as any).image_url;
                 if (imgUrl) {
+                  const hasBackText = Boolean(card.back && card.back.trim());
                   return (
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full h-full px-4">
-                      <div className={`flex-1 text-center text-gray-900 leading-relaxed whitespace-pre-wrap ${getBackFontSize(card.back, true)}`}>
-                        {card.back ? card.back : "..."}
-                      </div>
-                      <div className="flex-shrink-0 w-64 h-52 sm:w-64 sm:h-52 relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center p-1.5 shadow-sm">
+                      {hasBackText && (
+                        <div className={`flex-1 text-center text-gray-900 leading-relaxed whitespace-pre-wrap ${getBackFontSize(card.back, true)}`}>
+                          {card.back}
+                        </div>
+                      )}
+                      <div className={
+                        hasBackText
+                          ? "flex-shrink-0 w-64 h-52 sm:w-64 sm:h-52 relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center p-1.5 shadow-sm"
+                          : "w-full max-w-md h-56 sm:h-64 relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center p-2 shadow-sm"
+                      }>
                         <img
                           src={imgUrl}
                           alt="Definition illustration"

@@ -4,12 +4,15 @@ import { ContinueCourses } from "@/app/ui/dashboard/continue-courses";
 import { RecentAchievements } from "@/app/ui/dashboard/recent-achievements";
 import { LeaderboardPreview } from "@/app/ui/dashboard/leaderboard-preview";
 import { HeaderDashboard } from "@/app/ui/dashboard/header";
+import { RecentFlashcards } from "@/app/ui/dashboard/recent-flashcards";
 import { Suspense } from "react";
 import {
   DailyQuestsSkeleton,
   ContinueCoursesSkeleton,
   AchievementsCardSkeleton,
-  LeaderboardPreviewSkeleton
+  LeaderboardPreviewSkeleton,
+  RecentFlashcardsSkeleton,
+  RecentActivitySkeleton,
 } from "@/app/ui/skeleton/dashboard";
 import { auth } from "@/auth";
 import { getUserById, getLeaderboardData, getRankByUserId } from "@/app/lib/data/users";
@@ -18,7 +21,9 @@ import { getOrAssignDailyQuests } from "@/app/lib/data/quests";
 import { getEffectiveStreak } from "@/app/lib/actions/streak";
 import { StatsOverviewSkeleton } from "@/app/ui/skeleton/skeletons";
 import { getEnrolledCourses } from "@/app/lib/data/courses";
-import { getTotalFlashcardSetsByUserId } from "@/app/lib/data/flashcard";
+import { getRecentUnfinishedFlashcards, getTotalFlashcardSetsByUserId } from "@/app/lib/data/flashcard";
+import { getRecentActivities } from "@/app/lib/data/history";
+import RecentActivity from "@/app/ui/dashboard/recent-activity";
 
 export default async function DashboardHome() {
   const session = await auth();
@@ -31,6 +36,8 @@ export default async function DashboardHome() {
   const rankPosition = await getRankByUserId(user_id!);
   const recentAchievements = await getRecentAchievements(user_id!);
   const dailyQuests = await getOrAssignDailyQuests(user_id!);
+  const recentFlashcards = await getRecentUnfinishedFlashcards(user_id!);
+  const recentActivities = await getRecentActivities(user_id!);
   let currentStreak = 0;
 
   const recentCourse = continueCourses.slice(0, 3);
@@ -59,6 +66,11 @@ export default async function DashboardHome() {
                 <DailyQuests quests={dailyQuests} />
               </Suspense>
 
+              {/* Recent Flashcards */}
+              <Suspense fallback={<RecentFlashcardsSkeleton />}>
+                <RecentFlashcards flashcards={recentFlashcards} />
+              </Suspense>
+
               {/* Continuing Courses */}
               <Suspense fallback={<ContinueCoursesSkeleton />}>
                 <ContinueCourses data={recentCourse} />
@@ -74,6 +86,11 @@ export default async function DashboardHome() {
               {/* Leaderboard Preview */}
               <Suspense fallback={<LeaderboardPreviewSkeleton />}>
                 <LeaderboardPreview leaderboardData={leaderboardData} />
+              </Suspense>
+
+              {/* Recent Activity */}
+              <Suspense fallback={<RecentActivitySkeleton />}>
+                <RecentActivity activities={recentActivities} />
               </Suspense>
             </div>
           </div>
