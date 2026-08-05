@@ -541,3 +541,152 @@ export async function getRecommendedFlashcardSets(
   }
 }
 
+// ─── Shared: Mastery data per set ─────────────────────────────────────────────
+//
+// pct = correctCards / totalCards (số thẻ đúng / tổng số thẻ trong bộ)
+// Dùng chung cho cả dashboard RecentFlashcards và analytics SetMastery chart.
+
+export interface FlashcardSetProgressDTO {
+  id: string;
+  title: string;
+  correctCards: number;
+  totalCards: number;
+  pct: number; // = round(correctCards / totalCards * 100)
+}
+
+/**
+ * Tính mastery (correct/totalCards) cho danh sách setIds cho trước.
+ * Hàm không lọc theo owner — caller tự truyền đúng setIds.
+ */
+export async function getSetsMasteryByIds(
+  userId: string,
+  setIds: string[]
+): Promise<FlashcardSetProgressDTO[]> {
+  if (setIds.length === 0) return [];
+
+  const totalCardsSq = db
+    .select({
+      setId: flashcard_items.set_id,
+      totalCards: sql<number>`COUNT(*)::int`.as('total_cards'),
+    })
+    .from(flashcard_items)
+    .where(inArray(flashcard_items.set_id, setIds))
+    .groupBy(flashcard_items.set_id)
+    .as('total_sq');
+
+  const correctCardsSq = db
+    .select({
+      setId: flashcard_card_progress.set_id,
+      correctCards: sql<number>`COUNT(*)::int`.as('correct_cards'),
+    })
+    .from(flashcard_card_progress)
+    .where(
+      and(
+        eq(flashcard_card_progress.user_id, userId),
+        eq(flashcard_card_progress.status, 'correct'),
+        inArray(flashcard_card_progress.set_id, setIds)
+      )
+    )
+    .groupBy(flashcard_card_progress.set_id)
+    .as('correct_sq');
+
+  const rows = await db
+    .select({
+      id: flashcard_sets.id,
+      title: flashcard_sets.title,
+      totalCards: sql<number>`COALESCE(${totalCardsSq.totalCards}, 0)`.as('total_cards'),
+      correctCards: sql<number>`COALESCE(${correctCardsSq.correctCards}, 0)`.as('correct_cards'),
+    })
+    .from(flashcard_sets)
+    .leftJoin(totalCardsSq, eq(flashcard_sets.id, totalCardsSq.setId))
+    .leftJoin(correctCardsSq, eq(flashcard_sets.id, correctCardsSq.setId))
+    .where(inArray(flashcard_sets.id, setIds));
+
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    correctCards: row.correctCards,
+    totalCards: row.totalCards,
+    pct: row.totalCards > 0 ? Math.round((row.correctCards / row.totalCards) * 100) : 0,
+  }));
+}
+
+// ─── Query: 3 sets user học gần nhất chưa hoàn thành / chưa restart ──────────
+
+export async function getRecentUnfinishedFlashcards(
+  userId: string,
+  limit: number = 3
+): Promise<FlashcardSetProgressDTO[]> {
+  if (!userId) return [];
+
+  // 1. Recent access log (ordered by access time), lấy tối đa 20 để sau lọc
+  const recentLogs = await db
+    .select({ setId: flashcard_access_log.set_id })
+    .from(flashcard_access_log)
+    .where(eq(flashcard_access_log.user_id, userId))
+    .orderBy(desc(flashcard_access_log.accessed_at))
+    .limit(20);
+
+  if (recentLogs.length === 0) return [];
+
+  const setIds = recentLogs.map((l) => l.setId);
+
+  // 2. Xác định sets "đang học dở":
+  //    - lastCardIndex > 0 (track_progress=OFF, đang học dở giữa chừng)
+  //    - progCount > 0     (track_progress=ON, đã đánh dấu ít nhất 1 thẻ)
+  //    Sau restart, cả hai đều = 0 → set đó bị loại.
+  const progressCountSq = db
+    .select({
+      setId: flashcard_card_progress.set_id,
+      progCount: sql<number>`COUNT(*)::int`.as('prog_count'),
+    })
+    .from(flashcard_card_progress)
+    .where(
+      and(
+        eq(flashcard_card_progress.user_id, userId),
+        inArray(flashcard_card_progress.set_id, setIds)
+      )
+    )
+    .groupBy(flashcard_card_progress.set_id)
+    .as('prog_sq');
+
+  const sessionRows = await db
+    .select({
+      setId: flashcard_sets.id,
+      lastCardIndex: flashcard_study_sessions.last_card_index,
+      progCount: sql<number>`COALESCE(${progressCountSq.progCount}, 0)`.as('prog_count'),
+    })
+    .from(flashcard_sets)
+    .leftJoin(
+      flashcard_study_sessions,
+      and(
+        eq(flashcard_study_sessions.set_id, flashcard_sets.id),
+        eq(flashcard_study_sessions.user_id, userId)
+      )
+    )
+    .leftJoin(progressCountSq, eq(flashcard_sets.id, progressCountSq.setId))
+    .where(inArray(flashcard_sets.id, setIds));
+
+  const unfinishedSetIds = sessionRows
+    .filter((s) => (s.lastCardIndex ?? 0) > 0 || (s.progCount ?? 0) > 0)
+    .map((s) => s.setId);
+
+  if (unfinishedSetIds.length === 0) return [];
+
+  // 3. Lấy mastery data qua hàm dùng chung (pct = correct/totalCards)
+  const masteryList = await getSetsMasteryByIds(userId, unfinishedSetIds);
+  const masteryMap = new Map(masteryList.map((m) => [m.id, m]));
+
+  // 4. Giữ nguyên thứ tự theo access log, cắt đúng limit
+  const result: FlashcardSetProgressDTO[] = [];
+  for (const log of recentLogs) {
+    const mastery = masteryMap.get(log.setId);
+    if (!mastery) continue;
+    result.push(mastery);
+    if (result.length >= limit) break;
+  }
+
+  return result;
+}
+
+

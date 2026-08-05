@@ -8,12 +8,18 @@ import { enrollInCourse } from "@/app/lib/actions/course";
 import { useState } from "react";
 import { toast } from "sonner";
 import { showAchievementToasts } from "../achievement/achievement-toast";
+import { EnrollModal } from "../courses/enroll-modal";
 
-export function EnrollmentCard({ course }: { course: CourseDetail }) {
+export function EnrollmentCard({ course, isGuest = false }: { course: CourseDetail; isGuest?: boolean }) {
   const colorClasses = getColorClasses(course.theme_color);
   const [isPending, setIsPending] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const handleEnroll = async () => {
+    if (isGuest) {
+      setShowModal(true);
+      return;
+    }
     setIsPending(true);
     try {
       const result = await enrollInCourse(course.id);
@@ -34,6 +40,10 @@ export function EnrollmentCard({ course }: { course: CourseDetail }) {
 
   return (
     <>
+      {showModal && (
+        <EnrollModal course={course} isOpen={showModal} onClose={() => setShowModal(false)} />
+      )}
+
       {isPending && (
         <div className="fixed inset-0 z-[99999] bg-white/10 backdrop-blur-sm cursor-wait" />
       )}

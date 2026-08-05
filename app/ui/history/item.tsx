@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { BookOpen, Award, Brain, Layers } from 'lucide-react';
 import { HistoryEvent } from '@/app/lib/definitions/definitions';
 
-const CONFIG = {
+export const CONFIG = {
   lesson: {
     icon: BookOpen,
     bgColor: 'bg-blue-100',

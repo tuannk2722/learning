@@ -11,9 +11,10 @@ import { removeAccents } from "@/app/lib/utils/removeAccents";
 interface CourseListContainerProps {
   initialCourses: CourseListing[];
   categories: Category[];
+  isGuest?: boolean;
 }
 
-export function CourseListContainer({ initialCourses, categories }: CourseListContainerProps) {
+export function CourseListContainer({ initialCourses, categories, isGuest = false }: CourseListContainerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedLevel, setSelectedLevel] = useState("All");
@@ -60,7 +61,7 @@ export function CourseListContainer({ initialCourses, categories }: CourseListCo
         categories={categories}
       />
 
-      <CourseGrid courses={filteredCourses} />
+      <CourseGrid courses={filteredCourses} isGuest={isGuest} />
     </>
   );
 }

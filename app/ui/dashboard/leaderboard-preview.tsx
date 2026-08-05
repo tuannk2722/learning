@@ -66,7 +66,7 @@ export function LeaderboardPreview({ leaderboardData }: LeaderboardPreviewProps)
               </div>
             </div>
             <div className="text-sm font-medium text-gray-700">
-              {learner.xp.toLocaleString('en-US')} XP
+              {learner.xp} XP
             </div>
           </motion.div>
         ))}
