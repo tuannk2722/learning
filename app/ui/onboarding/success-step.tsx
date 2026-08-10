@@ -42,7 +42,6 @@ export function SuccessStep({ nickname, avatarUrl, onFinish }: SuccessStepProps)
           className="absolute -bottom-4 -right-4 bg-gray-900 text-white text-sm font-bold px-4 py-2 rounded-xl border-2 border-white shadow-xl z-20 flex items-center gap-1"
         >
           <Sparkles className="w-4 h-4 text-yellow-400" />
-          +100 XP
         </motion.div>
       </div>
 
@@ -50,7 +49,7 @@ export function SuccessStep({ nickname, avatarUrl, onFinish }: SuccessStepProps)
         Welcome, {nickname}!
       </h2>
       <p className="text-lg text-gray-600 mb-10 max-w-md">
-        Your profile is ready. You've earned the <b>Explorer Started</b> and 100 XP to start your learning journey.
+        Your profile is ready. You've earned the <b>Explorer Started</b> and let's start your learning journey.
       </p>
 
       <button
