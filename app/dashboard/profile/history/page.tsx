@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { auth } from '@/auth';
 import { getActivityHistory } from '@/app/lib/data/history';
 import { HistoryHeader } from '@/app/ui/history/header';
 import { HistoryFilterBar } from '@/app/ui/history/filter-bar';
 import { Suspense } from 'react';
+
+export const metadata: Metadata = {
+  title: "Learning History",
+  description: "Review your complete learning activity history, completed lessons, and study sessions on Learning.",
+  robots: { index: false, follow: false },
+};
 import { HistoryTimelineSkeleton } from '@/app/ui/skeleton/skeletons';
 import { redirect } from 'next/navigation';
 

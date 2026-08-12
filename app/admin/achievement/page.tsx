@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import AchievementHeader from '@/app/ui/admin/achievement/achievement-header';
 import AchievementStats from '@/app/ui/admin/achievement/achievement-stats';
 import AchievementList from '@/app/ui/admin/achievement/achievement-list';
+
+export const metadata: Metadata = {
+  title: "Badge Management | Admin",
+  description: "Manage achievements and badges for the Learning platform.",
+  robots: { index: false, follow: false },
+};
 
 export default async function BadgeManagementPage() {
   // Dữ liệu mock (Sau này thay bằng fetch từ DB)

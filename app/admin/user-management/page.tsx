@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import UserHeader from '@/app/ui/admin/user-management/user-header';
 import UserFilters from '@/app/ui/admin/user-management/user-filters';
 import UserList from '@/app/ui/admin/user-management/user-list';
 import { getFilteredUsers } from '@/app/lib/data/users';
+
+export const metadata: Metadata = {
+  title: "User Management | Admin",
+  description: "Manage users, roles, and permissions on Learning.",
+  robots: { index: false, follow: false },
+};
 
 interface SearchParams {
   searchQuery?: string;

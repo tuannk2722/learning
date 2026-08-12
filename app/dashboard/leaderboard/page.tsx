@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { LeaderboardTitle } from "@/app/ui/leaderboard/title";
 import { Top3Podium } from "@/app/ui/leaderboard/top-3-podium";
 import { FullLeaderboard } from "@/app/ui/leaderboard/full-leaderboard";
@@ -6,6 +7,12 @@ import { Top3PodiumSkeleton, FullLeaderboardSkeleton } from "@/app/ui/skeleton/s
 
 import { getLeaderboardData } from "@/app/lib/data/users";
 import { auth } from "@/auth";
+
+export const metadata: Metadata = {
+  title: "Leaderboard",
+  description: "See the top learners on Learning. Compete with other students, track your rank, and climb to the top of the leaderboard.",
+  keywords: ["leaderboard", "rankings", "learning competition", "top students"],
+};
 
 export default async function Leaderboard() {
   const session = await auth();

@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import CourseHeader from '@/app/ui/admin/course/course-header';
 import CourseList from '@/app/ui/admin/course/course-list';
 import { fetchAllCourses } from '@/app/lib/data/courses';
+
+export const metadata: Metadata = {
+  title: "Manage Courses",
+  description: "Create, edit, and manage all courses on the Learning platform.",
+  robots: { index: false, follow: false },
+};
 
 export default async function CourseManagementPage() {
   const courses = await fetchAllCourses();

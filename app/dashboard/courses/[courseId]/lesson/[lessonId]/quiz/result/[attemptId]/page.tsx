@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import QuizResultsContainer from "@/app/ui/result/result-container";
+
+export const metadata: Metadata = {
+  title: "Quiz Results",
+  description: "View your quiz score and review correct answers on Learning.",
+  robots: { index: false, follow: false },
+};
 import { getNextLessonId } from "@/app/lib/data/lessons";
 import { notFound } from "next/navigation";
 import { getAttemptById } from "@/app/lib/data/quiz";

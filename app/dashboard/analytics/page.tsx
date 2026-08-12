@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { AnalyticsStatsGrid } from '@/app/ui/analytics/stats-grid';
 import { AnalyticsWeeklyXP } from '@/app/ui/analytics/analytics-weekly-xp';
 import { AnalyticsTitle } from '@/app/ui/analytics/title';
@@ -8,6 +9,12 @@ import { getQuizHistory } from '@/app/lib/data/quiz';
 import { Suspense } from 'react';
 import { StatsOverviewSkeleton } from '@/app/ui/skeleton/skeletons';
 import { ChartSkeleton, QuizAttemptSkeleton, CardStatusSkeleton, SetMasterySkeleton } from '@/app/ui/skeleton/analytic';
+
+export const metadata: Metadata = {
+  title: "Analytics",
+  description: "Dive into your Learning analytics. Visualize your weekly XP, quiz scores, flashcard mastery, and overall progress.",
+  robots: { index: false, follow: false },
+};
 import { AnalyticsFlashcardDailyReviews } from '@/app/ui/analytics/flashcard-daily-reviews';
 import { AnalyticsFlashcardCardStatus } from '@/app/ui/analytics/flashcard-card-status';
 import { AnalyticsFlashcardSetMastery } from '@/app/ui/analytics/flashcard-set-mastery';

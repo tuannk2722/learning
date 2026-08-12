@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { StatsOverview } from "@/app/ui/dashboard/stats-overview";
 import { DailyQuests } from "@/app/ui/quests/daily-quests";
 import { ContinueCourses } from "@/app/ui/dashboard/continue-courses";
@@ -24,6 +25,12 @@ import { getEnrolledCourses } from "@/app/lib/data/courses";
 import { getRecentUnfinishedFlashcards, getTotalFlashcardSetsByUserId } from "@/app/lib/data/flashcard";
 import { getRecentActivities } from "@/app/lib/data/history";
 import RecentActivity from "@/app/ui/dashboard/recent-activity";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "Your personalized learning dashboard. Track your streak, complete daily quests, continue courses, and review recent achievements.",
+  robots: { index: false, follow: false },
+};
 
 export default async function DashboardHome() {
   const session = await auth();

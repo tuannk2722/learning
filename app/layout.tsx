@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { inter } from "./ui/fonts";
 import { Footer } from "./ui/footer";
@@ -7,6 +8,61 @@ import ConditionalNav from "./ui/conditional-nav";
 import { getUserById } from "./lib/data/users";
 import { Toaster } from 'sonner';
 import { getEffectiveStreak } from "./lib/actions/streak";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
+  title: {
+    template: "%s | Learning",
+    default: "Learning – Online Learning Platform",
+  },
+  description:
+    "Learning is a modern e-learning platform. Explore courses, study with flashcards, track your progress, and climb the leaderboard.",
+  keywords: [
+    "online learning",
+    "e-learning",
+    "courses",
+    "flashcards",
+    "education",
+    "learning platform",
+    "study",
+  ],
+  authors: [{ name: "Learning" }],
+  creator: "Learning",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Learning",
+    title: {
+      template: "%s | Learning",
+      default: "Learning – Online Learning Platform",
+    },
+    description:
+      "Learning is a modern e-learning platform. Explore courses, study with flashcards, track your progress, and climb the leaderboard.",
+    images: [
+      {
+        url: "/OG.png",
+        width: 1200,
+        height: 630,
+        alt: "Learning – Online Learning Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: {
+      template: "%s | Learning",
+      default: "Learning – Online Learning Platform",
+    },
+    description:
+      "Learning is a modern e-learning platform. Explore courses, study with flashcards, track your progress, and climb the leaderboard.",
+    images: ["/OG.png"],
+  },
+};
 
 export default async function RootLayout({
   children,

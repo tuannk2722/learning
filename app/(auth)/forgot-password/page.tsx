@@ -3,7 +3,9 @@ import { LoginBranding } from '@/app/ui/login/branding';
 import { ForgotPasswordForm } from '@/app/ui/forgot-password/forgot-password-form';
 
 export const metadata: Metadata = {
-  title: 'Forgot Password | Gamified Learning',
+  title: 'Forgot Password',
+  description: 'Reset your Learning account password. Enter your email to receive a password reset link.',
+  robots: { index: false, follow: false },
 };
 
 export default function ForgotPasswordPage() {

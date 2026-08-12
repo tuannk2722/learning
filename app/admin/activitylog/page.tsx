@@ -1,7 +1,14 @@
+import type { Metadata } from "next";
 import ActivityLogHeader from "@/app/ui/admin/activity-log/activity-log-header";
 import ActivityLogStats from "@/app/ui/admin/activity-log/activity-log-stats";
 import ActivityLogFilters from "@/app/ui/admin/activity-log/activity-log-filters";
 import ActivityLogTimeline from "@/app/ui/admin/activity-log/activity-log-timeline";
+
+export const metadata: Metadata = {
+  title: "Activity Log | Admin",
+  description: "Monitor user activity and system audit logs on Learning.",
+  robots: { index: false, follow: false },
+};
 import { Pagination } from "@/app/ui/pagination";
 import { getActivityLogs, getActivityLogStats } from "@/app/lib/data/activity-logs";
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { CourseInfo } from "@/app/ui/course-detail/course-info";
 import { EnrollmentCard } from "@/app/ui/course-detail/enrollment-card";
 import { CurriculumSection } from "@/app/ui/course-detail/course-curriculum";
@@ -8,6 +9,38 @@ import { WillLearned } from "@/app/ui/course-detail/will-learned";
 import { Suspense } from "react";
 import { CourseHeroSectionSkeleton, CurriculumSectionSkeleton } from "@/app/ui/skeleton/course-detail";
 import { NotFound } from "@/app/ui/course-detail/not-found";
+
+export async function generateMetadata(
+  props: { params: Promise<{ courseId: string }> }
+): Promise<Metadata> {
+  const { courseId } = await props.params;
+  const course = await getCourseById(Number(courseId));
+
+  if (!course || course.status !== 'published') {
+    return {
+      title: "Course Not Found",
+      description: "This course could not be found on Learning.",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const keywords = Array.isArray(course.categories) ? course.categories : [];
+
+  return {
+    title: course.name,
+    description:
+      course.description ??
+      `Learn ${course.name} on Learning – ${course.total_lessons} lessons, ${course.total_duration} minutes of content.`,
+    keywords,
+    openGraph: {
+      title: `${course.name} | Learning`,
+      description:
+        course.description ??
+        `Learn ${course.name} on Learning – ${course.total_lessons} lessons, ${course.total_duration} minutes of content.`,
+      images: [{ url: "/OG.png", width: 1200, height: 630, alt: course.name }],
+    },
+  };
+}
 
 export default async function PreviewCourseDetailPage(props: { params: Promise<{ courseId: string }> }) {
   // const session = await auth();

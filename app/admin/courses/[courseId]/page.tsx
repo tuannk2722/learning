@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { notFound } from 'next/navigation';
 import { getCourseForBuilder } from '@/app/lib/data/courses';
 import CourseBuilderClient from '@/app/ui/admin/course/course-builder/course-builder-client';
+
+export const metadata: Metadata = {
+  title: "Edit Course | Admin",
+  description: "Edit course details, sections, and lessons on Learning.",
+  robots: { index: false, follow: false },
+};
 import { iconOptions } from '@/app/ui/admin/course/course-builder/course-types';
 import { CourseBuilderResult } from '@/app/lib/definitions/lessons';
 
