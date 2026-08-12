@@ -1,9 +1,44 @@
 'use server';
 
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { v2 as cloudinary } from 'cloudinary';
 
-export async function uploadAvatar(formData: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
+// Cấu hình Cloudinary SDK dùng biến môi trường
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// ── Helper: Upload buffer lên Cloudinary ───────────────────────────────────────
+function uploadBufferToCloudinary(
+  buffer: Buffer,
+  folder: string,
+  publicId: string
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        {
+          folder: `learning/${folder}`,
+          public_id: publicId,
+          overwrite: true,
+          resource_type: 'image',
+        },
+        (error, result) => {
+          if (error || !result) {
+            return reject(error ?? new Error('Cloudinary upload failed'));
+          }
+          resolve(result.secure_url);
+        }
+      )
+      .end(buffer);
+  });
+}
+
+// ── Upload Avatar ──────────────────────────────────────────────────────────────
+export async function uploadAvatar(
+  formData: FormData
+): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
     const file = formData.get('file') as File;
 
@@ -25,31 +60,20 @@ export async function uploadAvatar(formData: FormData): Promise<{ success: boole
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const publicId = `avatar-${Date.now()}`;
 
-    // Create unique filename
-    const timestamp = Date.now();
-    const ext = file.name.split('.').pop() || 'jpg';
-    const filename = `avatar-${timestamp}.${ext}`;
-
-    // Ensure upload directory exists
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'avatars');
-    await mkdir(uploadDir, { recursive: true });
-
-    // Write file
-    const filepath = join(uploadDir, filename);
-    await writeFile(filepath, buffer);
-
-    // Return public URL (relative path served by Next.js)
-    const publicUrl = `/uploads/avatars/${filename}`;
-    return { success: true, url: publicUrl };
-
+    const url = await uploadBufferToCloudinary(buffer, 'avatars', publicId);
+    return { success: true, url };
   } catch (error) {
     console.error('Failed to upload avatar:', error);
     return { success: false, error: 'Failed to upload file.' };
   }
 }
 
-export async function uploadLessonImage(formData: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
+// ── Upload Lesson Image ────────────────────────────────────────────────────────
+export async function uploadLessonImage(
+  formData: FormData
+): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
     const file = formData.get('file') as File;
 
@@ -69,27 +93,20 @@ export async function uploadLessonImage(formData: FormData): Promise<{ success: 
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const publicId = `lesson-${Date.now()}`;
 
-    const timestamp = Date.now();
-    const ext = file.name.split('.').pop() || 'jpg';
-    const filename = `lesson-${timestamp}.${ext}`;
-
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'lessons');
-    await mkdir(uploadDir, { recursive: true });
-
-    const filepath = join(uploadDir, filename);
-    await writeFile(filepath, buffer);
-
-    const publicUrl = `/uploads/lessons/${filename}`;
-    return { success: true, url: publicUrl };
-
+    const url = await uploadBufferToCloudinary(buffer, 'lessons', publicId);
+    return { success: true, url };
   } catch (error) {
     console.error('Failed to upload lesson image:', error);
     return { success: false, error: 'Failed to upload file.' };
   }
 }
 
-export async function uploadFlashcardImage(formData: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
+// ── Upload Flashcard Image ─────────────────────────────────────────────────────
+export async function uploadFlashcardImage(
+  formData: FormData
+): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
     const file = formData.get('file') as File;
 
@@ -109,20 +126,10 @@ export async function uploadFlashcardImage(formData: FormData): Promise<{ succes
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const publicId = `flashcard-${Date.now()}`;
 
-    const timestamp = Date.now();
-    const ext = file.name.split('.').pop() || 'jpg';
-    const filename = `flashcard-${timestamp}.${ext}`;
-
-    const uploadDir = join(process.cwd(), 'public', 'uploads', 'flashcards');
-    await mkdir(uploadDir, { recursive: true });
-
-    const filepath = join(uploadDir, filename);
-    await writeFile(filepath, buffer);
-
-    const publicUrl = `/uploads/flashcards/${filename}`;
-    return { success: true, url: publicUrl };
-
+    const url = await uploadBufferToCloudinary(buffer, 'flashcards', publicId);
+    return { success: true, url };
   } catch (error) {
     console.error('Failed to upload flashcard image:', error);
     return { success: false, error: 'Failed to upload file.' };
