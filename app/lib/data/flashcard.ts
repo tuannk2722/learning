@@ -115,7 +115,7 @@ export async function getFlashcardSets(
       .leftJoin(cardCountSq, eq(flashcard_sets.id, cardCountSq.set_id))
       .where(and(...publicWhereConditions))
       .orderBy(desc(flashcard_sets.created_at))
-      .limit(10),
+      .limit(12),
   ]);
 
   // 4. Filter theo q in-memory (vì cần removeAccents tiếng Việt, DB không hỗ trợ natively)
@@ -495,7 +495,8 @@ export async function getRecommendedFlashcardSets(
       }));
     }
 
-    const tagsParam = `{${interestTags.map((t) => `"${t.replace(/"/g, '\\"')}"`).join(',')}}`;
+    // Đã lowercase từ getUserInterestTags, đảm bảo luôn lowercase khi build param
+    const tagsParam = `{${interestTags.map((t) => `"${t.toLowerCase().replace(/"/g, '\\"')}"`).join(',')}}`;
 
     const rows = await db
       .select({
@@ -512,7 +513,7 @@ export async function getRecommendedFlashcardSets(
         recommendation_score: sql<number>`
           CARDINALITY(
             ARRAY(
-              SELECT UNNEST(${flashcard_sets.tags})
+              SELECT LOWER(UNNEST(${flashcard_sets.tags}))
               INTERSECT
               SELECT UNNEST(${sql.raw(`'${tagsParam}'::text[]`)})
             )
@@ -524,7 +525,8 @@ export async function getRecommendedFlashcardSets(
       .leftJoin(cardCountSq, eq(flashcard_sets.id, cardCountSq.set_id))
       .where(and(
         baseWhere as any,
-        sql`${flashcard_sets.tags} && ${sql.raw(`'${tagsParam}'::text[]`)}`,
+        // So sánh không phân biệt hoa/thường: LOWER từng phần tử trước khi &&
+        sql`(SELECT ARRAY_AGG(LOWER(v)) FROM UNNEST(${flashcard_sets.tags}) AS v) && ${sql.raw(`'${tagsParam}'::text[]`)}`,
       ))
       .orderBy(desc(sql`recommendation_score`), desc(flashcard_sets.created_at))
       .limit(limit) as (SetRow & { recommendation_score: number })[];

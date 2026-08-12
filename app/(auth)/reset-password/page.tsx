@@ -4,7 +4,9 @@ import { redirect } from 'next/navigation';
 import { ResetPasswordForm } from '@/app/ui/reset-password/reset-password-form';
 
 export const metadata: Metadata = {
-  title: 'Reset Password | LearnQuest',
+  title: 'Reset Password',
+  description: 'Set a new password for your Learning account.',
+  robots: { index: false, follow: false },
 };
 
 export default async function ResetPasswordPage({

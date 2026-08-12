@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
 import { AchievementTitle } from '@/app/ui/achievement/title';
 import { AchievementProgressBar } from '@/app/ui/achievement/progress-bar';
 import { AchievementGrid } from '@/app/ui/achievement/achievement-grid';
 import { getAchievements } from '@/app/lib/data/achievements';
 import { auth } from '@/auth';
+
+export const metadata: Metadata = {
+  title: "My Achievements",
+  description: "Track the badges and milestones you have earned on your Learning journey.",
+  robots: { index: false, follow: false },
+};
 
 export default async function Achievements() {
   const session = await auth();

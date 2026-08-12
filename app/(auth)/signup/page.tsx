@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { SignUpBranding } from "@/app/ui/signup/branding";
 import { SignUpForm } from "@/app/ui/signup/signup-form";
+
+export const metadata: Metadata = {
+  title: "Create Account",
+  description: "Create your free Learning account and start your learning journey today.",
+  robots: { index: false, follow: false },
+};
 
 export default function SignUpPage() {
 

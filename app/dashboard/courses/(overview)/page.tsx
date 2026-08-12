@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { BookOpen } from 'lucide-react';
 import { CourseTitle } from '@/app/ui/courses/title';
 import { auth } from '@/auth';
@@ -10,6 +11,12 @@ import {
 } from '@/app/lib/data/courses';
 import { CourseListContainer } from '@/app/ui/courses/list-container';
 import CourseCardEnrolled from '@/app/ui/courses/enrolled-course-card';
+
+export const metadata: Metadata = {
+  title: "My Courses",
+  description: "Browse your enrolled courses and discover new ones tailored to your interests on Learning.",
+  robots: { index: false, follow: false },
+};
 
 export default async function Courses() {
   const session = await auth();

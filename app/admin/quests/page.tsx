@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import QuestHeader from '@/app/ui/admin/quests/quest-header';
 import QuestStats from '@/app/ui/admin/quests/quest-stats';
 import QuestList from '@/app/ui/admin/quests/quest-list';
+
+export const metadata: Metadata = {
+  title: "Quest Management | Admin",
+  description: "Manage daily quests and challenges for Learning users.",
+  robots: { index: false, follow: false },
+};
 
 export default async function QuestManagementPage() {
   // MOCK DATA (Sau này fetch từ DB)

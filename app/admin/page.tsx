@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import StatCards from '@/app/ui/admin/dashboard/stat-cards';
 import ActiveUsersChart from '@/app/ui/admin/dashboard/active-users-chart';
 import LessonsCompletedChart from '@/app/ui/admin/dashboard/lessons-completed-chart';
@@ -8,6 +9,12 @@ import { EnrollmentTrends } from '../ui/admin/dashboard/enrollment-trends';
 import { TopFlashcardSet } from '../ui/admin/dashboard/top-flashcard-set';
 import { TopFlashcardCreation } from '../ui/admin/dashboard/flashcard-creation';
 import { getTopFlashcardSets, getFlashcardCreationData } from '../lib/data/flashcard';
+
+export const metadata: Metadata = {
+  title: "Admin Dashboard",
+  description: "Platform overview and key metrics for Learning administrators.",
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminDashboard() {
   const { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements, enrollmentTrends } =

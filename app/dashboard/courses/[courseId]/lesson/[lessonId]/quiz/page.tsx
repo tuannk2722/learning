@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import QuizContainer from "@/app/ui/quiz/quiz-container";
+
+export const metadata: Metadata = {
+  title: "Lesson Quiz",
+  description: "Test your knowledge with the lesson quiz on Learning.",
+  robots: { index: false, follow: false },
+};
 import { getQuizByLessonId } from "@/app/lib/data/quiz";
 import { submitQuiz } from "@/app/lib/actions/quiz";
 import { getNextLessonId, getLessonById } from "@/app/lib/data/lessons";

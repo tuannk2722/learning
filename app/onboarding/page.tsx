@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { OnboardingWizard } from '@/app/ui/onboarding/onboarding-wizard';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+
+export const metadata: Metadata = {
+  title: "Set Up Your Profile",
+  description: "Tell us about your interests so we can personalize your learning experience on Learning.",
+  robots: { index: false, follow: false },
+};
 
 export default async function OnboardingPage() {
   const session = await auth();

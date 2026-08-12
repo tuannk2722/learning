@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { ProfileTitle } from '@/app/ui/profile/title';
 import { ProfileHeader } from '@/app/ui/profile/header';
 import { ProfileSetting } from '@/app/ui/profile/setting';
@@ -6,6 +7,12 @@ import { ProfileHeaderSkeleton, ProfileSettingSkeleton } from '@/app/ui/skeleton
 import { auth } from "@/auth";
 import { getUserById } from "@/app/lib/data/users";
 import { LogoutProvider } from '@/app/ui/profile/logout-context';
+
+export const metadata: Metadata = {
+  title: "My Profile",
+  description: "Manage your Learning profile, update your avatar, name, and account settings.",
+  robots: { index: false, follow: false },
+};
 
 export default async function Profile() {
   const session = await auth();

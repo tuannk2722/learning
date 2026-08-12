@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { LessonContent } from "@/app/ui/lesson/lesson-content";
 import { LessonNote } from "@/app/ui/lesson/lesson-note";
 import { getCourseCurriculum, getLessonDetail, getLessonNote } from "@/app/lib/data/lessons";
@@ -11,6 +12,26 @@ import { CurriculumSkeleton } from "@/app/ui/skeleton/course-detail";
 import { NotFound } from "@/app/ui/lesson/not-found";
 import Link from "next/link";
 import { ScrollToTop } from "@/app/ui/scroll-to-top";
+
+export async function generateMetadata(
+  props: { params: Promise<{ courseId: string; lessonId: string }> }
+): Promise<Metadata> {
+  const { lessonId } = await props.params;
+  const lesson = await getLessonDetail(Number(lessonId));
+
+  if (!lesson) {
+    return {
+      title: "Lesson Not Found",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  return {
+    title: `${lesson.title} – ${lesson.courseTitle}`,
+    description: `Learn "${lesson.title}" as part of the "${lesson.courseTitle}" course on Learning.`,
+    robots: { index: false, follow: false },
+  };
+}
 
 
 export default async function LessonDetailPage(props: { params: Promise<{ courseId: string, lessonId: string }> }) {

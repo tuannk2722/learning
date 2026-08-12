@@ -383,7 +383,7 @@ export async function getUserInterestTags(userId: string): Promise<string[]> {
     const [courseTagsRow, flashcardTagsRow] = await Promise.all([
       // Tags từ enrolled courses
       db.execute<{ tags: string[] }>(sql`
-        SELECT ARRAY_AGG(DISTINCT TRIM(cat)) FILTER (WHERE TRIM(cat) <> '') AS tags
+        SELECT ARRAY_AGG(DISTINCT LOWER(TRIM(cat))) FILTER (WHERE TRIM(cat) <> '') AS tags
         FROM ${schema.enrollments}
         JOIN ${schema.courses} ON ${schema.enrollments.course_id} = ${schema.courses.id}
         , UNNEST(${schema.courses.categories}) AS cat
@@ -391,7 +391,7 @@ export async function getUserInterestTags(userId: string): Promise<string[]> {
       `),
       // Tags từ accessed flashcard sets
       db.execute<{ tags: string[] }>(sql`
-        SELECT ARRAY_AGG(DISTINCT TRIM(tag)) FILTER (WHERE TRIM(tag) <> '') AS tags
+        SELECT ARRAY_AGG(DISTINCT LOWER(TRIM(tag))) FILTER (WHERE TRIM(tag) <> '') AS tags
         FROM ${schema.flashcard_access_log}
         JOIN ${schema.flashcard_sets} ON ${schema.flashcard_access_log.set_id} = ${schema.flashcard_sets.id}
         , UNNEST(${schema.flashcard_sets.tags}) AS tag
@@ -469,7 +469,8 @@ export async function getRecommendedCourses(
 
     const enrolledCount = sql<number>`coalesce(${enrollmentStats.total}, 0)`.as('enrolled_count');
     const totalLessons = sql<number>`coalesce(${lessonStats.total}, 0)`.as('total_lessons');
-    const tagsParam = `{${interestTags.map((t) => `"${t.replace(/"/g, '\\"')}"`).join(',')}}`;
+    // Đã lowercase từ getUserInterestTags, đảm bảo luôn lowercase khi build param
+    const tagsParam = `{${interestTags.map((t) => `"${t.toLowerCase().replace(/"/g, '\\"')}"`).join(',')}}`;
 
     const data = await db
       .select({
@@ -481,7 +482,7 @@ export async function getRecommendedCourses(
         recommendation_score: sql<number>`
           CARDINALITY(
             ARRAY(
-              SELECT UNNEST(${schema.courses.categories})
+              SELECT LOWER(UNNEST(${schema.courses.categories}))
               INTERSECT
               SELECT UNNEST(${sql.raw(`'${tagsParam}'::text[]`)})
             )
@@ -494,7 +495,8 @@ export async function getRecommendedCourses(
       .where(and(
         notInArray(schema.courses.id, userEnrollments),
         eq(schema.courses.status, 'published'),
-        sql`${schema.courses.categories} && ${sql.raw(`'${tagsParam}'::text[]`)}`,
+        // So sánh không phân biệt hoa/thường: LOWER từng phần tử trước khi &&
+        sql`(SELECT ARRAY_AGG(LOWER(v)) FROM UNNEST(${schema.courses.categories}) AS v) && ${sql.raw(`'${tagsParam}'::text[]`)}`,
       ))
       .orderBy(
         desc(sql`recommendation_score`),

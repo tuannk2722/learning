@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from 'react';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
@@ -16,6 +17,12 @@ import {
   FlashcardRecentSectionSkeleton,
   FlashcardPublicSectionSkeleton,
 } from '@/app/ui/skeleton/flashcard';
+
+export const metadata: Metadata = {
+  title: "Flashcards",
+  description: "Study smarter with your personal flashcard sets. Browse, create, and review flashcards to boost your learning on Learning.",
+  robots: { index: false, follow: false },
+};
 
 export type { FlashcardSetDTO };
 

@@ -1,5 +1,12 @@
+import type { Metadata } from "next";
 import { LoginBranding } from "../../ui/login/branding";
 import { LoginForm } from "../../ui/login/login-form";
+
+export const metadata: Metadata = {
+  title: "Sign In",
+  description: "Sign in to your Learning account to continue your learning journey.",
+  robots: { index: false, follow: false },
+};
 
 export default function LoginPage() {
 
