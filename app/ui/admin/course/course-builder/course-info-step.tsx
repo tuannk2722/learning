@@ -5,7 +5,7 @@ import { Lightbulb } from 'lucide-react';
 import { levels, iconOptions } from './course-types';
 import { DynamicIcon } from '../../../dynamic-icon';
 import { CoursePreview } from './preview-course';
-import { useCourseBuilderStore } from './course-store';
+import { useCourseBuilderStore } from '@/app/hooks/course-store';
 import { COLOR_PALETTE } from '@/app/lib/utils/color-palette';
 
 interface CourseInfoStepProps {

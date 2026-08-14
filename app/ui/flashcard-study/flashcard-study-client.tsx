@@ -2,7 +2,7 @@
 
 import { AnimatePresence } from "motion/react";
 import type { FlashcardSetForStudy, CardProgressMap, StudySessionMeta } from "@/app/lib/definitions/flashcards";
-import { useFlashcardStudy } from "./use-flashcard-study";
+import { useFlashcardStudy } from "../../hooks/use-flashcard-study";
 import { StudySummary } from "./study-summary";
 import { CardItem } from "./card-item";
 import { ButtonControl } from "./button-control";

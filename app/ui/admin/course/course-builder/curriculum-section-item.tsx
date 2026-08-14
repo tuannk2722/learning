@@ -1,11 +1,11 @@
 "use client";
 
-import { motion, Reorder, AnimatePresence } from 'motion/react';
+import { motion, Reorder } from 'motion/react';
 import { Plus, Trash2, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 import { CourseBuilderSection, CourseBuilderLesson } from '@/app/lib/definitions/lessons';
 import { CurriculumLessonItem } from './curriculum-lesson-item';
 
-import { useCourseBuilderStore } from './course-store';
+import { useCourseBuilderStore } from '@/app/hooks/course-store';
 
 interface CurriculumSectionItemProps {
   section: CourseBuilderSection;

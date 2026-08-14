@@ -8,7 +8,7 @@ import { ConfirmModal } from '@/app/ui/modal-confirm';
 import { CurriculumSectionItem } from './curriculum-section-item';
 import { CurriculumSummary } from './curriculum-summary';
 
-import { useCourseBuilderStore } from './course-store';
+import { useCourseBuilderStore } from '@/app/hooks/course-store';
 
 interface CurriculumStepProps {
   onBack: () => void;

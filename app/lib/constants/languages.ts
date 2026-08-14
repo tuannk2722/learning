@@ -45,3 +45,21 @@ export const TOP_LANGUAGES: Language[] = [
 export function getLanguageName(code: string): string {
   return TOP_LANGUAGES.find((l) => l.code === code)?.name ?? code;
 }
+
+/**
+ * Chuyển BCP 47 code sang ISO 639-1 base code.
+ * Ví dụ: 'en-US' → 'en', 'vi-VN' → 'vi', 'zh-CN' → 'zh-CN' (giữ nguyên cho Chinese variants)
+ */
+export function toBcp47Base(code: string): string {
+  // Giữ nguyên zh-CN / zh-TW vì chúng khác nhau hoàn toàn
+  if (code.startsWith('zh-')) return code;
+  return code.split('-')[0];
+}
+
+/**
+ * So sánh 2 language codes xem có cùng ngôn ngữ gốc không (bỏ qua region).
+ * Ví dụ: 'en-US' vs 'en-GB' → true, 'en-US' vs 'vi-VN' → false
+ */
+export function isSameBaseLanguage(lang1: string, lang2: string): boolean {
+  return toBcp47Base(lang1) === toBcp47Base(lang2);
+}

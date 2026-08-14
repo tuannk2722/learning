@@ -4,6 +4,8 @@ import { motion } from "motion/react";
 import { Trash2, Image as ImageIcon, X, Loader2 } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { uploadFlashcardImage } from "@/app/lib/actions/upload";
+import { useFieldSuggestions } from "@/app/hooks/use-term-suggestions";
+import { SuggestionDropdown } from "./suggestion-dropdown";
 
 export interface EditableCard {
   id: string;
@@ -20,6 +22,8 @@ interface BuilderCardItemProps {
   card: EditableCard;
   index: number;
   canDelete: boolean;
+  termLang?: string;
+  defLang?: string;
   onUpdate: (id: string, field: keyof EditableCard, value: string) => void;
   onDelete: (id: string) => void;
 }
@@ -28,6 +32,8 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
   card,
   index,
   canDelete,
+  termLang = 'en-US',
+  defLang = 'en-US',
   onUpdate,
   onDelete,
 }, ref) {
@@ -35,6 +41,22 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
   const backTextareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Suggestions for Term (based on Definition)
+  const termSuggestions = useFieldSuggestions({
+    sourceText: card.back,
+    sourceLang: defLang,
+    targetLang: termLang,
+  });
+
+  // Suggestions for Definition (based on Term)
+  const defSuggestions = useFieldSuggestions({
+    sourceText: card.front,
+    sourceLang: termLang,
+    targetLang: defLang,
+  });
+
+  const isAnyOpen = termSuggestions.isOpen || defSuggestions.isOpen;
 
   useImperativeHandle(ref, () => ({
     focusTerm: () => {
@@ -106,7 +128,9 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.18 }}
-      className="bg-white rounded-2xl border-2 transition-all shadow-sm shadow-violet-100"
+      className={`bg-white rounded-2xl border-2 transition-all shadow-sm shadow-violet-100 ${
+        isAnyOpen ? 'relative z-30 ring-2 ring-violet-200/50' : 'relative z-0'
+      }`}
     >
       {/* Hidden File Input */}
       <input
@@ -143,7 +167,16 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
             <textarea
               ref={textareaRef}
               value={card.front}
-              onChange={(e) => onUpdate(card.id, "front", e.target.value)}
+              onChange={(e) => {
+                onUpdate(card.id, "front", e.target.value);
+                termSuggestions.close();
+              }}
+              onClick={() => {
+                termSuggestions.trigger();
+              }}
+              onFocus={() => {
+                termSuggestions.trigger();
+              }}
               placeholder="E.g: Photosynthesis"
               rows={1}
               className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors whitespace-pre-wrap"
@@ -151,6 +184,14 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
             <label className="text-xs font-semibold text-gray-600 uppercase tracking-widest mt-1 block">
               Term
             </label>
+
+            {/* Term Suggestions Dropdown */}
+            <SuggestionDropdown
+              isOpen={termSuggestions.isOpen}
+              suggestions={termSuggestions.suggestions}
+              onSelect={(text) => onUpdate(card.id, "front", text)}
+              onClose={termSuggestions.close}
+            />
           </div>
 
           {/* Back (Definition) */}
@@ -159,7 +200,16 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
               <textarea
                 ref={backTextareaRef}
                 value={card.back}
-                onChange={(e) => onUpdate(card.id, "back", e.target.value)}
+                onChange={(e) => {
+                  onUpdate(card.id, "back", e.target.value);
+                  defSuggestions.close();
+                }}
+                onClick={() => {
+                  defSuggestions.trigger();
+                }}
+                onFocus={() => {
+                  defSuggestions.trigger();
+                }}
                 placeholder="E.g: abc"
                 rows={1}
                 className="rounded-xl w-full px-3 py-3 text-base font-semibold text-gray-900 bg-transparent resize-none focus:outline-none placeholder:text-gray-200 placeholder:font-normal border-b border-gray-200 focus:border-violet-300 transition-colors whitespace-pre-wrap"
@@ -167,6 +217,14 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
               <label className="text-xs font-semibold text-gray-600 uppercase tracking-widest mt-1 block">
                 Definition
               </label>
+
+              {/* Definition Suggestions Dropdown */}
+              <SuggestionDropdown
+                isOpen={defSuggestions.isOpen}
+                suggestions={defSuggestions.suggestions}
+                onSelect={(text) => onUpdate(card.id, "back", text)}
+                onClose={defSuggestions.close}
+              />
             </div>
 
             {/* Image Upload Area */}

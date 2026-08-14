@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { CourseBuilderResult } from '@/app/lib/definitions/lessons';
-import { defaultCourseData } from './course-types';
+import { defaultCourseData } from '../ui/admin/course/course-builder/course-types';
 
 interface CourseBuilderState {
   courseData: CourseBuilderResult;

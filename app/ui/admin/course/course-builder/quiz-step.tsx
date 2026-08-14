@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { HelpCircle } from 'lucide-react';
 import Link from 'next/link';
 
-import { useCourseBuilderStore } from './course-store';
+import { useCourseBuilderStore } from '@/app/hooks/course-store';
 import { useState } from 'react';
 import { ConfirmModal } from '@/app/ui/modal-confirm';
 

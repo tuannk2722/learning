@@ -245,6 +245,8 @@ export default function FlashcardBuilderClient({ existingSet }: Props) {
                   card={card}
                   index={index}
                   canDelete={cards.length > 1}
+                  termLang={frontLang}
+                  defLang={backLang}
                   onUpdate={updateCard}
                   onDelete={deleteCard}
                 />
