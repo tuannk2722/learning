@@ -6,6 +6,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { uploadFlashcardImage } from "@/app/lib/actions/upload";
 import { useFieldSuggestions } from "@/app/hooks/use-term-suggestions";
 import { SuggestionDropdown } from "./suggestion-dropdown";
+import { ImagePickerInline } from "./image-picker-inline";
 
 export interface EditableCard {
   id: string;
@@ -41,6 +42,7 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
   const backTextareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
 
   // Suggestions for Term (based on Definition)
   const termSuggestions = useFieldSuggestions({
@@ -255,8 +257,12 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
               ) : (
                 <button
                   type="button"
-                  onClick={handleImageClick}
-                  className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-all flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-violet-400"
+                  onClick={() => setShowImagePicker((p) => !p)}
+                  className={`w-16 h-16 border-2 border-dashed rounded-xl transition-all flex flex-col items-center justify-center gap-1 ${
+                    showImagePicker
+                      ? 'border-violet-400 bg-violet-50 text-violet-500'
+                      : 'border-gray-300 hover:border-violet-300 hover:bg-violet-50 text-gray-600 hover:text-violet-400'
+                  }`}
                   title="Add image"
                 >
                   <ImageIcon className="w-5 h-5" />
@@ -266,6 +272,16 @@ export const BuilderCardItem = forwardRef<BuilderCardItemHandle, BuilderCardItem
             </div>
           </div>
         </div>
+
+        {/* Inline Image Picker */}
+        <ImagePickerInline
+          isOpen={showImagePicker}
+          initialQuery={card.front}
+          termLang={termLang}
+          onSelect={(url) => onUpdate(card.id, "imageUrl", url)}
+          onUploadClick={handleImageClick}
+          onClose={() => setShowImagePicker(false)}
+        />
       </div>
     </motion.div>
   );
