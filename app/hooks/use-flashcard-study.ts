@@ -15,7 +15,7 @@ import {
 } from "@/app/lib/actions/flashcard";
 import { showAchievementToasts } from "@/app/ui/achievement/achievement-toast";
 import { showQuestToasts } from "@/app/ui/quests/quest-toast";
-import { useSpeech } from "./use-speech";
+import { useSpeech } from "../ui/flashcard-study/use-speech";
 
 
 export type AnswerStatus = "correct" | "incorrect" | null;

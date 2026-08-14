@@ -10,7 +10,7 @@ import CourseInfoStep from './course-info-step';
 import CurriculumStep from './curriculum-step';
 import QuizStep from './quiz-step';
 import { CourseBuilderResult } from '@/app/lib/definitions/lessons';
-import { useCourseBuilderStore } from './course-store';
+import { useCourseBuilderStore } from '@/app/hooks/course-store';
 import { saveCourseBuilder, publishCourseBuilder, UnPublishCourse } from '@/app/lib/actions/course';
 import { toast } from 'sonner';
 

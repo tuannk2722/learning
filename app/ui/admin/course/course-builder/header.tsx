@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 import { useState } from 'react';
 import { ConfirmModal } from '@/app/ui/modal-confirm';
 
-import { useCourseBuilderStore } from './course-store';
+import { useCourseBuilderStore } from '@/app/hooks/course-store';
 
 interface HeaderProps {
   onSave: () => void;

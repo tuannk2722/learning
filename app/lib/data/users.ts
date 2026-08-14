@@ -9,7 +9,7 @@ import {
   quiz_attempts,
   activity_logs
 } from "../db/schema";
-import { eq, desc, sql, and, notInArray, isNull, isNotNull, count } from "drizzle-orm";
+import { eq, desc, sql, and, notInArray, isNull, isNotNull, count, getTableColumns } from "drizzle-orm";
 import type { User, UserInfoLogin } from "../definitions/user";
 import type { LeaderboardEntry } from "../definitions/definitions";
 import { calculateLevel } from "../utils/xp";
@@ -41,12 +41,23 @@ export async function getFilteredUsers(filter: {
     const { searchQuery, status, page = 1, pageSize = 10 } = filter;
     const offset = (page - 1) * pageSize;
 
+    // Correlated subquery: thời gian active thực tế = max activity_logs.created_at, fallback last_study_date
+    // Dùng raw string "users"."id" để tránh Drizzle resolve thiếu table qualifier trong SELECT context
+    const effectiveLastActive = sql<Date>`coalesce(
+      (SELECT max(al.created_at) FROM "activity_logs" al WHERE al.user_id = "users"."id"),
+      "users"."last_study_date"
+    )`;
+
     const conditions = [];
 
     if (status === 'active') {
-      conditions.push(isNotNull(users.last_study_date));
+      conditions.push(sql`(
+        SELECT max(al.created_at) FROM "activity_logs" al WHERE al.user_id = "users"."id"
+      ) IS NOT NULL OR "users"."last_study_date" IS NOT NULL`);
     } else if (status === 'inactive') {
-      conditions.push(isNull(users.last_study_date));
+      conditions.push(sql`(
+        SELECT max(al.created_at) FROM "activity_logs" al WHERE al.user_id = "users"."id"
+      ) IS NULL AND "users"."last_study_date" IS NULL`);
     }
 
     if (searchQuery && searchQuery.trim() !== '') {
@@ -60,10 +71,13 @@ export async function getFilteredUsers(filter: {
 
     const [usersResult, countResult] = await Promise.all([
       db
-        .select()
+        .select({
+          ...getTableColumns(users),
+          last_study_date: effectiveLastActive,
+        })
         .from(users)
         .where(whereClause ?? sql`1=1`)
-        .orderBy(desc(users.last_study_date))
+        .orderBy(desc(effectiveLastActive))
         .limit(pageSize)
         .offset(offset),
       db
@@ -431,8 +445,10 @@ export async function getUserDetailsForModal(userId: string) {
       ? new Date(rawUser.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       : "N/A";
 
-    const lastActive = rawUser.last_study_date
-      ? formatLastActive(rawUser.last_study_date)
+    // Lấy last active từ bản ghi activity log mới nhất (activityRows đã sort desc)
+    const latestActivityDate = activityRows[0]?.created_at ?? rawUser.last_study_date;
+    const lastActive = latestActivityDate
+      ? formatLastActive(latestActivityDate)
       : "InActive";
 
     return {

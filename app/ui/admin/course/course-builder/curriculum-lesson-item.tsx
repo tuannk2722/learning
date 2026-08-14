@@ -8,7 +8,7 @@ import { CourseBuilderLesson } from '@/app/lib/definitions/lessons';
 import { Popconfirm } from '@/app/ui/pop-confirm';
 import { toast } from 'sonner';
 
-import { useCourseBuilderStore } from './course-store';
+import { useCourseBuilderStore } from '@/app/hooks/course-store';
 import { publishLesson, unpublishLesson } from '@/app/lib/actions/lesson';
 
 interface CurriculumLessonItemProps {

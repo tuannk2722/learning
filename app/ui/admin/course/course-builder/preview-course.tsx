@@ -1,6 +1,6 @@
 import { DynamicIcon } from '../../../dynamic-icon';
 import { getColorClasses } from '@/app/lib/utils/color-palette';
-import { useCourseBuilderStore } from './course-store';
+import { useCourseBuilderStore } from '@/app/hooks/course-store';
 
 export function CoursePreview() {
   const { courseData } = useCourseBuilderStore();
@@ -44,4 +44,4 @@ export function CoursePreview() {
       </div>
     </div>
   );
-}
+}
