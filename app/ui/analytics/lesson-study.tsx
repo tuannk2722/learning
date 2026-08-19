@@ -20,7 +20,12 @@ export function AnalyticsLessonStudy({ weeklyActivity }: { weeklyActivity: { day
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={weeklyActivity}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-          <XAxis dataKey="day" stroke="#6B7280" />
+          <XAxis
+            dataKey="day"
+            stroke="#6B7280"
+            tick={{ fontSize: weeklyActivity.length > 15 ? 10 : 12 }}
+            interval="preserveStartEnd"
+          />
           <YAxis stroke="#6B7280" />
           <Tooltip
             contentStyle={{

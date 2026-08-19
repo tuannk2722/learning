@@ -19,7 +19,7 @@ export function EnrollmentTrends({ data }: { data: EnrollmentTrendItem[] }) {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-semibold text-gray-900">Enrollment & Completion Trends</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Monthly overview</p>
+          <p className="text-xs text-gray-500 mt-0.5">Overview in selected period</p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-violet-500 inline-block rounded" />Enrollments</span>
@@ -39,7 +39,13 @@ export function EnrollmentTrends({ data }: { data: EnrollmentTrendItem[] }) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-          <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+          <XAxis
+            dataKey="month"
+            tick={{ fontSize: data.length > 15 ? 10 : 11, fill: "#9ca3af" }}
+            interval="preserveStartEnd"
+            axisLine={false}
+            tickLine={false}
+          />
           <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
           <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
           <Area type="monotone" dataKey="enrollments" stroke="#7c3aed" strokeWidth={2} fill="url(#enrollGrad)" />

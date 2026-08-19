@@ -19,12 +19,17 @@ export default function ActiveUsersChart({ data }: { data: DAUData[] }) {
     >
       <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-slate-800">
         <Users className="w-6 h-6 text-blue-600" />
-        Daily Active Users
+        Active Users Trend
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-          <XAxis dataKey="day" stroke="#6B7280" />
+          <XAxis
+            dataKey="day"
+            stroke="#6B7280"
+            tick={{ fontSize: data.length > 15 ? 10 : 12 }}
+            interval="preserveStartEnd"
+          />
           <YAxis stroke="#6B7280" allowDecimals={false} />
           <Tooltip
             contentStyle={{

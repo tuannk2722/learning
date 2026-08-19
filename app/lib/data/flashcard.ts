@@ -10,6 +10,7 @@ import {
 } from '../db/schema';
 import { eq, and, inArray, notInArray, sql, desc, gte } from 'drizzle-orm';
 import { removeAccents } from '../utils/removeAccents';
+import { getTimeRangeConfig, generateDateBuckets, matchDateToBucket } from '../utils/date-range';
 import type {
   FlashcardSetDTO,
   FlashcardSetForStudy,
@@ -303,7 +304,8 @@ export type DeckRow = {
 
 export const RANK_COLORS = ['#6366f1', '#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'];
 
-export async function getTopFlashcardSets(): Promise<TopActiveDeckDTO[]> {
+export async function getTopFlashcardSets(rangeInput?: string | null): Promise<TopActiveDeckDTO[]> {
+  const { startDate } = getTimeRangeConfig(rangeInput);
 
   // 1. Biểu thức accuracy cho từng dòng log: ưu tiên metadata.accuracy, fallback
   // 1 (100%) khi allCorrect = true, còn lại NULL (AVG() của Postgres tự bỏ qua NULL)
@@ -338,7 +340,7 @@ export async function getTopFlashcardSets(): Promise<TopActiveDeckDTO[]> {
         eq(activity_logs.entity_type, 'flashcard_set'),
         eq(activity_logs.action, 'COMPLETE_FLASHCARD_SESSION'),
         eq(activity_logs.entity_id, sql`${flashcard_sets.id}::text`),
-        sql`${activity_logs.created_at} >= CURRENT_DATE - INTERVAL '6 days'`
+        gte(activity_logs.created_at, startDate)
       )
     )
     .groupBy(flashcard_sets.id, flashcard_sets.title, flashcard_sets.tags)
@@ -364,39 +366,32 @@ export async function getTopFlashcardSets(): Promise<TopActiveDeckDTO[]> {
 
 // ─── Query: Analytics tạo flashcard cho Admin Dashboard ──────────────
 
-export async function getFlashcardCreationData(): Promise<FlashcardCreationData> {
-  const now = new Date();
-  const fiftySixDaysAgo = new Date(now.getTime() - 8 * 7 * 24 * 60 * 60 * 1000);
+export async function getFlashcardCreationData(rangeInput?: string | null): Promise<FlashcardCreationData> {
+  const { startDate, granularity } = getTimeRangeConfig(rangeInput);
+  const buckets = generateDateBuckets(rangeInput);
 
-  // 1. Thống kê xu hướng tạo bộ thẻ theo 8 tuần từ database
+  // 1. Thống kê xu hướng tạo bộ thẻ từ database theo khoảng thời gian
   const setsRows = await db
     .select({ createdAt: flashcard_sets.created_at })
     .from(flashcard_sets)
-    .where(gte(flashcard_sets.created_at, fiftySixDaysAgo));
+    .where(gte(flashcard_sets.created_at, startDate));
 
-  const weeksCount = Array(8).fill(0);
-  for (const row of setsRows) {
-    if (!row.createdAt) continue;
-    const diffMs = now.getTime() - new Date(row.createdAt).getTime();
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    const weekIdx = Math.floor(diffDays / 7);
-    if (weekIdx >= 0 && weekIdx < 8) {
-      weeksCount[7 - weekIdx] += 1;
-    }
-  }
+  const setCreationTrend: SetCreationTrendItem[] = buckets.map((bucket) => {
+    const matching = setsRows.filter((r) => matchDateToBucket(r.createdAt, bucket, granularity));
+    return {
+      week: bucket.label,
+      sets: matching.length,
+    };
+  });
 
-  const setCreationTrend: SetCreationTrendItem[] = weeksCount.map((count, i) => ({
-    week: `W${i + 1}`,
-    sets: count,
-  }));
-
-  // 2. Thống kê số lượng bộ thẻ được tạo theo tags từ database
+  // 2. Thống kê số lượng bộ thẻ được tạo theo tags trong khoảng thời gian đã chọn
   const tagRows = await db
     .select({
       tag: sql<string>`COALESCE(${flashcard_sets.tags}[1], 'General')`.as('tag'),
       count: sql<number>`COUNT(${flashcard_sets.id})::int`.as('count'),
     })
     .from(flashcard_sets)
+    .where(gte(flashcard_sets.created_at, startDate))
     .groupBy(sql`COALESCE(${flashcard_sets.tags}[1], 'General')`)
     .orderBy(desc(sql`COUNT(${flashcard_sets.id})`))
     .limit(5);

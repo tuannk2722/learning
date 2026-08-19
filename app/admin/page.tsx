@@ -9,6 +9,7 @@ import { EnrollmentTrends } from '../ui/admin/dashboard/enrollment-trends';
 import { TopFlashcardSet } from '../ui/admin/dashboard/top-flashcard-set';
 import { TopFlashcardCreation } from '../ui/admin/dashboard/flashcard-creation';
 import { getTopFlashcardSets, getFlashcardCreationData } from '../lib/data/flashcard';
+import { AdminDashboardHeader } from "../ui/admin/dashboard/header";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard",
@@ -16,22 +17,22 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard(props: {
+  searchParams?: Promise<{ range?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const range = searchParams?.range || "7d";
+
   const { stats, dailyActiveUsers, weeklyLessons, topCourses, topAchievements, enrollmentTrends } =
-    await getAdminDashboardData();
-  const topFlashcardSets = await getTopFlashcardSets();
-  const flashcardCreationData = await getFlashcardCreationData();
+    await getAdminDashboardData(range);
+  const topFlashcardSets = await getTopFlashcardSets(range);
+  const flashcardCreationData = await getFlashcardCreationData(range);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-violet-50 to-white">
       <div className="pt-5 pb-12 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-4xl mb-2 bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent font-bold">
-              Admin Dashboard
-            </h1>
-            <p className="text-muted-foreground">Platform overview and key metrics</p>
-          </div>
+          <AdminDashboardHeader />
 
           {/* Stats Grid */}
           <StatCards stats={stats} />

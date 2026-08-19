@@ -12,6 +12,7 @@ export interface ImageSearchResult {
 interface ImageSearchResponse {
   images: ImageSearchResult[];
   translatedQuery?: string;
+  source?: string;
 }
 
 // ─── Translate non-English query to English ──────────────────────────────────
@@ -36,46 +37,89 @@ async function translateToEnglish(text: string, fromLang: string): Promise<strin
   return text;
 }
 
-// ─── Search Pexels ───────────────────────────────────────────────────────────
-async function searchPexels(query: string): Promise<ImageSearchResult[]> {
-  const apiKey = process.env.PEXELS_API_KEY;
+// ─── Primary: Pixabay API (Photos, Illustrations, Vectors) ───────────────────
+async function searchPixabay(query: string): Promise<ImageSearchResult[]> {
+  const apiKey = process.env.PIXABAY_API_KEY;
   if (!apiKey) {
-    console.error('[image-search] PEXELS_API_KEY not set');
+    console.warn('[image-search] PIXABAY_API_KEY not configured in .env');
     return [];
   }
 
-  const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=12&orientation=landscape`;
+  try {
+    // image_type=all bao gồm cả photo, illustration, vector rất hợp cho Flashcard
+    const url = `https://pixabay.com/api/?key=${apiKey}&q=${encodeURIComponent(query)}&image_type=all&per_page=24&safesearch=true`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
 
-  const res = await fetch(url, {
-    headers: { Authorization: apiKey },
-    signal: AbortSignal.timeout(6000),
-  });
+    if (!res.ok) {
+      console.error(`[image-search] Pixabay API error: HTTP ${res.status}`);
+      return [];
+    }
 
-  if (!res.ok) {
-    console.error('[image-search] Pexels API error:', res.status);
+    const data = await res.json();
+    if (!data.hits || data.hits.length === 0) {
+      console.warn('[image-search] Pixabay returned 0 results for:', query);
+      return [];
+    }
+
+    return data.hits.map((hit: {
+      id: number;
+      webformatURL: string;
+      largeImageURL: string;
+      tags: string;
+      user: string;
+    }, i: number) => ({
+      id: i + 1,
+      url: hit.webformatURL,
+      fullUrl: hit.largeImageURL,
+      alt: hit.tags || query,
+      photographer: hit.user || 'Pixabay',
+    }));
+  } catch (err) {
+    console.error('[image-search] Pixabay failed:', err);
     return [];
   }
+}
 
-  const data = await res.json();
+// ─── Fallback: Openverse API (Free, No Key, CC-licensed) ─────────────────────
+async function searchOpenverse(query: string): Promise<ImageSearchResult[]> {
+  try {
+    const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=20&license_type=commercial,modification`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'LearnQuest/1.0' },
+      signal: AbortSignal.timeout(8000),
+    });
 
-  if (!data.photos || !Array.isArray(data.photos)) return [];
+    if (!res.ok) {
+      console.error(`[image-search] Openverse API error: HTTP ${res.status}`);
+      return [];
+    }
 
-  return data.photos.map((photo: {
-    id: number;
-    alt: string;
-    photographer: string;
-    src: { medium: string; large: string };
-  }) => ({
-    id: photo.id,
-    url: photo.src.medium,
-    fullUrl: photo.src.large,
-    alt: photo.alt || '',
-    photographer: photo.photographer || '',
-  }));
+    const data = await res.json();
+    if (!data.results || !Array.isArray(data.results) || data.results.length === 0) {
+      console.warn('[image-search] Openverse returned 0 results for:', query);
+      return [];
+    }
+
+    return data.results.map((item: {
+      id: string;
+      url: string;
+      thumbnail: string;
+      title: string;
+      creator: string;
+    }, i: number) => ({
+      id: i + 1,
+      url: item.thumbnail || item.url,
+      fullUrl: item.url,
+      alt: item.title || query,
+      photographer: item.creator || 'Openverse',
+    }));
+  } catch (err) {
+    console.error('[image-search] Openverse failed:', err);
+    return [];
+  }
 }
 
 // ─── Route Handler ───────────────────────────────────────────────────────────
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
@@ -88,16 +132,32 @@ export async function GET(req: NextRequest) {
 
     // Translate to English if needed
     const englishQuery = await translateToEnglish(query, termLang);
+    console.log(`[image-search] query="${query}" → englishQuery="${englishQuery}"`);
 
-    // Search Pexels with the English query
-    const images = await searchPexels(englishQuery);
+    let images: ImageSearchResult[] = [];
+    let source = 'pixabay';
+
+    // 1. Gọi Pixabay làm nguồn chính
+    if (process.env.PIXABAY_API_KEY) {
+      images = await searchPixabay(englishQuery);
+    }
+
+    // 2. Fallback sang Openverse nếu Pixabay không có kết quả hoặc chưa có key
+    if (images.length === 0) {
+      console.log('[image-search] Falling back to Openverse...');
+      images = await searchOpenverse(englishQuery);
+      source = 'openverse';
+    }
+
+    console.log(`[image-search] Returning ${images.length} images from ${source}`);
 
     return NextResponse.json<ImageSearchResponse>({
       images,
       translatedQuery: englishQuery !== query ? englishQuery : undefined,
+      source,
     });
   } catch (error) {
-    console.error('[image-search]', error);
+    console.error('[image-search] Unhandled error:', error);
     return NextResponse.json<ImageSearchResponse>({ images: [] });
   }
 }

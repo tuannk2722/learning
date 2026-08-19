@@ -215,8 +215,8 @@ export const CardItem = forwardRef<HTMLDivElement, CardItemProps>(({
                       )}
                       <div className={
                         hasBackText
-                          ? "flex-shrink-0 w-64 h-52 sm:w-64 sm:h-52 relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center p-1.5 shadow-sm"
-                          : "w-full max-w-md h-56 sm:h-64 relative rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center p-2 shadow-sm"
+                          ? "flex-shrink-0 w-64 h-52 sm:w-64 sm:h-52 relative flex items-center justify-center"
+                          : "w-full max-w-md h-56 sm:h-64 relative flex items-center justify-center"
                       }>
                         <img
                           src={imgUrl}

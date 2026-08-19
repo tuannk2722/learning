@@ -2,7 +2,7 @@
 import { motion } from 'motion/react';
 import { HistoryEvent } from '@/app/lib/definitions/definitions';
 import { HistoryItem } from './item';
-import { getDateLabel } from '@/app/lib/utils/date';
+import { getDateLabel } from '@/app/lib/utils/date-range';
 import { HistoryEmptyState } from './empty-state';
 
 export function HistoryTimeline({ events }: { events: HistoryEvent[] }) {

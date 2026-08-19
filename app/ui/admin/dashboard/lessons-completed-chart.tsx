@@ -24,7 +24,12 @@ export default function LessonsCompletedChart({ data }: { data: LessonData[] }) 
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-          <XAxis dataKey="day" stroke="#6B7280" />
+          <XAxis
+            dataKey="day"
+            stroke="#6B7280"
+            tick={{ fontSize: data.length > 15 ? 10 : 12 }}
+            interval="preserveStartEnd"
+          />
           <YAxis stroke="#6B7280" allowDecimals={false} />
           <Tooltip
             contentStyle={{
