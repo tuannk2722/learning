@@ -20,15 +20,20 @@ import { AnalyticsFlashcardCardStatus } from '@/app/ui/analytics/flashcard-card-
 import { AnalyticsFlashcardSetMastery } from '@/app/ui/analytics/flashcard-set-mastery';
 import { AnalyticsLessonStudy } from '@/app/ui/analytics/lesson-study';
 
-export default async function Analytics() {
+export default async function Analytics(props: {
+  searchParams?: Promise<{ range?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const range = searchParams?.range || "7d";
+
   const session = await auth();
   const userId = session?.user?.id;
   const quizHistory = userId ? await getQuizHistory(userId) : [];
-  const stats = userId ? await getOverviewStats(userId) : [];
-  const weeklyActivity = userId ? await getWeeklyActivity(userId) : [];
-  const weeklyXP = userId ? await getWeeklyXP(userId) : [];
+  const stats = userId ? await getOverviewStats(userId, range) : [];
+  const weeklyActivity = userId ? await getWeeklyActivity(userId, range) : [];
+  const weeklyXP = userId ? await getWeeklyXP(userId, range) : [];
   const flashcardAnalytics = userId
-    ? await getFlashcardAnalytics(userId)
+    ? await getFlashcardAnalytics(userId, range)
     : { dailyReviews: [], cardStatus: [], setMastery: [], totalCards: 0 };
 
   return (

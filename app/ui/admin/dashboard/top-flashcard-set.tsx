@@ -9,7 +9,7 @@ export function TopFlashcardSet({ data }: { data: TopActiveDeckDTO[] }) {
       className="lg:col-span-2 bg-white rounded-3xl border-2 border-gray-200 shadow-lg overflow-hidden flex flex-col">
       <div className="px-6 py-4 border-b border-gray-100">
         <h2 className="text-lg font-semibold">Top Active Flashcard Sets</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">Ranked by active users this week</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Ranked by active users in selected period</p>
       </div>
       <div className="divide-y divide-gray-50">
         {data.map((deck, i) => (

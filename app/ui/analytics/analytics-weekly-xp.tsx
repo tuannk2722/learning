@@ -15,12 +15,17 @@ export function AnalyticsWeeklyXP({ weeklyXP }: { weeklyXP: { day: string, xp: n
     >
       <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
         <TrendingUp className="w-6 h-6 text-violet-600" />
-        Weekly XP
+        XP Activity
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={weeklyXP}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-          <XAxis dataKey="day" stroke="#6B7280" />
+          <XAxis
+            dataKey="day"
+            stroke="#6B7280"
+            tick={{ fontSize: weeklyXP.length > 15 ? 10 : 12 }}
+            interval="preserveStartEnd"
+          />
           <YAxis stroke="#6B7280" />
           <Tooltip
             contentStyle={{
@@ -34,9 +39,9 @@ export function AnalyticsWeeklyXP({ weeklyXP }: { weeklyXP: { day: string, xp: n
             type="monotone"
             dataKey="xp"
             stroke="#8B5CF6"
-            strokeWidth={3}
-            dot={{ fill: '#8B5CF6', r: 6 }}
-            activeDot={{ r: 8 }}
+            strokeWidth={2.5}
+            dot={{ fill: '#8B5CF6', r: weeklyXP.length > 20 ? 2.5 : 4 }}
+            activeDot={{ r: 6 }}
           />
         </LineChart>
       </ResponsiveContainer>

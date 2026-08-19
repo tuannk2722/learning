@@ -42,7 +42,7 @@ export default function TopAchievements({ data }: { data: AchievementData[] }) {
       <div className="flex items-start justify-between mb-5">
         <div>
           <h2 className="font-semibold">Top Achievements Awarded</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{achievementTotal.toLocaleString()} total this month</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{achievementTotal.toLocaleString()} awarded in selected period</p>
         </div>
         <div className="flex items-center gap-1 bg-yellow-50 px-2.5 py-1 rounded-lg">
           <Trophy className="w-3.5 h-3.5 text-yellow-500" />

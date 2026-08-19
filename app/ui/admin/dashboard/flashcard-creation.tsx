@@ -13,20 +13,32 @@ export function TopFlashcardCreation({ data }: { data?: FlashcardCreationData })
       className="bg-white rounded-3xl p-8 border-2 border-gray-200 shadow-lg flex flex-col gap-5 w-full min-w-0">
       <div>
         <h2 className="font-semibold">New Sets Created</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">8-week trend</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Sets created in selected period</p>
       </div>
 
       <div className="flex-1 min-h-0 w-full min-w-0" style={{ height: 160 }}>
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={160}>
           <LineChart data={setCreationTrend} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-            <XAxis dataKey="week" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+            <XAxis
+              dataKey="week"
+              tick={{ fontSize: 10, fill: '#9ca3af' }}
+              interval="preserveStartEnd"
+              axisLine={false}
+              tickLine={false}
+            />
             <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={32} />
             <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e5e7eb", fontSize: 12 }} />
-            <Line type="monotone" dataKey="sets" name="Sets" stroke="#6366f1" strokeWidth={2.5}
+            <Line
+              type="monotone"
+              dataKey="sets"
+              name="Sets"
+              stroke="#6366f1"
+              strokeWidth={2}
               isAnimationActive={false}
-              dot={{ fill: '#6366f1', r: 3, strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }} />
+              dot={{ fill: '#6366f1', r: setCreationTrend.length > 20 ? 2 : 3, strokeWidth: 0 }}
+              activeDot={{ r: 5, fill: '#6366f1', strokeWidth: 2, stroke: '#fff' }}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>

@@ -4,7 +4,7 @@ import { db } from "../db";
 import { users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { StreakResult } from "../definitions/definitions";
-import { getVNDateString } from "../utils/date";
+import { getVNDateString } from "../utils/date-range";
 
 
 /**
